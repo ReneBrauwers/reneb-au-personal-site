@@ -46,6 +46,36 @@ for (const viewport of viewports) {
   check(response?.status() === 200, `${viewport.name}: homepage returned ${response?.status()}`);
   await page.evaluate(() => document.fonts?.ready);
 
+  const aiArtwork = page.locator(".ai-artwork img");
+  check(await aiArtwork.getAttribute("loading") === "lazy", `${viewport.name}: AI artwork is not lazy-loaded`);
+  await aiArtwork.evaluate(image => {
+    image.loading = "eager";
+  });
+  await page.waitForFunction(() => {
+    const image = document.querySelector(".ai-artwork img");
+    return image?.complete && image.naturalWidth > 0;
+  });
+  const aiImage = await aiArtwork.evaluate(image => ({
+    naturalWidth: image.naturalWidth,
+    naturalHeight: image.naturalHeight,
+    alt: image.alt
+  }));
+  check(aiImage.naturalWidth === 1200 && aiImage.naturalHeight === 900, `${viewport.name}: AI artwork is ${aiImage.naturalWidth}x${aiImage.naturalHeight}`);
+  check(aiImage.alt.length > 0, `${viewport.name}: AI artwork alt text is empty`);
+  await aiArtwork.evaluate(image => image.decode());
+  await page.waitForTimeout(100);
+  const captureOverlays = page.locator(".site-header, .skip-link");
+  await captureOverlays.evaluateAll(elements => elements.forEach(element => {
+    element.hidden = true;
+  }));
+  await page.locator(".ai-section").screenshot({
+    path: path.join(outputDir, `ai-section-${viewport.name}.png`),
+    animations: "disabled"
+  });
+  await captureOverlays.evaluateAll(elements => elements.forEach(element => {
+    element.hidden = false;
+  }));
+
   const metrics = await page.evaluate(() => ({
     scrollWidth: document.documentElement.scrollWidth,
     clientWidth: document.documentElement.clientWidth,
@@ -98,6 +128,13 @@ for (const viewport of viewports) {
   check(response?.status() === 200, `JavaScript-disabled homepage returned ${response?.status()}`);
   check(await page.locator("main").isVisible(), "JavaScript-disabled main content is not visible");
   check(await page.locator("a", { hasText: "Connect on LinkedIn" }).first().isVisible(), "JavaScript-disabled primary CTA is not visible");
+  await page.locator(".ai-artwork img").evaluate(image => {
+    image.loading = "eager";
+  });
+  await page.waitForFunction(() => {
+    const image = document.querySelector(".ai-artwork img");
+    return image?.complete && image.naturalWidth > 0;
+  });
   await page.screenshot({ path: path.join(outputDir, "javascript-disabled-390x844.png"), fullPage: true });
   await context.close();
 }
@@ -153,7 +190,7 @@ for (const viewport of viewports) {
 
 {
   const request = await browser.newPage();
-  const assetPaths = ["/styles.css", "/favicon.svg", "/social-card.png", "/robots.txt", "/sitemap.xml"];
+  const assetPaths = ["/styles.css", "/favicon.svg", "/social-card.png", "/assets/human-ai-collaboration.webp", "/robots.txt", "/sitemap.xml"];
   for (const assetPath of assetPaths) {
     const response = await request.request.get(`${baseUrl}${assetPath}`);
     check(response.status() === 200, `${assetPath} returned ${response.status()}`);
