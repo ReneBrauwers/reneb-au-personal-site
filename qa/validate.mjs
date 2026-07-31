@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { chromium } from "playwright";
+import { chromium, devices, webkit } from "playwright";
 import AxeBuilder from "@axe-core/playwright";
 
 const baseUrl = (process.env.QA_BASE_URL || "http://web:8080").replace(/\/$/, "");
@@ -17,6 +17,7 @@ const viewports = [
 
 const failures = [];
 const results = [];
+const touchResults = [];
 
 function check(condition, message) {
   if (!condition) failures.push(message);
@@ -216,9 +217,94 @@ for (const viewport of viewports) {
   await request.close();
 }
 
+for (const touchBrowserName of ["chromium", "webkit"]) {
+  const touchBrowser = touchBrowserName === "chromium" ? browser : await webkit.launch({ headless: true });
+  const context = await touchBrowser.newContext({
+    ...devices["iPhone 13"],
+    colorScheme: "light",
+    reducedMotion: "no-preference"
+  });
+  const page = await context.newPage();
+  const consoleErrors = [];
+  const failedRequests = [];
+
+  page.on("console", message => {
+    if (message.type() === "error") consoleErrors.push(message.text());
+  });
+  page.on("requestfailed", request => {
+    failedRequests.push(`${request.url()}: ${request.failure()?.errorText || "failed"}`);
+  });
+
+  const response = await page.goto(`${baseUrl}/`, { waitUntil: "networkidle" });
+  check(response?.status() === 200, `${touchBrowserName} touch: homepage returned ${response?.status()}`);
+
+  const touchMetrics = await page.evaluate(() => {
+    const artwork = document.querySelector(".ai-artwork").getBoundingClientRect();
+    const monogram = document.querySelector(".monogram-frame").getBoundingClientRect();
+    const brand = document.querySelector(".brand-mark").getBoundingClientRect();
+    return {
+      clientWidth: document.documentElement.clientWidth,
+      scrollWidth: document.documentElement.scrollWidth,
+      bodyScrollWidth: document.body.scrollWidth,
+      rootOverflowX: getComputedStyle(document.documentElement).overflowX,
+      bodyOverflowX: getComputedStyle(document.body).overflowX,
+      rootOverscrollX: getComputedStyle(document.documentElement).overscrollBehaviorX,
+      bodyOverscrollX: getComputedStyle(document.body).overscrollBehaviorX,
+      artworkWidth: artwork.width,
+      monogramWidth: monogram.width,
+      monogramHeight: monogram.height,
+      monogramRadius: getComputedStyle(document.querySelector(".monogram-frame")).borderRadius,
+      brandWidth: brand.width,
+      brandHeight: brand.height,
+      brandRadius: getComputedStyle(document.querySelector(".brand-mark")).borderRadius
+    };
+  });
+
+  const horizontalPosition = await page.evaluate(() => {
+    document.documentElement.scrollLeft = 10000;
+    document.body.scrollLeft = 10000;
+    return {
+      windowX: window.scrollX,
+      rootX: document.documentElement.scrollLeft,
+      bodyX: document.body.scrollLeft
+    };
+  });
+
+  check(touchMetrics.scrollWidth <= touchMetrics.clientWidth, `${touchBrowserName} touch: root overflow ${touchMetrics.scrollWidth}/${touchMetrics.clientWidth}`);
+  check(touchMetrics.bodyScrollWidth <= touchMetrics.clientWidth, `${touchBrowserName} touch: body overflow ${touchMetrics.bodyScrollWidth}/${touchMetrics.clientWidth}`);
+  check(["hidden", "clip"].includes(touchMetrics.rootOverflowX), `${touchBrowserName} touch: root overflow-x is ${touchMetrics.rootOverflowX}`);
+  check(["hidden", "clip"].includes(touchMetrics.bodyOverflowX), `${touchBrowserName} touch: body overflow-x is ${touchMetrics.bodyOverflowX}`);
+  check(touchMetrics.rootOverscrollX === "none" && touchMetrics.bodyOverscrollX === "none", `${touchBrowserName} touch: horizontal overscroll is ${touchMetrics.rootOverscrollX}/${touchMetrics.bodyOverscrollX}`);
+  check(horizontalPosition.windowX === 0 && horizontalPosition.rootX === 0 && horizontalPosition.bodyX === 0, `${touchBrowserName} touch: horizontal position moved ${JSON.stringify(horizontalPosition)}`);
+  check(touchMetrics.artworkWidth <= touchMetrics.clientWidth * 0.82, `${touchBrowserName} touch: artwork is ${Math.round(touchMetrics.artworkWidth)}px in a ${touchMetrics.clientWidth}px viewport`);
+  check(Math.abs(touchMetrics.monogramWidth - touchMetrics.monogramHeight) <= 1 && touchMetrics.monogramRadius === "50%", `${touchBrowserName} touch: hero monogram is not circular`);
+  check(Math.abs(touchMetrics.brandWidth - touchMetrics.brandHeight) <= 1 && touchMetrics.brandRadius === "50%", `${touchBrowserName} touch: header monogram is not circular`);
+
+  if (touchBrowserName === "chromium") {
+    const captureOverlays = page.locator(".site-header, .skip-link");
+    await captureOverlays.evaluateAll(elements => elements.forEach(element => {
+      element.hidden = true;
+    }));
+    await page.locator(".hero-visual").screenshot({
+      path: path.join(outputDir, `touch-${touchBrowserName}-hero-390x844.png`)
+    });
+    await captureOverlays.evaluateAll(elements => elements.forEach(element => {
+      element.hidden = false;
+    }));
+  }
+  await page.waitForTimeout(100);
+
+  check(consoleErrors.length === 0, `${touchBrowserName} touch: console errors: ${consoleErrors.join(" | ")}`);
+  check(failedRequests.length === 0, `${touchBrowserName} touch: failed requests: ${failedRequests.join(" | ")}`);
+
+  touchResults.push({ browser: touchBrowserName, ...touchMetrics, horizontalPosition, consoleErrors, failedRequests });
+  await context.close();
+  if (touchBrowserName === "webkit") await touchBrowser.close();
+}
+
 await browser.close();
 
-const report = { baseUrl, viewports: results, failures };
+const report = { baseUrl, viewports: results, touch: touchResults, failures };
 await fs.writeFile(path.join(outputDir, "qa-report.json"), `${JSON.stringify(report, null, 2)}\n`, "utf8");
 
 if (failures.length > 0) {

@@ -26,6 +26,8 @@ html {
   scroll-behavior: smooth;
   scroll-padding-top: 6rem;
   background: var(--ink);
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
 }
 
 body {
@@ -35,8 +37,17 @@ body {
   font-family: Inter, Aptos, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   font-size: 1rem;
   line-height: 1.65;
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+}
+
+@supports (overflow-x: clip) {
+  html,
+  body {
+    overflow-x: clip;
+  }
 }
 
 a {
@@ -91,6 +102,7 @@ h3 {
 }
 
 .shell {
+  min-width: 0;
   width: min(100% - (2 * var(--gutter)), var(--shell));
   margin-inline: auto;
 }
@@ -149,17 +161,32 @@ h3 {
 }
 
 .brand-mark {
+  position: relative;
   display: inline-grid;
   width: 48px;
   height: 48px;
   place-items: center;
   color: var(--white);
   background: var(--navy);
-  border-radius: 0.65rem;
+  border: 1px solid rgb(255 255 255 / 0.18);
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 5px rgb(255 255 255 / 0.04);
   font-size: 0.9rem;
   font-weight: 750;
   letter-spacing: 0.04em;
   text-decoration: none;
+}
+
+.brand-mark::after {
+  position: absolute;
+  right: 3px;
+  bottom: 9px;
+  width: 7px;
+  height: 7px;
+  background: var(--warm);
+  border: 2px solid var(--navy);
+  border-radius: 50%;
+  content: "";
 }
 
 .header-cta,
@@ -273,13 +300,14 @@ h3 {
 .monogram-frame {
   position: relative;
   display: grid;
-  width: clamp(260px, 30vw, 390px);
-  aspect-ratio: 4 / 5;
+  width: clamp(270px, 29vw, 380px);
+  aspect-ratio: 1;
   place-items: center;
   overflow: hidden;
   color: var(--white);
   background: var(--navy);
-  border-radius: 44% 44% 1.5rem 1.5rem;
+  border: 1px solid rgb(255 255 255 / 0.12);
+  border-radius: 50%;
   box-shadow: 0 24px 50px rgb(10 22 36 / 0.14);
 }
 
@@ -574,12 +602,15 @@ h3 {
 
 .ai-grid {
   display: grid;
+  min-width: 0;
   align-items: center;
   grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
   gap: clamp(3rem, 8vw, 7rem);
 }
 
 .ai-artwork {
+  min-width: 0;
+  max-width: 100%;
   margin: 0;
   overflow: hidden;
   background: var(--white);
@@ -590,11 +621,13 @@ h3 {
 
 .ai-artwork img {
   display: block;
+  max-width: 100%;
   width: 100%;
   height: auto;
 }
 
 .ai-copy {
+  min-width: 0;
   max-width: 58ch;
 }
 
@@ -730,9 +763,7 @@ h3 {
   }
 
   .monogram-frame {
-    width: min(72vw, 360px);
-    aspect-ratio: 5 / 4;
-    border-radius: 50% 50% 1.5rem 1.5rem;
+    width: min(62vw, 340px);
   }
 
   .section-intro,
@@ -832,8 +863,18 @@ h3 {
   }
 
   .monogram-frame {
-    width: 100%;
-    max-width: 330px;
+    width: min(68vw, 260px);
+  }
+
+  .ai-grid {
+    gap: 2.75rem;
+  }
+
+  .ai-artwork {
+    width: min(88%, 20rem);
+    justify-self: center;
+    border-radius: 1rem;
+    box-shadow: 0 16px 34px rgb(10 22 36 / 0.1);
   }
 
   .alignment-path {
