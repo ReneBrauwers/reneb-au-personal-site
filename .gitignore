@@ -1,0 +1,24 @@
+.env
+.env.*
+!.env.example
+artifacts/
+node_modules/
+*.log
+*.bak
+*.old
+Thumbs.db
+.DS_Store
+
+# Local creation pack (not part of the public website source)
+/AGENTS.md
+/agent.md
+/brand-data.json
+/BUILD_PROMPT.md
+/CONTENT.md
+/DECISIONS.md
+/DESIGN.md
+/PRIVACY.md
+/QA.md
+/REQUIREMENTS.md
+/RESEARCH.md
+/SEO.md

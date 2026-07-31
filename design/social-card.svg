@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#0A1624"/>
+  <circle cx="1070" cy="-20" r="280" fill="none" stroke="#27435C" stroke-width="2"/>
+  <circle cx="1070" cy="-20" r="205" fill="none" stroke="#27435C" stroke-width="2"/>
+  <polygon points="670,450 788,379 793,389 671,458" fill="#C86632"/>
+  <polygon points="790,379 914,416 911,427 788,389" fill="#C86632"/>
+  <polygon points="911,416 1030,413 1030,423 911,427" fill="#C86632"/>
+  <polygon points="1028,413 1143,360 1148,370 1032,423" fill="#C86632"/>
+  <polygon points="670,489 810,440 811,444 671,493" fill="#6E8292"/>
+  <polygon points="810,440 955,472 954,476 810,444" fill="#6E8292"/>
+  <polygon points="954,472 1060,453 1061,457 955,476" fill="#6E8292"/>
+  <polygon points="1060,453 1170,437 1171,441 1061,457" fill="#6E8292"/>
+  <circle cx="670" cy="454" r="11" fill="#C86632"/>
+  <circle cx="912" cy="421" r="11" fill="#F7F9FA"/>
+  <circle cx="1145" cy="365" r="11" fill="#C86632"/>
+  <text x="72" y="92" fill="#EEA57D" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700" letter-spacing="3">RENÉ BRAUWERS</text>
+  <text x="72" y="205" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="67" font-weight="700">Better technology</text>
+  <text x="72" y="284" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="67" font-weight="700">decisions.</text>
+  <text x="72" y="373" fill="#AFC0CC" font-family="Arial, Helvetica, sans-serif" font-size="53" font-weight="500">Stronger business outcomes.</text>
+  <text x="72" y="520" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700">Business</text>
+  <text x="206" y="520" fill="#6E8292" font-family="Arial, Helvetica, sans-serif" font-size="21">↔</text>
+  <text x="250" y="520" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700">Architecture</text>
+  <text x="408" y="520" fill="#6E8292" font-family="Arial, Helvetica, sans-serif" font-size="21">↔</text>
+  <text x="452" y="520" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700">Engineering</text>
+  <text x="72" y="578" fill="#AFC0CC" font-family="Arial, Helvetica, sans-serif" font-size="22">reneb.au</text>
+  <g transform="translate(972 460)">
+    <rect width="145" height="108" rx="22" fill="#102A43" stroke="#526779"/>
+    <text x="72.5" y="70" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="47" font-weight="700" text-anchor="middle">RB</text>
+  </g>
+</svg>

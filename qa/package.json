@@ -1,0 +1,18 @@
+{
+  "name": "reneb-au-site-qa",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "validate": "node validate.mjs",
+    "lighthouse": "node lighthouse.mjs",
+    "html": "node html-validate.mjs",
+    "css": "node css-validate.mjs"
+  },
+  "dependencies": {
+    "@axe-core/playwright": "4.10.2",
+    "html-validate": "9.7.1",
+    "lighthouse": "12.8.2",
+    "playwright": "1.55.0",
+    "postcss": "8.5.6"
+  }
+}
