@@ -1,0 +1,45 @@
+name: reneb-au-personal-site
+
+services:
+  web:
+    image: reneb-au-personal-site:${IMAGE_TAG:-local}
+    build:
+      context: .
+    ports:
+      - "${SITE_BIND_ADDRESS:-127.0.0.1}:${SITE_PORT:-8091}:8080"
+    restart: unless-stopped
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp:size=16m,mode=1777,nosuid,nodev
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+
+  qa:
+    profiles: ["qa"]
+    build:
+      context: ./qa
+    depends_on:
+      web:
+        condition: service_healthy
+    environment:
+      QA_BASE_URL: http://web:8080
+      QA_OUTPUT_DIR: /work/artifacts/local
+    volumes:
+      - ./artifacts:/work/artifacts
+      - ./site:/work/site:ro
+    init: true
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp:size=256m,mode=1777,nosuid,nodev

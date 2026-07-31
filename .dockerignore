@@ -1,0 +1,9 @@
+.git
+.github
+.env
+.env.*
+artifacts
+design
+qa
+*.md
+!README.md
