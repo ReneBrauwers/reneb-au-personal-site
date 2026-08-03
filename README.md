@@ -42,6 +42,8 @@ nginx/             Production web-server configuration
 design/            Source artwork for the social card
 qa/                Docker-only validation and browser checks
 deploy/            Pull-only production Compose manifest and runbook
+AGENTS.md           AI-agent entry point and repository workflow
+agent.md + *.md     Content, design, privacy, SEO and QA source of truth
 Dockerfile         Pinned non-root production image
 compose.yaml       Local preview and QA service definition
 ```
