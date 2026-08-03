@@ -1,0 +1,103 @@
+{
+  "schemaVersion": "1.0",
+  "researchDate": "2026-07-31",
+  "locale": "en-AU",
+  "site": {
+    "domain": "https://reneb.au/",
+    "type": "one-page-static-personal-brand-site",
+    "language": "English",
+    "primaryAction": "Connect on LinkedIn"
+  },
+  "identity": {
+    "displayName": "René Brauwers",
+    "asciiName": "Rene Brauwers",
+    "location": "Sydney, Australia",
+    "role": "Head of Enterprise Architecture",
+    "employer": "Perpetual Corporate Trust",
+    "sector": "Regulated financial services"
+  },
+  "positioning": {
+    "primary": "Business-first technology advisor and enterprise architecture leader",
+    "promise": "Helping Business and Engineering make better technology decisions that deliver sustainable business outcomes",
+    "motif": [
+      "Business",
+      "Architecture",
+      "Engineering"
+    ],
+    "traits": [
+      "direct",
+      "credible",
+      "practical",
+      "calm",
+      "experienced",
+      "hands-on",
+      "opinionated without being combative"
+    ]
+  },
+  "links": {
+    "linkedin": "https://www.linkedin.com/in/renebrauwers/",
+    "x": "https://x.com/Rene_B",
+    "xHandle": "@Rene_B"
+  },
+  "approvedCurrentClaims": [
+    "René leads Enterprise Architecture at Perpetual Corporate Trust.",
+    "He works across Business, Engineering, Product, Data, Security and Risk.",
+    "His professional context is regulated financial services in Sydney.",
+    "His focus is helping Business and Engineering make better technology decisions."
+  ],
+  "approvedHistoricalClaims": [
+    "Earlier in his career, René was recognised as a Microsoft Azure MVP.",
+    "He contributed through technical writing, book reviews and community sessions.",
+    "His professional foundation includes software, enterprise integration, automation and cloud."
+  ],
+  "claimsRequiringConfirmation": [
+    "Exact total years of experience",
+    "Exact MVP category, award years or award count",
+    "Exact number of books reviewed",
+    "Current speaking availability",
+    "Public contact email",
+    "Named current or former client outcomes"
+  ],
+  "publicationExclusions": [
+    "precise residence",
+    "date of birth or age",
+    "family information",
+    "citizenship or nationality matters",
+    "financial information",
+    "health information",
+    "travel plans",
+    "internal employer projects",
+    "internal stakeholders",
+    "private infrastructure or repositories",
+    "historical email addresses"
+  ],
+  "copy": {
+    "heroEyebrow": "Sydney · Enterprise technology · Regulated financial services",
+    "heroHeading": "Better technology decisions. Stronger business outcomes.",
+    "heroIntroduction": "I’m René Brauwers, a business-first technology advisor and enterprise architecture leader. I help Business and Engineering turn strategy, risk and complexity into practical decisions that teams can execute.",
+    "valueHeading": "Clarity where strategy, risk and delivery meet.",
+    "perspectiveHeading": "Architecture is useful when it improves the decision.",
+    "aboutHeading": "From building systems to shaping enterprise decisions.",
+    "closingHeading": "Working through a difficult technology decision?"
+  },
+  "designTokens": {
+    "ink": "#0A1624",
+    "navy": "#102A43",
+    "slate": "#526779",
+    "line": "#CBD6DE",
+    "mist": "#EAF0F4",
+    "paper": "#F7F9FA",
+    "white": "#FFFFFF",
+    "warm": "#C86632",
+    "warmSoft": "#F0D8CA",
+    "focus": "#0A6FC2"
+  },
+  "privacyDefaults": {
+    "analytics": false,
+    "cookies": false,
+    "contactForm": false,
+    "publicEmail": null,
+    "socialEmbeds": false,
+    "scrapeProfileImages": false
+  }
+}
