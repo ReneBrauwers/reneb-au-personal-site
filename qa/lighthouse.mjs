@@ -45,12 +45,21 @@ if (!chromeReady) {
 }
 
 try {
+  const isHttpsTarget = new URL(`${baseUrl}/`).protocol === "https:";
+  const config = {
+    extends: "lighthouse:default",
+    settings: {
+      onlyCategories: ["performance", "accessibility", "best-practices", "seo"],
+      // TLS and HTTP-to-HTTPS redirects belong to the external edge, not the
+      // local HTTP-only validation container. Keep those audits for live runs.
+      skipAudits: isHttpsTarget ? [] : ["is-on-https", "redirects-http"]
+    }
+  };
   const run = await lighthouse(`${baseUrl}/`, {
     port,
     output: "json",
-    logLevel: "error",
-    onlyCategories: ["performance", "accessibility", "best-practices", "seo"]
-  });
+    logLevel: "error"
+  }, config);
 
   const lhr = run.lhr;
   const scores = Object.fromEntries(Object.entries(lhr.categories).map(([key, category]) => [key, Math.round(category.score * 100)]));

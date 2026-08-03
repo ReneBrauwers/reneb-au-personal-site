@@ -1,0 +1,22 @@
+name: reneb-au-personal-site
+
+services:
+  web:
+    image: ${RENEB_AU_IMAGE:-ghcr.io/renebrauwers/reneb-au-personal-site:latest}
+    pull_policy: always
+    ports:
+      - "${SITE_BIND_ADDRESS:-127.0.0.1}:${SITE_PORT:-8091}:8080"
+    restart: unless-stopped
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp:size=16m,mode=1777,nosuid,nodev
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3

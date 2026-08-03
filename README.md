@@ -41,13 +41,18 @@ site/              Deployable static website
 nginx/             Production web-server configuration
 design/            Source artwork for the social card
 qa/                Docker-only validation and browser checks
+deploy/            Pull-only production Compose manifest and runbook
 Dockerfile         Pinned non-root production image
-compose.yaml       Local preview, QA and deployment service definition
+compose.yaml       Local preview and QA service definition
 ```
 
 ## Deployment approach
 
-Production is built from the committed `main` branch with Docker Compose. The container publishes only to an explicitly configured host interface, and the existing edge reverse proxy owns public HTTP, HTTPS, TLS and canonical-host redirects. Environment-specific addresses are set on the deployment host and are never committed.
+GitHub Actions validates `main`, builds the production container and publishes private `latest` and immutable `sha-*` tags to GHCR. Production holds only the pull-only Compose manifest and its host-specific `.env`; it does not contain a repository checkout, source files or build scripts.
+
+The production manifest uses `pull_policy: always`, so each deployment checks GHCR for the newest selected image. `RENEB_AU_IMAGE` defaults to `ghcr.io/renebrauwers/reneb-au-personal-site:latest` and can be changed to an immutable tag or digest for a deliberate pin or rollback. See [`deploy/README.md`](deploy/README.md) for the operator workflow.
+
+The container publishes only to an explicitly configured host interface, and the existing edge reverse proxy owns public HTTP, HTTPS, TLS and canonical-host redirects. Environment-specific addresses and registry credentials are never committed.
 
 Unknown paths return a real `404`; `/index.html` permanently redirects to the canonical `/` path.
 
