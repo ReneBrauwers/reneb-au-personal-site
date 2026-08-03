@@ -93,7 +93,15 @@
     "focus": "#0A6FC2"
   },
   "privacyDefaults": {
-    "analytics": false,
+    "analytics": true,
+    "analyticsProvider": "self-hosted Umami",
+    "analyticsHost": "https://stats.reneb.au",
+    "analyticsWebsiteId": "55c627ba-826f-4472-9479-f1279071488c",
+    "analyticsLocationResolution": [
+      "country",
+      "region",
+      "city"
+    ],
     "cookies": false,
     "contactForm": false,
     "publicEmail": null,

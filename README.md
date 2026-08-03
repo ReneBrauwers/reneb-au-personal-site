@@ -2,7 +2,7 @@
 
 The production source for [reneb.au](https://reneb.au/), René Brauwers' one-page personal website. It is a lightweight static site built with semantic HTML and CSS, served from a hardened non-root Nginx container.
 
-The site deliberately has no analytics, cookies, form, CMS, frontend framework, remote fonts or client-side JavaScript.
+The site deliberately has no cookies, form, CMS, frontend framework, remote fonts or application JavaScript. Its only client-side script is the cookieless, self-hosted Umami tracker at `stats.reneb.au`, restricted to this domain.
 
 ## Docker development
 
@@ -30,7 +30,7 @@ docker compose --profile qa run --rm qa npm run validate
 docker compose --profile qa run --rm qa npm run lighthouse
 ```
 
-The browser suite covers the required responsive viewports, accessibility, keyboard navigation, reduced motion, forced colours, JavaScript-disabled behaviour, metadata, assets, security headers and real 404 handling. Screenshots and machine-readable results are written beneath `artifacts/`, which is intentionally ignored by Git.
+The browser suite covers the required responsive viewports, accessibility, keyboard navigation, reduced motion, forced colours, JavaScript-disabled behaviour, the approved analytics contract, metadata, assets, security headers and real 404 handling. Screenshots and machine-readable results are written beneath `artifacts/`, which is intentionally ignored by Git.
 
 For final HTTPS checks, override `QA_BASE_URL` with the public URL when running the QA container.
 
@@ -60,4 +60,4 @@ Unknown paths return a real `404`; `/index.html` permanently redirects to the ca
 
 ## Content and privacy
 
-The site publishes only approved professional information and links to René's LinkedIn and X profiles. It contains no public email address, employer branding, private infrastructure information, tracking or third-party embeds.
+The site publishes only approved professional information and links to René's LinkedIn and X profiles. It contains no public email address, employer branding, private infrastructure information or third-party embeds. Self-hosted Umami collects aggregate visits plus approximate country, region and city without cookies or advertising identifiers; the raw visitor IP address is not stored in its PostgreSQL schema.

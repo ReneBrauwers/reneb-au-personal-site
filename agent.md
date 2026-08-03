@@ -87,7 +87,7 @@ Do not add a framework, package manager or build step for a page that does not n
 - Keep the primary CTA visible without scrolling at common desktop sizes.
 - Use the exact verified links from `DECISIONS.md`.
 - Open external profile links in the same tab by default. If a new tab is used, disclose it accessibly and add `rel="noopener noreferrer"`.
-- Do not load trackers, analytics, tag managers, advertising, chat widgets or cookie banners.
+- Load only the approved cookieless Umami tracker from `https://stats.reneb.au/script.js`, restricted to `reneb.au` with website ID `55c627ba-826f-4472-9479-f1279071488c`. Do not add any other analytics, tag managers, advertising, chat widgets, tracking pixels or cookie banners.
 - Do not add a contact form. There is no approved form endpoint or public email address.
 - Do not add a blog, navigation drawer, résumé download, client logo wall, skills meter, testimonial carousel, animated cursor or fake terminal.
 - Do not use vendor logos or turn the page into a product stack.

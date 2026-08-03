@@ -5,6 +5,8 @@ import AxeBuilder from "@axe-core/playwright";
 
 const baseUrl = (process.env.QA_BASE_URL || "http://web:8080").replace(/\/$/, "");
 const outputDir = process.env.QA_OUTPUT_DIR || "/work/artifacts/local";
+const analyticsUrl = "https://stats.reneb.au/script.js";
+const analyticsWebsiteId = "55c627ba-826f-4472-9479-f1279071488c";
 
 const viewports = [
   { name: "320x568", width: 320, height: 568 },
@@ -90,6 +92,12 @@ for (const viewport of viewports) {
     eyebrowFontSize: Number.parseFloat(getComputedStyle(document.querySelector(".eyebrow")).fontSize),
     wordmark: document.querySelector(".brand-copy strong")?.textContent.trim(),
     bodyText: document.body.innerText,
+    analyticsScripts: [...document.querySelectorAll('script[src^="https://stats.reneb.au/"]')].map(script => ({
+      src: script.src,
+      websiteId: script.dataset.websiteId,
+      domains: script.dataset.domains,
+      defer: script.defer
+    })),
     targets: [...document.querySelectorAll(".brand-home,.header-link,.header-cta,.button,.text-link,.site-footer a")]
       .filter(element => {
         const style = getComputedStyle(element);
@@ -107,6 +115,12 @@ for (const viewport of viewports) {
   check(metrics.bodyText.includes("Head of Enterprise Architecture"), `${viewport.name}: current role is missing`);
   check(metrics.bodyText.includes("Perpetual Corporate Trust"), `${viewport.name}: employer is missing`);
   check(metrics.bodyText.includes("Yes, this website was coded by AI."), `${viewport.name}: AI transparency statement is missing`);
+  check(metrics.bodyText.includes("Cookieless, self-hosted analytics measure aggregate visits and approximate city/region."), `${viewport.name}: analytics privacy notice is missing`);
+  check(metrics.analyticsScripts.length === 1, `${viewport.name}: expected one approved analytics script, found ${metrics.analyticsScripts.length}`);
+  check(metrics.analyticsScripts[0]?.src === analyticsUrl, `${viewport.name}: analytics script URL is ${metrics.analyticsScripts[0]?.src}`);
+  check(metrics.analyticsScripts[0]?.websiteId === analyticsWebsiteId, `${viewport.name}: analytics website ID is ${metrics.analyticsScripts[0]?.websiteId}`);
+  check(metrics.analyticsScripts[0]?.domains === "reneb.au", `${viewport.name}: analytics domain restriction is ${metrics.analyticsScripts[0]?.domains}`);
+  check(metrics.analyticsScripts[0]?.defer === true, `${viewport.name}: analytics script is not deferred`);
   check(metrics.bodyFontSize >= 18, `${viewport.name}: body text is ${metrics.bodyFontSize}px`);
   check(metrics.heroIntroFontSize >= 18, `${viewport.name}: hero introduction is ${metrics.heroIntroFontSize}px`);
   check(metrics.eyebrowFontSize >= 13, `${viewport.name}: eyebrow text is ${metrics.eyebrowFontSize}px`);
@@ -226,7 +240,10 @@ for (const viewport of viewports) {
 
   const home = await request.request.get(`${baseUrl}/`);
   const headers = home.headers();
-  check(Boolean(headers["content-security-policy"]), "Content-Security-Policy header missing");
+  const contentSecurityPolicy = headers["content-security-policy"] || "";
+  check(Boolean(contentSecurityPolicy), "Content-Security-Policy header missing");
+  check(contentSecurityPolicy.includes("script-src 'self' https://stats.reneb.au"), "CSP does not allow only the approved analytics script origin");
+  check(contentSecurityPolicy.includes("connect-src 'self' https://stats.reneb.au"), "CSP does not allow analytics collection at the approved origin");
   check(headers["x-content-type-options"] === "nosniff", "X-Content-Type-Options header missing or incorrect");
   check(Boolean(headers["permissions-policy"]), "Permissions-Policy header missing");
   check(headers["referrer-policy"] === "strict-origin-when-cross-origin", "Referrer-Policy header missing or incorrect");

@@ -31,7 +31,9 @@ Search the entire production output, including assets and source:
 - [ ] No scraped social profile image is present.
 - [ ] Image metadata has been stripped.
 - [ ] No source map or comment exposes private information.
-- [ ] No analytics or tracking identifier exists.
+- [ ] The only analytics identifier is the approved Umami website ID `55c627ba-826f-4472-9479-f1279071488c` on `https://stats.reneb.au/script.js`.
+- [ ] The tracker is restricted to `reneb.au`, deferred, cookieless and covered by the visible analytics notice.
+- [ ] No other analytics host, pixel, tag manager, advertising identifier or browser-stored identifier exists.
 
 ## 3. Visual review
 
@@ -100,6 +102,9 @@ Also inspect:
 - [ ] HTML validates without material errors.
 - [ ] CSS parses without material errors.
 - [ ] Browser console has no errors or failed requests.
+- [ ] The approved Umami script loads over HTTPS and a production page view reaches `stats.reneb.au`.
+- [ ] The CSP allows `stats.reneb.au` only for `script-src` and `connect-src`; no broad wildcard is introduced.
+- [ ] A production session records approximate country, region and city from Cloudflare headers without storing a raw IP address.
 - [ ] No mixed-content request.
 - [ ] No local absolute filesystem path.
 - [ ] No development hostname.

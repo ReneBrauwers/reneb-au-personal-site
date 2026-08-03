@@ -100,16 +100,20 @@ Until René approves a dedicated public email:
 
 ## Analytics
 
-Default: no analytics.
+Approved implementation: self-hosted Umami at `https://stats.reneb.au`.
 
-If analytics are later requested, the implementation must be:
+The implementation must remain:
 
 - privacy-preserving;
-- cookieless where possible;
+- cookieless and free of browser identifiers stored by the site;
 - documented;
 - limited to aggregate page performance and usage;
 - free of cross-site advertising identifiers; and
-- accompanied by an appropriate privacy notice when required.
+- accompanied by a concise visible privacy notice.
+
+Cloudflare supplies approximate country, region and city headers to Umami. Umami uses the requesting IP address transiently to derive a rotating session identifier and location, but the raw IP address is not stored in the PostgreSQL analytics schema. Do not enable fingerprinting, advertising integrations, session replay or custom event payloads containing personal information.
+
+The only approved production tracker is `https://stats.reneb.au/script.js`, restricted to `reneb.au` with website ID `55c627ba-826f-4472-9479-f1279071488c`. Any other analytics host, identifier or collection purpose requires a fresh privacy review.
 
 ## Research hygiene
 
@@ -136,6 +140,6 @@ Before release, search the full production output for:
 - EXIF metadata;
 - source-map files;
 - private comments; and
-- placeholder analytics IDs.
+- unapproved or placeholder analytics IDs.
 
 Any unexpected match must be resolved before deployment.
