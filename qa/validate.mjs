@@ -222,6 +222,7 @@ for (const viewport of viewports) {
   check(missing.status() === 404, `Unknown path returned ${missing.status()}`);
   const index = await request.request.get(`${baseUrl}/index.html`, { maxRedirects: 0 });
   check([301, 308].includes(index.status()), `/index.html returned ${index.status()}`);
+  check(index.headers().location === "/", `/index.html redirected to ${index.headers().location || "no location"} instead of /`);
 
   const home = await request.request.get(`${baseUrl}/`);
   const headers = home.headers();
