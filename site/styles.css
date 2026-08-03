@@ -756,8 +756,15 @@ blockquote footer {
   font-size: 0.86rem;
 }
 
-.footer-inner > p {
+.footer-notice {
   text-align: center;
+}
+
+.footer-notice p + p {
+  margin-top: 0.35rem;
+  color: #91a3b0;
+  font-size: 0.78rem;
+  line-height: 1.45;
 }
 
 .footer-inner nav {
@@ -1018,7 +1025,7 @@ blockquote footer {
     text-align: center;
   }
 
-  .footer-inner > p {
+  .footer-notice {
     text-align: center;
   }
 

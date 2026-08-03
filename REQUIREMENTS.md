@@ -14,6 +14,7 @@ Version one includes:
 - favicon;
 - SEO metadata and structured data;
 - accessible motion and interaction;
+- approved self-hosted, cookieless Umami analytics;
 - `robots.txt`; and
 - `sitemap.xml`.
 
@@ -23,11 +24,10 @@ Version one excludes:
 - blog;
 - contact form;
 - authentication;
-- analytics;
 - cookie consent;
 - live social feeds;
 - third-party embeds;
-- API calls;
+- application API calls or server-side runtime;
 - downloadable CV;
 - newsletter;
 - calendar booking;
@@ -138,8 +138,11 @@ Implementation guidance:
 
 ## Privacy and security
 
-- No cookies or local storage
-- No analytics or pixels
+- Do not set cookies or local storage
+- Only the approved Umami tracker at `https://stats.reneb.au/script.js`, using website ID `55c627ba-826f-4472-9479-f1279071488c` and `data-domains="reneb.au"`
+- No pixels, advertising identifiers, tag managers or other analytics providers
+- Limit analytics to aggregate usage and approximate country/region/city resolution
+- Include a concise visible analytics notice
 - No third-party embeds
 - No live social widgets
 - Add `referrerpolicy="strict-origin-when-cross-origin"` where appropriate

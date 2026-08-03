@@ -100,9 +100,10 @@ Do not state exact MVP years or award counts without fresh confirmation.
 ## Behaviour and privacy
 
 - Static and fast
-- No analytics by default
+- Self-hosted, cookieless Umami analytics at `stats.reneb.au`, limited to aggregate usage and approximate country/region/city
 - No cookies
 - No tracking pixels
+- No advertising identifiers or third-party analytics
 - No automatic X or LinkedIn embeds
 - No personal details beyond the approved professional facts
 
@@ -111,7 +112,6 @@ Do not state exact MVP years or award counts without fresh confirmation.
 - Short “notes” or writing section under a separate path
 - Downloadable vCard after contact details are explicitly approved
 - Speaking or publications archive
-- Privacy-preserving analytics
 - Dark/light theme toggle
 - Dutch-language version
 
