@@ -1,30 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
-  <rect width="1200" height="630" fill="#0A1624"/>
-  <circle cx="1070" cy="-20" r="280" fill="none" stroke="#27435C" stroke-width="2"/>
-  <circle cx="1070" cy="-20" r="205" fill="none" stroke="#27435C" stroke-width="2"/>
-  <polygon points="670,450 788,379 793,389 671,458" fill="#C86632"/>
-  <polygon points="790,379 914,416 911,427 788,389" fill="#C86632"/>
-  <polygon points="911,416 1030,413 1030,423 911,427" fill="#C86632"/>
-  <polygon points="1028,413 1143,360 1148,370 1032,423" fill="#C86632"/>
-  <polygon points="670,489 810,440 811,444 671,493" fill="#6E8292"/>
-  <polygon points="810,440 955,472 954,476 810,444" fill="#6E8292"/>
-  <polygon points="954,472 1060,453 1061,457 955,476" fill="#6E8292"/>
-  <polygon points="1060,453 1170,437 1171,441 1061,457" fill="#6E8292"/>
-  <circle cx="670" cy="454" r="11" fill="#C86632"/>
-  <circle cx="912" cy="421" r="11" fill="#F7F9FA"/>
-  <circle cx="1145" cy="365" r="11" fill="#C86632"/>
-  <text x="72" y="92" fill="#EEA57D" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700" letter-spacing="3">RENÉ BRAUWERS</text>
-  <text x="72" y="205" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="67" font-weight="700">Better technology</text>
-  <text x="72" y="284" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="67" font-weight="700">decisions.</text>
-  <text x="72" y="373" fill="#AFC0CC" font-family="Arial, Helvetica, sans-serif" font-size="53" font-weight="500">Stronger business outcomes.</text>
-  <text x="72" y="520" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700">Business</text>
-  <text x="206" y="520" fill="#6E8292" font-family="Arial, Helvetica, sans-serif" font-size="21">↔</text>
-  <text x="250" y="520" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700">Architecture</text>
-  <text x="408" y="520" fill="#6E8292" font-family="Arial, Helvetica, sans-serif" font-size="21">↔</text>
-  <text x="452" y="520" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700">Engineering</text>
-  <text x="72" y="578" fill="#AFC0CC" font-family="Arial, Helvetica, sans-serif" font-size="22">reneb.au</text>
-  <g transform="translate(972 460)">
-    <rect width="145" height="108" rx="22" fill="#102A43" stroke="#526779"/>
-    <text x="72.5" y="70" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="47" font-weight="700" text-anchor="middle">RB</text>
-  </g>
+  <rect width="1200" height="630" fill="#F7F5F0"/>
+  <rect x="42" y="42" width="1116" height="546" fill="none" stroke="#0A1624" stroke-width="2"/>
+  <circle cx="88" cy="91" r="11" fill="#C86632"/>
+  <text x="116" y="101" fill="#0A1624" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="700">René Brauwers</text>
+  <text x="80" y="177" fill="#A84419" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" letter-spacing="3">DECISION BRIEF — 01</text>
+  <text x="80" y="286" fill="#0A1624" font-family="Arial, Helvetica, sans-serif" font-size="60" font-weight="700">Protect the outcome.</text>
+  <text x="80" y="359" fill="#344B5E" font-family="Arial, Helvetica, sans-serif" font-size="52" font-weight="700">Make the trade-offs visible.</text>
+  <text x="80" y="492" fill="#526779" font-family="Arial, Helvetica, sans-serif" font-size="22">Head of Enterprise Architecture · Sydney, Australia</text>
+  <text x="80" y="543" fill="#0A1624" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700">reneb.au</text>
+
+  <line x1="820" y1="150" x2="1100" y2="150" stroke="#CBD6DE" stroke-width="2"/>
+  <line x1="820" y1="150" x2="820" y2="515" stroke="#CBD6DE" stroke-width="2"/>
+  <circle cx="820" cy="150" r="8" fill="#0A1624"/>
+  <circle cx="955" cy="310" r="34" fill="#F7F5F0" stroke="#0A1624" stroke-width="2"/>
+  <circle cx="1095" cy="468" r="34" fill="#F7F5F0" stroke="#0A1624" stroke-width="2"/>
+  <path d="M820 150 L955 310 L1095 468" fill="none" stroke="#C86632" stroke-width="4"/>
+  <text x="955" y="318" fill="#A84419" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" text-anchor="middle">02</text>
+  <text x="1095" y="476" fill="#A84419" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" text-anchor="middle">03</text>
+  <text x="848" y="196" fill="#526779" font-family="Arial, Helvetica, sans-serif" font-size="18">Business</text>
+  <text x="866" y="292" fill="#526779" font-family="Arial, Helvetica, sans-serif" font-size="18">Architecture</text>
+  <text x="957" y="439" fill="#526779" font-family="Arial, Helvetica, sans-serif" font-size="18">Engineering</text>
 </svg>

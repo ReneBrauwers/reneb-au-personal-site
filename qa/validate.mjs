@@ -47,23 +47,21 @@ for (const viewport of viewports) {
   check(response?.status() === 200, `${viewport.name}: homepage returned ${response?.status()}`);
   await page.evaluate(() => document.fonts?.ready);
 
-  const aiArtwork = page.locator(".ai-artwork img");
-  check(await aiArtwork.getAttribute("loading") === "lazy", `${viewport.name}: AI artwork is not lazy-loaded`);
-  await aiArtwork.evaluate(image => {
-    image.loading = "eager";
-  });
+  const heroArtwork = page.locator(".hero-portrait img");
+  check(await heroArtwork.getAttribute("loading") !== "lazy", `${viewport.name}: hero artwork is lazy-loaded`);
+  check(await heroArtwork.getAttribute("fetchpriority") === "high", `${viewport.name}: hero artwork fetch priority is not high`);
   await page.waitForFunction(() => {
-    const image = document.querySelector(".ai-artwork img");
+    const image = document.querySelector(".hero-portrait img");
     return image?.complete && image.naturalWidth > 0;
   });
-  const aiImage = await aiArtwork.evaluate(image => ({
+  const heroImage = await heroArtwork.evaluate(image => ({
     naturalWidth: image.naturalWidth,
     naturalHeight: image.naturalHeight,
     alt: image.alt
   }));
-  check(aiImage.naturalWidth === 1200 && aiImage.naturalHeight === 900, `${viewport.name}: AI artwork is ${aiImage.naturalWidth}x${aiImage.naturalHeight}`);
-  check(aiImage.alt.length > 0, `${viewport.name}: AI artwork alt text is empty`);
-  await aiArtwork.evaluate(image => image.decode());
+  check(heroImage.naturalWidth === 1200 && heroImage.naturalHeight === 900, `${viewport.name}: hero artwork is ${heroImage.naturalWidth}x${heroImage.naturalHeight}`);
+  check(heroImage.alt.length > 0, `${viewport.name}: hero artwork alt text is empty`);
+  await heroArtwork.evaluate(image => image.decode());
   await page.waitForTimeout(100);
   const captureOverlays = page.locator(".site-header, .skip-link");
   await captureOverlays.evaluateAll(elements => elements.forEach(element => {
@@ -87,7 +85,12 @@ for (const viewport of viewports) {
     linkedIn: [...document.querySelectorAll("a")].filter(link => link.textContent.includes("LinkedIn")).map(link => link.href),
     xLinks: [...document.querySelectorAll("a")].filter(link => link.href.includes("x.com/")).map(link => link.href),
     headings: [...document.querySelectorAll("h1,h2,h3")].map(heading => Number(heading.tagName.slice(1))),
-    targets: [...document.querySelectorAll(".brand-mark,.header-cta,.button,.text-link,.site-footer a")]
+    bodyFontSize: Number.parseFloat(getComputedStyle(document.body).fontSize),
+    heroIntroFontSize: Number.parseFloat(getComputedStyle(document.querySelector(".hero-intro")).fontSize),
+    eyebrowFontSize: Number.parseFloat(getComputedStyle(document.querySelector(".eyebrow")).fontSize),
+    wordmark: document.querySelector(".brand-copy strong")?.textContent.trim(),
+    bodyText: document.body.innerText,
+    targets: [...document.querySelectorAll(".brand-home,.header-link,.header-cta,.button,.text-link,.site-footer a")]
       .filter(element => {
         const style = getComputedStyle(element);
         const rect = element.getBoundingClientRect();
@@ -100,6 +103,13 @@ for (const viewport of viewports) {
   check(metrics.h1Count === 1, `${viewport.name}: expected one h1, found ${metrics.h1Count}`);
   check(metrics.lang === "en-AU", `${viewport.name}: lang is ${metrics.lang}`);
   check(metrics.canonical === "https://reneb.au/", `${viewport.name}: canonical is ${metrics.canonical}`);
+  check(metrics.wordmark === "René Brauwers", `${viewport.name}: wordmark is '${metrics.wordmark}'`);
+  check(metrics.bodyText.includes("Head of Enterprise Architecture"), `${viewport.name}: current role is missing`);
+  check(metrics.bodyText.includes("Perpetual Corporate Trust"), `${viewport.name}: employer is missing`);
+  check(metrics.bodyText.includes("Yes, this website was coded by AI."), `${viewport.name}: AI transparency statement is missing`);
+  check(metrics.bodyFontSize >= 18, `${viewport.name}: body text is ${metrics.bodyFontSize}px`);
+  check(metrics.heroIntroFontSize >= 18, `${viewport.name}: hero introduction is ${metrics.heroIntroFontSize}px`);
+  check(metrics.eyebrowFontSize >= 13, `${viewport.name}: eyebrow text is ${metrics.eyebrowFontSize}px`);
   check(metrics.linkedIn.length >= 1 && metrics.linkedIn.every(url => url === "https://www.linkedin.com/in/renebrauwers/"), `${viewport.name}: LinkedIn URL mismatch`);
   check(metrics.xLinks.length >= 1 && metrics.xLinks.every(url => url === "https://x.com/Rene_B"), `${viewport.name}: X URL mismatch`);
   check(metrics.headings.every((level, index, levels) => index === 0 || level <= levels[index - 1] + 1), `${viewport.name}: heading level skipped`);
@@ -117,7 +127,15 @@ for (const viewport of viewports) {
     `${viewport.name}: axe serious/critical: ${seriousAxe.map(violation => `${violation.id} [${violation.nodes.map(node => node.target.join(" ")).join(", ")}]`).join("; ")}`
   );
 
+  await page.evaluate(() => scrollTo(0, 0));
+  await page.waitForTimeout(50);
+  await page.locator(".skip-link").evaluate(element => {
+    element.hidden = true;
+  });
   await page.screenshot({ path: path.join(outputDir, `${viewport.name}.png`), fullPage: true });
+  await page.locator(".skip-link").evaluate(element => {
+    element.hidden = false;
+  });
   results.push({ viewport: viewport.name, axeViolations: axe.violations.length, consoleErrors: consoleErrors.length, failedRequests: failedRequests.length });
   await context.close();
 }
@@ -129,11 +147,8 @@ for (const viewport of viewports) {
   check(response?.status() === 200, `JavaScript-disabled homepage returned ${response?.status()}`);
   check(await page.locator("main").isVisible(), "JavaScript-disabled main content is not visible");
   check(await page.locator("a", { hasText: "Connect on LinkedIn" }).first().isVisible(), "JavaScript-disabled primary CTA is not visible");
-  await page.locator(".ai-artwork img").evaluate(image => {
-    image.loading = "eager";
-  });
   await page.waitForFunction(() => {
-    const image = document.querySelector(".ai-artwork img");
+    const image = document.querySelector(".hero-portrait img");
     return image?.complete && image.naturalWidth > 0;
   });
   await page.screenshot({ path: path.join(outputDir, "javascript-disabled-390x844.png"), fullPage: true });
@@ -239,9 +254,8 @@ for (const touchBrowserName of ["chromium", "webkit"]) {
   check(response?.status() === 200, `${touchBrowserName} touch: homepage returned ${response?.status()}`);
 
   const touchMetrics = await page.evaluate(() => {
-    const artwork = document.querySelector(".ai-artwork").getBoundingClientRect();
-    const monogram = document.querySelector(".monogram-frame").getBoundingClientRect();
-    const brand = document.querySelector(".brand-mark").getBoundingClientRect();
+    const portrait = document.querySelector(".hero-portrait").getBoundingClientRect();
+    const brand = document.querySelector(".brand-home").getBoundingClientRect();
     return {
       clientWidth: document.documentElement.clientWidth,
       scrollWidth: document.documentElement.scrollWidth,
@@ -250,13 +264,13 @@ for (const touchBrowserName of ["chromium", "webkit"]) {
       bodyOverflowX: getComputedStyle(document.body).overflowX,
       rootOverscrollX: getComputedStyle(document.documentElement).overscrollBehaviorX,
       bodyOverscrollX: getComputedStyle(document.body).overscrollBehaviorX,
-      artworkWidth: artwork.width,
-      monogramWidth: monogram.width,
-      monogramHeight: monogram.height,
-      monogramRadius: getComputedStyle(document.querySelector(".monogram-frame")).borderRadius,
+      portraitLeft: portrait.left,
+      portraitRight: portrait.right,
+      portraitWidth: portrait.width,
       brandWidth: brand.width,
       brandHeight: brand.height,
-      brandRadius: getComputedStyle(document.querySelector(".brand-mark")).borderRadius
+      h1FontSize: Number.parseFloat(getComputedStyle(document.querySelector("h1")).fontSize),
+      heroIntroFontSize: Number.parseFloat(getComputedStyle(document.querySelector(".hero-intro")).fontSize)
     };
   });
 
@@ -276,16 +290,18 @@ for (const touchBrowserName of ["chromium", "webkit"]) {
   check(["hidden", "clip"].includes(touchMetrics.bodyOverflowX), `${touchBrowserName} touch: body overflow-x is ${touchMetrics.bodyOverflowX}`);
   check(touchMetrics.rootOverscrollX === "none" && touchMetrics.bodyOverscrollX === "none", `${touchBrowserName} touch: horizontal overscroll is ${touchMetrics.rootOverscrollX}/${touchMetrics.bodyOverscrollX}`);
   check(horizontalPosition.windowX === 0 && horizontalPosition.rootX === 0 && horizontalPosition.bodyX === 0, `${touchBrowserName} touch: horizontal position moved ${JSON.stringify(horizontalPosition)}`);
-  check(touchMetrics.artworkWidth <= touchMetrics.clientWidth * 0.82, `${touchBrowserName} touch: artwork is ${Math.round(touchMetrics.artworkWidth)}px in a ${touchMetrics.clientWidth}px viewport`);
-  check(Math.abs(touchMetrics.monogramWidth - touchMetrics.monogramHeight) <= 1 && touchMetrics.monogramRadius === "50%", `${touchBrowserName} touch: hero monogram is not circular`);
-  check(Math.abs(touchMetrics.brandWidth - touchMetrics.brandHeight) <= 1 && touchMetrics.brandRadius === "50%", `${touchBrowserName} touch: header monogram is not circular`);
+  check(touchMetrics.portraitLeft >= 0 && touchMetrics.portraitRight <= touchMetrics.clientWidth, `${touchBrowserName} touch: portrait escapes viewport ${touchMetrics.portraitLeft}/${touchMetrics.portraitRight}`);
+  check(touchMetrics.portraitWidth <= touchMetrics.clientWidth - 40, `${touchBrowserName} touch: portrait is ${Math.round(touchMetrics.portraitWidth)}px in a ${touchMetrics.clientWidth}px viewport`);
+  check(touchMetrics.brandWidth >= 44 && touchMetrics.brandHeight >= 44, `${touchBrowserName} touch: wordmark target is ${Math.round(touchMetrics.brandWidth)}x${Math.round(touchMetrics.brandHeight)}`);
+  check(touchMetrics.h1FontSize >= 40, `${touchBrowserName} touch: hero heading is ${touchMetrics.h1FontSize}px`);
+  check(touchMetrics.heroIntroFontSize >= 18, `${touchBrowserName} touch: hero introduction is ${touchMetrics.heroIntroFontSize}px`);
 
   if (touchBrowserName === "chromium") {
     const captureOverlays = page.locator(".site-header, .skip-link");
     await captureOverlays.evaluateAll(elements => elements.forEach(element => {
       element.hidden = true;
     }));
-    await page.locator(".hero-visual").screenshot({
+    await page.locator(".hero-portrait").screenshot({
       path: path.join(outputDir, `touch-${touchBrowserName}-hero-390x844.png`)
     });
     await captureOverlays.evaluateAll(elements => elements.forEach(element => {
