@@ -177,7 +177,7 @@ public sealed class IdentityFlowTests : IClassFixture<PortalFactory>
     }
 
     [Fact]
-    public async Task UnlistedDomainRequiresApprovalAfterMailboxVerification()
+    public async Task UnlistedNonDisposableDomainReceivesAccessAfterMailboxVerification()
     {
         var email = $"unknown-{Guid.NewGuid():N}@unlisted-search.example";
         using var client = CreateClient();
@@ -189,8 +189,8 @@ public sealed class IdentityFlowTests : IClassFixture<PortalFactory>
         var completion = await GetWithCsrfAsync(client, "/auth/complete");
         var response = await client.PostAsync("/auth/complete?handler=Token", Form(("__RequestVerificationToken", completion.Token), ("Token", magicLinkValue)));
 
-        Assert.Equal("/auth/pending", response.Headers.Location?.OriginalString);
-        Assert.Equal(RecruiterStatus.PendingApproval, (await database.FindRecruiterByEmailAsync(email))?.Status);
+        Assert.Equal("/portal", response.Headers.Location?.OriginalString);
+        Assert.Equal(RecruiterStatus.Active, (await database.FindRecruiterByEmailAsync(email))?.Status);
     }
 
     [Fact]

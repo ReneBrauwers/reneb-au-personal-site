@@ -8,7 +8,8 @@ services:
       ASPNETCORE_ENVIRONMENT: Production
       RECRUITER_PORTAL_ENABLED: ${RECRUITER_PORTAL_ENABLED:-false}
       ADMIN_EMAILS: ${ADMIN_EMAILS:?Set ADMIN_EMAILS in the host-owned .env}
-      TRUSTED_BUSINESS_DOMAINS: ${TRUSTED_BUSINESS_DOMAINS:-}
+      UNTRUSTED_EMAIL_DOMAINS: ${UNTRUSTED_EMAIL_DOMAINS:?Set the comma-separated domains that require administrator approval}
+      DISPOSABLE_EMAIL_DOMAINS: ${DISPOSABLE_EMAIL_DOMAINS:?Set the comma-separated disposable domains to reject}
       Portal__DataDirectory: /app/data
       Portal__BackupDirectory: /app/backups
       Portal__CanonicalBaseUrl: https://reneb.au
