@@ -4,7 +4,7 @@
   "locale": "en-AU",
   "site": {
     "domain": "https://reneb.au/",
-    "type": "one-page-static-personal-brand-site",
+    "type": "hybrid-personal-brand-and-recruiter-portal",
     "language": "English",
     "primaryAction": "Connect on LinkedIn"
   },
@@ -102,8 +102,12 @@
       "region",
       "city"
     ],
-    "cookies": false,
-    "contactForm": false,
+    "publicCookies": false,
+    "authenticatedEssentialCookies": true,
+    "publicContactForm": false,
+    "recruiterPortal": true,
+    "privateDataEncryptedAtRest": true,
+    "privatePageAnalytics": false,
     "publicEmail": null,
     "socialEmbeds": false,
     "scrapeProfileImages": false

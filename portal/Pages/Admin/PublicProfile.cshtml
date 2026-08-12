@@ -1,0 +1,53 @@
+@page "/admin/public-profile"
+@model ReneB.Portal.Pages.Admin.PublicProfileModel
+@{
+    ViewData["Title"] = "Edit public recruiter profile";
+}
+<div class="form-shell">
+  <form method="post" class="form-card">
+    <p class="section-eyebrow">Public discovery record</p>
+    <h1>Edit once. Publish everywhere.</h1>
+    <p>One item per line for list fields. Draft changes are private until published.</p>
+    @if (TempData["Status"] is string status) { <div class="notice notice-success"><p>@status</p></div> }
+    <div asp-validation-summary="ModelOnly"></div>
+    <div class="field"><label asp-for="Input.CandidateName"></label><input asp-for="Input.CandidateName"></div>
+    <div class="field"><label asp-for="Input.Headline"></label><input asp-for="Input.Headline"></div>
+    <div class="field"><label asp-for="Input.CurrentRole"></label><input asp-for="Input.CurrentRole"></div>
+    <div class="field"><label asp-for="Input.CurrentEmployer"></label><input asp-for="Input.CurrentEmployer"></div>
+    <div class="field"><label asp-for="Input.ProfessionalContext"></label><input asp-for="Input.ProfessionalContext"></div>
+    <div class="field"><label asp-for="Input.Summary"></label><textarea asp-for="Input.Summary"></textarea></div>
+    <div class="field"><label asp-for="Input.DemonstratedSignals"></label><textarea asp-for="Input.DemonstratedSignals"></textarea></div>
+    <div class="field"><label asp-for="Input.RolesOfInterest"></label><textarea asp-for="Input.RolesOfInterest"></textarea></div>
+    <div class="field"><label asp-for="Input.AreasOfInterest"></label><textarea asp-for="Input.AreasOfInterest"></textarea></div>
+    <div class="field"><label asp-for="Input.LocationPreferences"></label><textarea asp-for="Input.LocationPreferences"></textarea></div>
+    <div class="field"><label asp-for="Input.StrongFitSignals"></label><textarea asp-for="Input.StrongFitSignals"></textarea></div>
+    <div class="field"><label asp-for="Input.PoorFitSignals"></label><textarea asp-for="Input.PoorFitSignals"></textarea></div>
+    <div class="field"><label asp-for="Input.LastReviewed"></label><input asp-for="Input.LastReviewed" type="date"></div>
+    <div class="action-row">
+      <button class="button" type="submit" asp-page-handler="Save">Save draft</button>
+      <button class="button button-secondary" type="submit" asp-page-handler="Preview">Save and preview draft</button>
+      <button class="button button-secondary" type="submit" asp-page-handler="Publish">Publish draft</button>
+      <a class="button button-secondary" href="/recruiters">View published profile</a>
+    </div>
+  </form>
+</div>
+@if (Model.PreviewProfile is { } preview)
+{
+  <section class="content-section admin-preview" aria-labelledby="draft-preview-title">
+    <div class="portal-shell">
+      <p class="section-eyebrow">Private draft preview</p>
+      <h2 id="draft-preview-title">@preview.Headline</h2>
+      <p><strong>@preview.CandidateName</strong> · @preview.CurrentRole at @preview.CurrentEmployer · @preview.ProfessionalContext</p>
+      <p class="lead">@preview.Summary</p>
+      <div class="fit-grid">
+        <article class="fit-card"><h3>Demonstrated signals</h3><ul>@foreach (var item in preview.DemonstratedSignals) { <li>@item</li> }</ul></article>
+        <article class="fit-card"><h3>Roles of interest</h3><ul>@foreach (var item in preview.RolesOfInterest) { <li>@item</li> }</ul></article>
+        <article class="fit-card"><h3>Areas of interest</h3><ul>@foreach (var item in preview.AreasOfInterest) { <li>@item</li> }</ul></article>
+        <article class="fit-card"><h3>Location preferences</h3><ul>@foreach (var item in preview.LocationPreferences) { <li>@item</li> }</ul></article>
+        <article class="fit-card"><h3>Strong fit</h3><ul>@foreach (var item in preview.StrongFitSignals) { <li>@item</li> }</ul></article>
+        <article class="fit-card"><h3>Usually not suitable</h3><ul>@foreach (var item in preview.PoorFitSignals) { <li>@item</li> }</ul></article>
+      </div>
+      <p class="field-hint">Candidate-supplied · Last reviewed @preview.LastReviewed.ToString("dd MMMM yyyy") · This preview is visible only in the authenticated administrator session.</p>
+    </div>
+  </section>
+}

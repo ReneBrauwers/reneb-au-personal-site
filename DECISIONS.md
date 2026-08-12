@@ -32,13 +32,14 @@ The page is not aimed at entry-level technical audiences and should not attempt 
 
 ## Page model
 
-- One page only
-- English only for version one
-- No top-level navigation required; a compact name/monogram and CTA are sufficient
-- No blog in version one
-- No résumé/CV download in version one
-- No consulting price list, lead capture or service packages
-- No contact form
+- The primary portfolio remains a one-page, framework-free public site
+- English only
+- Add a visible `/recruiters` preview plus `/llms.txt`, `/recruiters/profile.md` and `/candidate.json`
+- Add an authenticated ASP.NET Core recruiter portal under `/auth`, `/portal` and `/admin`
+- Publish a linkable, analytics-free collection notice at `/privacy`
+- No blog, consulting price list, public contact form or public résumé
+- Exact compensation, detailed availability and messages require verified recruiter access
+- Résumé download requires an explicit revocable 30-day administrator grant
 - No testimonials until real, approved statements exist
 - No employer, client or technology logo wall
 
@@ -99,13 +100,16 @@ Do not state exact MVP years or award counts without fresh confirmation.
 
 ## Behaviour and privacy
 
-- Static and fast
-- Self-hosted, cookieless Umami analytics at `stats.reneb.au`, limited to aggregate usage and approximate country/region/city
-- No cookies
+- Public portfolio and recruiter preview remain fast and server-rendered/static
+- Self-hosted, cookieless Umami analytics at `stats.reneb.au` is permitted only on `/` and `/recruiters`, limited to aggregate usage and approximate country/region/city
+- No analytics, session replay or tracking on `/auth`, `/portal` or `/admin`
+- Essential secure, HTTP-only authentication and antiforgery cookies are permitted only for protected workflows
 - No tracking pixels
 - No advertising identifiers or third-party analytics
 - No automatic X or LinkedIn embeds
-- No personal details beyond the approved professional facts
+- Public personal details remain limited to approved professional facts and recruiter fit signals
+- Private recruiter and candidate information is encrypted before SQLite storage
+- Authentication cookies are backed by revocable server-side sessions; persisted cookie-key material uses a certificate separate from Microsoft Graph credentials
 
 ## Future options, not part of version one
 

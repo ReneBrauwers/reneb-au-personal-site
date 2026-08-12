@@ -1,0 +1,23 @@
+@page "/admin/messages"
+@model ReneB.Portal.Pages.Admin.MessagesModel
+@{
+    ViewData["Title"] = "Private recruiter messages";
+}
+<section class="content-section"><div class="portal-shell">
+  <p class="section-eyebrow">Encrypted inbox</p><h1>Recruiter messages.</h1>
+  @if (TempData["Status"] is string status) { <div class="notice notice-success"><p>@status</p></div> }
+  @if (Model.Messages.Count == 0) { <p>No messages are waiting.</p> }
+  @foreach (var message in Model.Messages)
+  {
+    <article class="form-card">
+      <p class="section-eyebrow">@message.CreatedAt.ToString("dd MMMM yyyy HH:mm 'UTC'") · @(message.ReadAt is null ? "Unread" : "Read")</p>
+      <h2>@message.Subject</h2>
+      <p><strong>@message.RecruiterName · @message.Organisation</strong></p>
+      <p class="pre-line">@message.Body</p>
+      <div class="action-row">
+        @if (message.ReadAt is null) { <form method="post" asp-page-handler="Read"><input type="hidden" name="id" value="@message.Id"><button type="submit">Mark read</button></form> }
+        <form method="post" asp-page-handler="Delete"><input type="hidden" name="id" value="@message.Id"><button type="submit">Delete permanently</button></form>
+      </div>
+    </article>
+  }
+</div></section>

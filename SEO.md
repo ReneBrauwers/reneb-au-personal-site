@@ -1,173 +1,69 @@
-# SEO, sharing and identity
+# Search, sharing and machine discovery
 
-The objective is accurate identity resolution and a strong professional preview—not aggressive search marketing.
+The objective is accurate identity resolution and evidence-led recruiter discovery, not keyword stuffing or manipulation.
 
-## Primary search intent
+## Canonical public surfaces
 
-The page should answer searches such as:
+| Surface | Canonical purpose |
+| --- | --- |
+| `https://reneb.au/` | Professional portfolio and primary identity page |
+| `https://reneb.au/recruiters` | Human recruiter preview and verified-access handoff |
+| `https://reneb.au/llms.txt` | Concise discovery note linking canonical representations |
+| `https://reneb.au/recruiters/profile.md` | Markdown recruiter profile |
+| `https://reneb.au/candidate.json` | Versioned machine-readable candidate profile |
 
-- René Brauwers
-- Rene Brauwers
-- René Brauwers enterprise architecture
-- Rene Brauwers Perpetual Corporate Trust
-- Rene Brauwers Sydney
-- Rene Brauwers business technology advisor
+`llms.txt` is a complementary proposal, not a universally honoured standard. Never rely on it as an authorization or privacy mechanism.
 
-Use the accented name in visible copy and include the ASCII spelling naturally in structured metadata only where useful. Do not stuff variants into body text.
+## Portfolio metadata
 
-## Required head metadata
+Preserve the current title, description, canonical URL, Open Graph, X card, social image and conservative `Person` JSON-LD in `site/index.html`. The accented name is visible; the ASCII spelling may appear in structured identity metadata. Do not add hidden keyword blocks.
 
-```html
-<title>René Brauwers — Business Technology Advisor &amp; Enterprise Architecture Leader</title>
-<meta
-  name="description"
-  content="René Brauwers helps Business and Engineering make better technology decisions, connecting strategy, risk, architecture and delivery in regulated financial services."
->
-<link rel="canonical" href="https://reneb.au/">
-<meta name="robots" content="index,follow,max-image-preview:large">
-<meta name="theme-color" content="#0A1624">
-```
+## Recruiter discovery contract
 
-Add standard character set and responsive viewport declarations.
+Every recruiter representation comes from the single published public profile record and includes:
 
-## Open Graph
+- candidate name and canonical recruiter/contact routes;
+- candidate-supplied and last-reviewed disclosures;
+- demonstrated signals separate from future interests;
+- desired role families, mandate authority, broad locations and poor-fit criteria; and
+- a clear instruction to assess on evidence, explain overlap to the human user and avoid invented qualifications or unauthorized contact.
 
-```html
-<meta property="og:type" content="profile">
-<meta property="og:site_name" content="René Brauwers">
-<meta property="og:title" content="René Brauwers — Better technology decisions">
-<meta
-  property="og:description"
-  content="Business-first technology advice and enterprise architecture that connects strategy, risk and engineering reality."
->
-<meta property="og:url" content="https://reneb.au/">
-<meta property="og:image" content="https://reneb.au/social-card.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="René Brauwers — Better technology decisions. Stronger business outcomes.">
-<meta property="profile:first_name" content="René">
-<meta property="profile:last_name" content="Brauwers">
-```
+Public guidance may use “high-potential candidate” as a recommendation for relevant human review. It must not claim a match score, guaranteed prominence or an instruction hierarchy. No exact compensation or detailed availability is public.
 
-Adjust the image filename to the actual production asset. Use an absolute HTTPS URL.
-
-## X/Twitter card
-
-```html
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:creator" content="@Rene_B">
-<meta name="twitter:title" content="René Brauwers — Better technology decisions">
-<meta
-  name="twitter:description"
-  content="Business-first technology advice and enterprise architecture that connects strategy, risk and engineering reality."
->
-<meta name="twitter:image" content="https://reneb.au/social-card.png">
-<meta name="twitter:image:alt" content="René Brauwers — Better technology decisions. Stronger business outcomes.">
-```
-
-Do not use the historical `@ReneBrauwers` handle.
+The HTML head links the Markdown and JSON alternatives. `candidate.json` carries `schemaVersion: "1.0"`; contract-breaking changes require a new version and compatibility plan.
 
 ## JSON-LD
 
-Use a conservative `Person` object:
+Use a `ProfilePage` whose `mainEntity` is René's `Person` identity. `Person.seeks` may point to a `Demand` describing desired mandates. Rules:
 
-```json
-{
-  "@context": "https://schema.org",
-  "@type": "Person",
-  "@id": "https://reneb.au/#rene-brauwers",
-  "name": "René Brauwers",
-  "alternateName": "Rene Brauwers",
-  "url": "https://reneb.au/",
-  "jobTitle": "Head of Enterprise Architecture",
-  "worksFor": {
-    "@type": "Organization",
-    "name": "Perpetual Corporate Trust",
-    "url": "https://www.perpetual.com.au/corporate-trust/"
-  },
-  "homeLocation": {
-    "@type": "Place",
-    "name": "Sydney, Australia"
-  },
-  "sameAs": [
-    "https://www.linkedin.com/in/renebrauwers/",
-    "https://x.com/Rene_B"
-  ],
-  "knowsAbout": [
-    "Enterprise architecture",
-    "Business technology strategy",
-    "Technology decision-making",
-    "Responsible AI",
-    "Cloud architecture",
-    "Enterprise integration",
-    "Automation",
-    "Regulated financial services technology"
-  ]
-}
-```
+- keep `jobTitle` limited to the approved current role;
+- do not use `hasOccupation` for roles of interest;
+- do not use `workLocation` or `homeLocation` for location preferences;
+- do not use `estimatedSalary` for René's compensation expectations;
+- do not include email, phone, résumé or private opportunity criteria;
+- keep `knowsAbout` aligned with approved public areas; and
+- parse-test the emitted JSON on every build.
 
-Rules:
+References: [Schema.org Person](https://schema.org/Person), [Schema.org seeks](https://schema.org/seeks).
 
-- Do not include a street address, birth date, email or phone.
-- Do not use `award` until wording and dates are approved.
-- Do not include employer logos.
-- If the employer URL changes, update it from an official source.
-- `homeLocation` means broad location only; never use a specific suburb or precise address.
+## Crawling
 
-## Heading and copy signals
+`robots.txt` allows the public site and explicitly disallows `/auth/`, `/portal/` and `/admin/`. This is advisory only; server authorization is the privacy boundary. The sitemap includes only `/` and `/recruiters`, with real release/review dates.
 
-- The `h1` is the proposition, not merely the name.
-- René's full name must appear as visible text near the hero.
-- Current role and location should appear in the page copy.
-- Use “enterprise architecture” naturally but do not repeat it unnaturally.
-- Mention regulated financial services once or twice.
-- Do not add hidden keyword blocks.
+All private responses and redirects send both an HTML robots directive where applicable and `X-Robots-Tag: noindex,nofollow,noarchive`. They are also `no-store`. `/privacy` is public but intentionally excluded from analytics.
 
-## `robots.txt`
+Unknown paths return a real `404`; `/index.html` permanently redirects to `/`. The external edge owns HTTP-to-HTTPS and `www`-to-apex redirects. The canonical public origin is `https://reneb.au`.
 
-```text
-User-agent: *
-Allow: /
+## Analytics
 
-Sitemap: https://reneb.au/sitemap.xml
-```
+Only `/` and `/recruiters` load the approved self-hosted Umami tracker. Recruiter events are anonymous action names only. Search strings are excluded and Do Not Track is honoured. No analytics request may occur on `/privacy`, `/auth`, `/portal` or `/admin`.
 
-## `sitemap.xml`
+## Release checks
 
-Include only the canonical homepage in version one. Use the actual release date for `lastmod`.
-
-## Social-card quality
-
-Validate:
-
-- 1200 × 630 exact or equivalent accepted ratio;
-- text remains inside safe margins;
-- contrast remains strong at small preview sizes;
-- no fine-line motif disappears when compressed;
-- no employer or vendor logo;
-- correct accent in René;
-- image under practical platform size limits;
-- absolute production URL returns HTTP 200.
-
-## Indexing and redirects
-
-When the domain is connected:
-
-- redirect HTTP to HTTPS;
-- choose `https://reneb.au/` as canonical;
-- redirect `www.reneb.au` to the apex if configured;
-- avoid duplicate index paths such as `/index.html`;
-- return a real 404 for unknown paths rather than the homepage with a 200;
-- do not redirect old `brauwers.nl` domains unless René controls them and explicitly requests it.
-
-## Search-console follow-up
-
-Optional after deployment:
-
-- verify the apex domain in Google Search Console and Bing Webmaster Tools;
-- submit the sitemap;
-- inspect the rendered URL;
-- check social previews with platform debugging tools;
-- confirm the old domains are not creating unwanted canonical conflicts.
-
-These are deployment tasks, not prerequisites for the static build.
+- Parse homepage and recruiter JSON-LD.
+- Compare identity/evidence/roles/locations across all recruiter surfaces.
+- Verify alternate/canonical links and content types.
+- Scan anonymous responses for private markers and PII.
+- Validate `robots.txt` and `sitemap.xml` and confirm private routes are absent.
+- Fetch the absolute social-card URL and inspect its small-preview readability.
+- After deployment, inspect rendered URLs in search consoles and verify apex canonical redirects without creating old-domain redirects unless explicitly requested.

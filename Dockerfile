@@ -1,4 +1,4 @@
-FROM nginxinc/nginx-unprivileged:1.29.1-alpine3.22-slim@sha256:ba47582e1ad3ad1df0c12a21bf464770c5b995e5f06db4aabead4ab1ae2858c4
+FROM nginxinc/nginx-unprivileged:1.31.3-alpine3.24-slim@sha256:ff4671e70f4f903721c5eacce1373d3e5d21b3d5f6fb03982154aabd084ed32e
 
 COPY --chown=101:101 nginx/nginx.conf /etc/nginx/nginx.conf
 COPY --chown=101:101 site/ /usr/share/nginx/html/

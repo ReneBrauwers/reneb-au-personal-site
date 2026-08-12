@@ -1,162 +1,89 @@
 # Quality assurance and definition of done
 
-The building agent owns validation. Do not hand off a page that has only been code-reviewed.
+The implementing agent owns every applicable lane. A code review or desktop screenshot alone is not acceptance.
 
-## 1. Content and fact check
+## Local commands
 
-- [ ] Visible name is spelled `René Brauwers`.
-- [ ] Current role is `Head of Enterprise Architecture`.
-- [ ] Employer is `Perpetual Corporate Trust`.
-- [ ] Location is no more specific than `Sydney, Australia`.
-- [ ] Core positioning is business-first, not a technology catalogue.
-- [ ] The page describes Business and Engineering as partners.
-- [ ] Architecture is presented as a decision tool, not a governance gate.
-- [ ] The historical MVP/community line is understated and contains no invented dates.
-- [ ] No client names, private projects, confidential systems or internal stakeholder names appear.
-- [ ] No fabricated metrics, testimonials or achievements appear.
-- [ ] No placeholder copy remains.
-- [ ] Footer includes `Personal site. Views are my own.`
+```sh
+docker compose build web portal
+docker run --rm --volume "$PWD:/src" --workdir /src mcr.microsoft.com/dotnet/sdk:10.0.400-noble dotnet test portal.tests/ReneB.Portal.Tests.csproj --configuration Release
+docker compose --profile qa build qa
+docker compose --profile qa run --rm qa npm run html
+docker compose --profile qa run --rm qa npm run css
+docker compose --profile qa run --rm qa npm run validate
+docker compose --profile qa run --rm qa npm run lighthouse
+```
 
-## 2. Privacy check
+Use the digest-pinned SDK reference from the workflow when reproducing CI exactly. Browser evidence is written beneath ignored `artifacts/`.
+`QA_MAIL_URL` must identify the Development-mode mailbox endpoint for the same stack as `QA_BASE_URL`; it is never available in production.
 
-Search the entire production output, including assets and source:
+## Public content and discovery
 
-- [ ] No email address is present.
-- [ ] No phone number is present.
-- [ ] No date of birth, age or family information is present.
-- [ ] No precise home location is present.
-- [ ] No financial, citizenship, health or travel information is present.
-- [ ] No old `brauwers.nl` contact details are present.
-- [ ] No historical `@ReneBrauwers` social link is present.
-- [ ] No scraped social profile image is present.
-- [ ] Image metadata has been stripped.
-- [ ] No source map or comment exposes private information.
-- [ ] The only analytics identifier is the approved Umami website ID `55c627ba-826f-4472-9479-f1279071488c` on `https://stats.reneb.au/script.js`.
-- [ ] The tracker is restricted to `reneb.au`, deferred, cookieless and covered by the visible analytics notice.
-- [ ] No other analytics host, pixel, tag manager, advertising identifier or browser-stored identifier exists.
+- [ ] Approved portfolio claims remain accurate and understated.
+- [ ] `/recruiters`, `/llms.txt`, `/recruiters/profile.md` and `/candidate.json` contain the same identity, evidence, role interests, locations, fit/non-fit signals, canonical recruiter URL, candidate-supplied disclosure and last-reviewed date.
+- [ ] `candidate.json` has the documented schema version and JSON-LD parses as a `Person` identity with `seeks`/`Demand`.
+- [ ] Desired roles are not presented as current employment; preferred locations are not presented as current work location.
+- [ ] No surface claims a guaranteed AI rank or includes prompt-injection wording.
+- [ ] `/privacy` is linked from registration, readable without authentication and loads no analytics.
 
-## 3. Visual review
+## Leakage and privacy
 
-Render and inspect screenshots at:
+Scan source, anonymous responses, static assets, sitemap, the application assembly/config and public files in both final image filesystems/layers, and captured logs. Do not pattern-scan unrelated native dependency binaries as text.
 
-- [ ] 320 × 568
-- [ ] 390 × 844
-- [ ] 768 × 1024
-- [ ] 1024 × 768
-- [ ] 1440 × 900
-- [ ] 1920 × 1080
+- [ ] Exact compensation figures, detailed availability conditions, messages, recruiter PII and résumé bytes are absent.
+- [ ] No tokens, manual codes, TOTP secrets, key material, Graph credentials, private hostnames or infrastructure addresses are present.
+- [ ] Every `/auth`, `/portal` and `/admin` response/redirect uses `no-store` and `X-Robots-Tag: noindex,nofollow,noarchive`.
+- [ ] Umami appears only on `/` and `/recruiters`, honours search/DNT exclusions and emits no private payloads.
+- [ ] `/privacy` and all private routes make no Umami request.
+- [ ] Registration provides a clear collection notice and self-service deletion is available after sign-in.
 
-At each size confirm:
+## Authentication and authorization
 
-- [ ] No horizontal overflow.
-- [ ] Hero content is not clipped.
-- [ ] H1 wraps intentionally and does not create isolated single words.
-- [ ] Primary CTA is obvious.
-- [ ] Headshot crop is natural, or monogram fallback looks deliberate.
-- [ ] Business/Architecture/Engineering labels remain readable.
-- [ ] Cards/columns collapse in a sensible order.
-- [ ] Body line length remains comfortable.
-- [ ] Section spacing feels deliberate, not empty or crowded.
-- [ ] Footer does not overlap content.
-- [ ] No focus ring or hover treatment is clipped.
+- [ ] Registration requires every contracted field and a privacy acknowledgement; repeat anonymous registration cannot rewrite or demote an existing account.
+- [ ] Disposable domains are blocked, explicitly allowlisted business domains activate after mailbox verification, and free/unlisted domains remain pending.
+- [ ] Generic responses do not reveal account existence or domain classification.
+- [ ] Magic links/codes expire at 15 minutes, are single use, store only hashes and reject replay; disabled-mode gates also cover trailing-slash route variants.
+- [ ] The URL fragment token reaches the server only through an antiforgery-protected POST; manual code fallback works.
+- [ ] Authentication throttling covers IP and email identity; manual-code and TOTP attempts use persistent identity-bound lockout/backoff that cannot be bypassed by rotating IPs.
+- [ ] Sessions expire, sign-out/revocation works and removed `ADMIN_EMAILS` lose authority immediately.
+- [ ] Approved recruiters cannot access admin pages and pending/suspended/deleted accounts cannot access private data.
+- [ ] Admin TOTP setup is not persisted until a valid code proves enrolment; verification and five-minute step-up protect every sensitive action.
 
-Also inspect:
+## Messaging, résumé and retention
 
-- [ ] 200% browser zoom.
-- [ ] Dark operating-system mode, even if the site itself is light-only.
-- [ ] High-contrast/forced-colour mode where available.
-- [ ] Reduced-motion mode.
-- [ ] A slow connection/mobile profile if a photographic asset is used.
+- [ ] Approved recruiters can create inbound messages and admins can list, read and delete them; résumé access requests are persistently deduplicated for 24 hours.
+- [ ] Notifications contain no private profile or message body; transport timeouts advance retry/backoff state instead of starving the outbox.
+- [ ] PDF upload rejects files over 5 MB, renamed/non-PDF, malformed, encrypted/uninspectable, forms/XFA, rich media and other active-content structures.
+- [ ] Successful download requires an active approved session plus a current, unexpired, unrevoked grant; headers force a non-cacheable attachment with `nosniff`, and a metadata-only download audit event is written.
+- [ ] Grant expiry/revocation fails immediately and changing the current résumé invalidates an older-version grant.
+- [ ] Current and newest previous résumé versions are retained indefinitely for rollback; only older versions are removed after the encrypted-backup retention window.
+- [ ] Retention tests exercise the 150-day warning, 180-day content deletion, recruiter-only self-service deletion, immediate authentication-secret cleanup and 12-month hard deletion of residual metadata/audit records.
 
-## 4. Interaction and keyboard
+## Responsive, touch and accessibility
 
-- [ ] Skip link appears on focus and works.
-- [ ] Focus order follows reading order.
-- [ ] All controls are reachable by keyboard.
-- [ ] Focus indicator is clearly visible.
-- [ ] No keyboard trap.
-- [ ] Anchor scroll lands with headings visible below any sticky header.
-- [ ] LinkedIn link resolves to `https://www.linkedin.com/in/renebrauwers/`.
-- [ ] X link resolves to `https://x.com/Rene_B`.
-- [ ] JavaScript-disabled page remains fully readable and navigable.
-- [ ] Reduced-motion preference disables non-essential movement.
-- [ ] New-tab behaviour, if used, is communicated and secured.
+Automate and visually inspect 320×568, 375×667, 390×844, 768×1024 and 1440×900. Also inspect the homepage at 1024×768 and 1920×1080.
 
-## 5. Accessibility automation and manual checks
+- [ ] No root/body horizontal overflow and forced horizontal movement remains zero in Chromium and WebKit iPhone touch contexts.
+- [ ] Body text is at least 16 px (18 px portal default); controls are at least 44×44 px.
+- [ ] One `h1`, semantic heading order, landmarks, meaningful labels and visible keyboard focus.
+- [ ] No serious/critical axe issues; colour contrast meets WCAG 2.2 AA.
+- [ ] 200% zoom, text reflow, forced colours, reduced motion and JavaScript-disabled reading are usable; the authenticated header and actions also pass at 320×568.
+- [ ] Forms expose validation accessibly and do not lose entered context unnecessarily.
 
-- [ ] Automated accessibility scan produces no serious or critical issue.
-- [ ] Page has `lang="en-AU"`.
-- [ ] Exactly one `h1`.
-- [ ] Heading order is logical.
-- [ ] Landmarks are present and correctly nested.
-- [ ] Images have correct `alt`; decorative images use empty alt or are hidden.
-- [ ] SVGs do not create noisy accessibility trees.
-- [ ] Text and interactive-state contrast meet WCAG 2.2 AA.
-- [ ] Touch targets meet 44 × 44px guidance.
-- [ ] Information is not conveyed by colour alone.
-- [ ] Link text makes sense out of context.
-- [ ] No ARIA is used where native HTML is sufficient.
+## Runtime and operations
 
-## 6. Technical validation
+- [ ] HTML/CSS validators and .NET tests pass; NuGet and npm dependency audits report no known high/critical vulnerability.
+- [ ] Both images build from the same commit, run non-root/read-only and pass high/critical Trivy scans.
+- [ ] CI emits SBOM/provenance and matching immutable full-SHA tags. It never auto-promotes a partially initialized `latest` channel; once both mutable tags exist, a promotion failure attempts to restore both previous pointers.
+- [ ] GitHub's package API reports both GHCR packages as `private`, and a full anonymous pull of each immutable tag fails with an authorization-specific error; network, registry, rate-limit, missing-tag and other failures do not count as privacy proof, and the production account can pull both.
+- [ ] Production contains only Compose, `.env`, secret files and Docker volumes—no repository, SDK, Dockerfile or QA/build tooling.
+- [ ] Encrypted online backup succeeds, the newest backup passes restore/integrity verification, and migration succeeds before start.
+- [ ] `web` and `portal` are recreated together so Nginx resolves the current portal container address.
+- [ ] Both images report the intended matching revision/digest and services survive restart with sessions/data intact.
+- [ ] `/healthz` and `/readyz` pass; unknown paths are real 404s; `/index.html` and public HTTP/www canonical redirects are correct.
+- [ ] Live TLS, HSTS/CSP/security headers and external M365 delivery are verified.
+- [ ] Full business/free/disposable-domain, message, résumé approval/download/revoke and account-deletion flows pass in a real browser.
 
-- [ ] HTML validates without material errors.
-- [ ] CSS parses without material errors.
-- [ ] Browser console has no errors or failed requests.
-- [ ] The approved Umami script loads over HTTPS and a production page view reaches `stats.reneb.au`.
-- [ ] The CSP allows `stats.reneb.au` only for `script-src` and `connect-src`; no broad wildcard is introduced.
-- [ ] A production session records approximate country, region and city from Cloudflare headers without storing a raw IP address.
-- [ ] No mixed-content request.
-- [ ] No local absolute filesystem path.
-- [ ] No development hostname.
-- [ ] No 404 for site-owned assets.
-- [ ] Favicon loads.
-- [ ] Social card loads from its production path.
-- [ ] Canonical URL is exactly `https://reneb.au/`.
-- [ ] `robots.txt` is valid.
-- [ ] `sitemap.xml` is valid and contains only the canonical homepage.
-- [ ] JSON-LD parses and contains no private fields.
-- [ ] External links use HTTPS.
+## Release record
 
-## 7. Performance
-
-Test the production build, not a development server with debugging overhead.
-
-- [ ] Lighthouse Performance 95+ or documented reason.
-- [ ] Lighthouse Accessibility 95+; aim for 100.
-- [ ] Lighthouse Best Practices 95+.
-- [ ] Lighthouse SEO 95+; aim for 100.
-- [ ] LCP under 2.5 seconds.
-- [ ] CLS under 0.1.
-- [ ] INP under 200ms where measurable.
-- [ ] Hero image has intrinsic dimensions.
-- [ ] Hero/LCP image is not lazy-loaded.
-- [ ] Below-fold photography is lazy-loaded.
-- [ ] No remote font dependency.
-- [ ] No unused large JavaScript or icon library.
-
-## 8. Content feel test
-
-Ask these questions during final visual inspection:
-
-- [ ] Could this page belong to a random enterprise architect? If yes, make the progression from hands-on builder to decision advisor more distinctive.
-- [ ] Does it sound like René challenges weak logic without sounding combative?
-- [ ] Does the page lead with business consequences before technology?
-- [ ] Could a business executive understand it without knowing architecture jargon?
-- [ ] Would an engineer recognise that the advice remains close to delivery?
-- [ ] Does the page avoid overclaiming?
-- [ ] Is the visitor's next action obvious?
-
-## 9. Release package
-
-The handoff must include:
-
-- [ ] deployable static output;
-- [ ] source files;
-- [ ] social card;
-- [ ] favicon;
-- [ ] short deployment instructions;
-- [ ] validation summary with tested viewport sizes;
-- [ ] screenshots or visual proof from desktop and mobile;
-- [ ] list of optional items still awaiting René's input, if any.
-
-The only expected optional item is an approved headshot or future public contact email. Neither may block a complete monogram-based version one.
+Handoff records the commit, both image digests, migration/backup result, tested viewports, screenshots, live acceptance evidence, rollback pair and any prerequisite left intentionally incomplete. Do not describe an untested external mail or TOTP flow as accepted.

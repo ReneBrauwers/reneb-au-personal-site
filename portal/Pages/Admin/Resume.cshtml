@@ -1,0 +1,20 @@
+@page "/admin/resume"
+@model ReneB.Portal.Pages.Admin.ResumeModel
+@{
+    ViewData["Title"] = "Manage résumé";
+}
+<div class="form-shell">
+  <form method="post" enctype="multipart/form-data" class="form-card">
+    <p class="section-eyebrow">Protected document</p>
+    <h1>Publish the current résumé.</h1>
+    @if (TempData["Status"] is string status) { <div class="notice notice-success"><p>@status</p></div> }
+    @if (Model.Current is not null)
+    {
+      <p>Current: <strong>@Model.Current.OriginalFileName</strong><br>Uploaded @Model.Current.UploadedAt.ToString("dd MMMM yyyy HH:mm 'UTC'") · @Math.Ceiling(Model.Current.Size / 1024d) KB · SHA-256 @Model.Current.Sha256</p>
+    }
+    else { <p>No résumé has been published.</p> }
+    <div asp-validation-summary="ModelOnly"></div>
+    <div class="field"><label asp-for="Upload">PDF résumé</label><input asp-for="Upload" type="file" accept="application/pdf,.pdf"><span class="field-hint">Maximum 5 MB. Active content, embedded files and malformed PDFs are rejected.</span></div>
+    <div class="action-row"><button class="button" type="submit">Validate and publish PDF</button></div>
+  </form>
+</div>
