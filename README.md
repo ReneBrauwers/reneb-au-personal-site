@@ -64,7 +64,7 @@ Pushes to `main` run all gates and publish matching private GHCR images:
 
 Each always receives a matching `sha-<full-commit>` tag with SBOM/provenance. After the two-package `latest` channel has been deliberately initialized, CI advances both mutable tags and restores the previous pair if a later promotion command fails. Production is pull-only and never clones or builds this repository. Both Compose services use `pull_policy: always`; the initial launch and any controlled release or rollback pin both images to the same immutable tag.
 
-See [`deploy/README.md`](deploy/README.md) for secret provisioning, backup/migration, release and rollback. Begin with `RECRUITER_PORTAL_ENABLED=false`; enable discovery only after Graph mail, admin/TOTP, both profiles, résumé and full browser acceptance pass.
+See [`deploy/README.md`](deploy/README.md) for secret provisioning, backup/migration, release and rollback, and [`docs/entra/RECRUITER_PORTAL_MAIL_IDENTITY.md`](docs/entra/RECRUITER_PORTAL_MAIL_IDENTITY.md) for both Entra ClickOps and Azure CLI provisioning. Begin with `RECRUITER_PORTAL_ENABLED=false`; enable discovery only after Graph mail, admin/TOTP, both profiles, résumé and full browser acceptance pass.
 
 ## Privacy boundary
 

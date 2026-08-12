@@ -40,7 +40,7 @@ Scan source, anonymous responses, static assets, sitemap, the application assemb
 ## Authentication and authorization
 
 - [ ] Registration requires every contracted field and a privacy acknowledgement; repeat anonymous registration cannot rewrite or demote an existing account.
-- [ ] Disposable domains are blocked, explicitly allowlisted business domains activate after mailbox verification, and free/unlisted domains remain pending.
+- [ ] Configured disposable domains are blocked, configured consumer/free-mail domains remain pending, and other non-disposable domains activate after mailbox verification.
 - [ ] Generic responses do not reveal account existence or domain classification.
 - [ ] Magic links/codes expire at 15 minutes, are single use, store only hashes and reject replay; disabled-mode gates also cover trailing-slash route variants.
 - [ ] The URL fragment token reaches the server only through an antiforgery-protected POST; manual code fallback works.
@@ -83,6 +83,7 @@ Automate and visually inspect 320×568, 375×667, 390×844, 768×1024 and 1440×
 - [ ] Both images report the intended matching revision/digest and services survive restart with sessions/data intact.
 - [ ] `/healthz` and `/readyz` pass; unknown paths are real 404s; `/index.html` and public HTTP/www canonical redirects are correct.
 - [ ] Live TLS, HSTS/CSP/security headers and external M365 delivery are verified.
+- [ ] Exchange `Test-ServicePrincipalAuthorization` reports `Application Mail.Send` in scope for the dedicated sender and out of scope for a different mailbox; both the app manifest and the service principal's authoritative `appRoleAssignments` prove there is no unscoped Entra application grant.
 - [ ] Full business/free/disposable-domain, message, résumé approval/download/revoke and account-deletion flows pass in a real browser.
 
 ## Release record

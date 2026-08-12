@@ -10,7 +10,8 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       RECRUITER_PORTAL_ENABLED: "true"
       ADMIN_EMAILS: admin@example.invalid
-      TRUSTED_BUSINESS_DOMAINS: executivesearch.example
+      UNTRUSTED_EMAIL_DOMAINS: gmail.com,outlook.com,hotmail.com
+      DISPOSABLE_EMAIL_DOMAINS: mailinator.com,10minutemail.com,yopmail.com
       Portal__DataDirectory: /app/data
       Portal__BackupDirectory: /app/backups
       Encryption__AllowDevelopmentKey: "true"

@@ -7,7 +7,8 @@ public sealed class PortalOptions
     public string BackupDirectory { get; set; } = "/app/backups";
     public string CanonicalBaseUrl { get; set; } = "https://reneb.au";
     public string[] AdminEmails { get; set; } = [];
-    public string[] TrustedBusinessDomains { get; set; } = [];
+    public string[] UntrustedEmailDomains { get; set; } = [];
+    public string[] DisposableEmailDomains { get; set; } = [];
     public int AuthRequestsPerMinute { get; set; } = 8;
     public string TrustedProxyNetworks { get; set; } = string.Empty;
 }

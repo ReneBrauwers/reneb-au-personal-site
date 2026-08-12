@@ -25,10 +25,15 @@ builder.Services.PostConfigure<PortalOptions>(options =>
     {
         options.AdminEmails = adminEmails.Split([',', ';'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
     }
-    var trustedBusinessDomains = builder.Configuration["TRUSTED_BUSINESS_DOMAINS"];
-    if (!string.IsNullOrWhiteSpace(trustedBusinessDomains))
+    var untrustedEmailDomains = builder.Configuration["UNTRUSTED_EMAIL_DOMAINS"];
+    if (untrustedEmailDomains is not null)
     {
-        options.TrustedBusinessDomains = trustedBusinessDomains.Split([',', ';'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        options.UntrustedEmailDomains = untrustedEmailDomains.Split([',', ';'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+    }
+    var disposableEmailDomains = builder.Configuration["DISPOSABLE_EMAIL_DOMAINS"];
+    if (disposableEmailDomains is not null)
+    {
+        options.DisposableEmailDomains = disposableEmailDomains.Split([',', ';'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
     }
     if (bool.TryParse(builder.Configuration["RECRUITER_PORTAL_ENABLED"], out var enabled))
     {
