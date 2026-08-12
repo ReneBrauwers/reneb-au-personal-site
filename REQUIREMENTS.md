@@ -42,7 +42,7 @@ When `RECRUITER_PORTAL_ENABLED=false`, discovery, sign-in, registration and recr
 ## Identity and authorization
 
 - Registration requires name, email, organisation, title, organisation or LinkedIn URL, country, sourcing purpose and privacy acknowledgement. Phone is optional.
-- Disposable domains are rejected with the same response shown for every request. Only positively reviewed domains in the host-owned business-domain allowlist receive access after verification; known free-mail and every unlisted non-disposable domain remain pending for admin approval.
+- Disposable domains in the host-owned denylist are rejected with the same response shown for every request. Consumer/free-mail domains in the host-owned untrusted list remain pending after verification. Every other non-disposable domain receives access after mailbox verification and remains subject to administrator suspension. Both lists are configurable and explicitly non-exhaustive.
 - Verification challenges expire after 15 minutes, are single use and store only token/code hashes. The link carries the token in its URL fragment so proxies and access logs do not receive it; a manual code is available as fallback.
 - Authentication uses secure, HTTP-only cookies and server-side authorization on every private operation.
 - Administrators are determined at request time from `ADMIN_EMAILS`. Removal from the setting removes admin authority without a database migration.
@@ -76,6 +76,7 @@ When `RECRUITER_PORTAL_ENABLED=false`, discovery, sign-in, registration and recr
 
 - Production mail uses Microsoft Graph certificate application authentication for a dedicated sender mailbox.
 - Exchange Online Application RBAC must scope the application to that mailbox. A tenant-wide practical send permission is not acceptable merely because the token can be acquired.
+- Do not grant the app an organization-wide Microsoft Graph `Mail.Send` application permission in Entra. Exchange Application RBAC grants the scoped `Application Mail.Send` role directly; Entra and Exchange grants are additive.
 - Mail is sent through a persistent outbox with retry and backoff. Magic links, approval decisions, expiry warnings and message alerts use neutral copy without sensitive payloads.
 
 ## Accessibility and responsive behaviour

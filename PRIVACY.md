@@ -61,7 +61,7 @@ Only anonymous events such as `recruiter-preview-open` and `recruiter-access-sta
 
 ## Mail and credentials
 
-Microsoft Graph uses certificate-based application authentication and a dedicated sender mailbox. Exchange Online Application RBAC must restrict the app to that mailbox. Certificates, private keys and the portal field-encryption keyring are host-mounted files outside source control and `.env`.
+Microsoft Graph uses certificate-based application authentication and a dedicated sender mailbox. Exchange Online Application RBAC grants `Application Mail.Send` only within that mailbox's resource scope. The Entra app must not also hold unscoped Graph `Mail.Send`, because Entra and Exchange grants are additive. Certificates, private keys and the portal field-encryption keyring are host-mounted files outside source control and `.env`.
 
 ## Employer, imagery and historical sources
 

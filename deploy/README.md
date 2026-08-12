@@ -42,7 +42,7 @@ If either command fails, leave production pinned and retry until both tags resol
 
 `ADMIN_EMAILS` is a comma-separated set of verified mailbox addresses. It is the live administrator allowlist: removing an address removes its admin authority on the next authorization check.
 
-`TRUSTED_BUSINESS_DOMAINS` is the reviewed, comma-separated allowlist of organisation domains that may become active immediately after mailbox verification. Leave it empty unless the organisation domain has been positively checked. Known free-mail and every unlisted non-disposable domain remain pending for administrator approval; the disposable-domain denylist is never treated as exhaustive.
+`UNTRUSTED_EMAIL_DOMAINS` is the comma-separated set of consumer/free-mail domains that remain pending for administrator approval after mailbox verification. `DISPOSABLE_EMAIL_DOMAINS` is the separate comma-separated set rejected with a generic response. Domain and subdomain matches are case-insensitive. Both lists are configurable and non-exhaustive; every other non-disposable domain activates after mailbox verification and can still be suspended by an administrator.
 
 `PORTAL_TRUSTED_PROXY_NETWORKS` is a comma-separated CIDR allowlist for the actual Docker gateway and external edge-proxy hops. Resolve these networks read-only on the production host; do not copy the documentation examples. The portal processes at most two forwarded hops and stops when the current sender is not trusted, preventing a client-supplied `X-Forwarded-For` value from bypassing IP throttling.
 
@@ -66,7 +66,9 @@ Point `PORTAL_KEYRING_FILE` at that absolute host path. The lookup key makes nor
 
 Provision a dedicated Exchange Online mailbox and an Entra application using certificate credentials. Upload only the public certificate to Entra; mount its PEM certificate and private key as host files. Set the tenant ID, client ID and dedicated sender address in `.env`.
 
-Grant Graph application `Mail.Send` and then use Exchange Online Application RBAC to restrict practical resource access to only the dedicated mailbox. Validate the scoped application authorization for that mailbox and a different mailbox; the first must be in scope and the second out of scope. Do not enable the portal based only on successful token acquisition.
+Grant `Application Mail.Send` through Exchange Online Application RBAC with a resource scope containing only the dedicated mailbox. Do **not** also grant the Microsoft Graph `Mail.Send` application permission in Entra: the two authorization systems are additive, so that Entra grant would restore tenant-wide access. Validate the scoped application authorization for the sender mailbox and a different mailbox; the first must be in scope and the second out of scope. Query the enterprise service principal's `appRoleAssignments` as the authoritative Entra grant check; an empty app-registration `requiredResourceAccess` manifest is necessary but insufficient. Do not enable the portal based only on successful token acquisition.
+
+The complete ClickOps, Azure CLI, Exchange Online PowerShell, rotation and verification instructions are in [`../docs/entra/RECRUITER_PORTAL_MAIL_IDENTITY.md`](../docs/entra/RECRUITER_PORTAL_MAIL_IDENTITY.md).
 
 Provision a separate self-signed RSA certificate/key pair for ASP.NET Data Protection and mount it through the `DATA_PROTECTION_*` paths. Do not reuse the Graph credential. The private key protects persisted cookie-key material in the data volume. Retain the old certificate/private key and test cookie-key recovery before rotating this pair; deleting it while old Data Protection keys remain makes active cookies and protected state unreadable.
 
