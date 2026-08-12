@@ -29,15 +29,21 @@ public sealed class SecurityPrimitiveTests : IClassFixture<PortalFactory>
     }
 
     [Theory]
-    [InlineData("person@executivesearch.example", DomainRisk.Free)]
+    [InlineData("person@executivesearch.example", DomainRisk.Business)]
     [InlineData("person@gmail.com", DomainRisk.Free)]
+    [InlineData("person@sub.gmail.com", DomainRisk.Free)]
     [InlineData("person@mailinator.com", DomainRisk.Disposable)]
+    [InlineData("person@sub.mailinator.com", DomainRisk.Disposable)]
+    [InlineData("person@gmail.com.", DomainRisk.Free)]
     public void DomainRiskIsDeterministic(string email, DomainRisk expected)
-        => Assert.Equal(expected, DomainRiskClassifier.Classify(email));
+        => Assert.Equal(expected, DomainRiskClassifier.Classify(email, ["gmail.com"], ["mailinator.com"]));
 
     [Fact]
-    public void OnlyExplicitlyTrustedOrganisationDomainsAreClassifiedAsBusiness()
-        => Assert.Equal(DomainRisk.Business, DomainRiskClassifier.Classify("person@executivesearch.example", ["executivesearch.example"]));
+    public void ExplicitlyUntrustedDomainsRequireApprovalWhileOtherDomainsAreBusiness()
+    {
+        Assert.Equal(DomainRisk.Free, DomainRiskClassifier.Classify("person@outlook.com", ["outlook.com"]));
+        Assert.Equal(DomainRisk.Business, DomainRiskClassifier.Classify("person@executivesearch.example", ["outlook.com"]));
+    }
 
     [Fact]
     public void TotpAcceptsCurrentCodeAndRejectsDifferentCode()

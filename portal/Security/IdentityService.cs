@@ -31,7 +31,10 @@ public sealed class IdentityService
 
     public async Task<bool> RequestRegistrationAsync(RecruiterRegistration registration, CancellationToken cancellationToken)
     {
-        var risk = DomainRiskClassifier.Classify(registration.Email, _options.TrustedBusinessDomains);
+        var risk = DomainRiskClassifier.Classify(
+            registration.Email,
+            _options.UntrustedEmailDomains,
+            _options.DisposableEmailDomains);
         if (risk == DomainRisk.Disposable)
         {
             return false;
