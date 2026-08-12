@@ -1,10 +1,10 @@
-FROM mcr.microsoft.com/playwright:v1.55.0-noble
+FROM mcr.microsoft.com/playwright:v1.62.1-noble@sha256:dcc5531e97840b9b5e794f2814476b21571c5124a3fca2267d73041f56e7580e
 
 WORKDIR /work/qa
 
 COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund
 
-COPY validate.mjs lighthouse.mjs html-validate.mjs css-validate.mjs ./
+COPY validate.mjs portal-validate.mjs lighthouse.mjs html-validate.mjs css-validate.mjs ./
 
 CMD ["npm", "run", "validate"]

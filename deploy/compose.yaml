@@ -1,12 +1,65 @@
 name: reneb-au-personal-site
 
 services:
+  portal:
+    image: ${RENEB_AU_PORTAL_IMAGE:-ghcr.io/renebrauwers/reneb-au-recruiter-portal:latest}
+    pull_policy: always
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      RECRUITER_PORTAL_ENABLED: ${RECRUITER_PORTAL_ENABLED:-false}
+      ADMIN_EMAILS: ${ADMIN_EMAILS:?Set ADMIN_EMAILS in the host-owned .env}
+      TRUSTED_BUSINESS_DOMAINS: ${TRUSTED_BUSINESS_DOMAINS:-}
+      Portal__DataDirectory: /app/data
+      Portal__BackupDirectory: /app/backups
+      Portal__CanonicalBaseUrl: https://reneb.au
+      Portal__TrustedProxyNetworks: ${PORTAL_TRUSTED_PROXY_NETWORKS:?Set the comma-separated Docker and edge proxy CIDRs}
+      Encryption__KeyFile: /run/secrets/field-encryption-keyring.json
+      Mail__Mode: Graph
+      Mail__TenantId: ${MAIL_TENANT_ID:?Set MAIL_TENANT_ID in the host-owned .env}
+      Mail__ClientId: ${MAIL_CLIENT_ID:?Set MAIL_CLIENT_ID in the host-owned .env}
+      Mail__SenderMailbox: ${MAIL_SENDER_MAILBOX:?Set MAIL_SENDER_MAILBOX in the host-owned .env}
+      Mail__CertificatePath: /run/secrets/graph-mail-certificate.pem
+      Mail__PrivateKeyPath: /run/secrets/graph-mail-private-key.pem
+      CookieKeyProtection__CertificatePath: /run/secrets/data-protection-certificate.pem
+      CookieKeyProtection__PrivateKeyPath: /run/secrets/data-protection-private-key.pem
+    restart: unless-stopped
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp:size=32m,mode=1777,nosuid,nodev
+    volumes:
+      - portal-data:/app/data
+      - portal-backups:/app/backups
+    secrets:
+      - source: field-encryption-keyring
+        target: field-encryption-keyring.json
+      - source: graph-mail-certificate
+        target: graph-mail-certificate.pem
+      - source: graph-mail-private-key
+        target: graph-mail-private-key.pem
+      - source: data-protection-certificate
+        target: data-protection-certificate.pem
+      - source: data-protection-private-key
+        target: data-protection-private-key.pem
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:8080/readyz"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+
   web:
     image: ${RENEB_AU_IMAGE:-ghcr.io/renebrauwers/reneb-au-personal-site:latest}
     pull_policy: always
     ports:
       - "${SITE_BIND_ADDRESS:-127.0.0.1}:${SITE_PORT:-8091}:8080"
     restart: unless-stopped
+    depends_on:
+      portal:
+        condition: service_healthy
     read_only: true
     security_opt:
       - no-new-privileges:true
@@ -20,3 +73,19 @@ services:
       timeout: 5s
       start_period: 10s
       retries: 3
+
+volumes:
+  portal-data:
+  portal-backups:
+
+secrets:
+  field-encryption-keyring:
+    file: ${PORTAL_KEYRING_FILE:?Set PORTAL_KEYRING_FILE to a host-owned secret file}
+  graph-mail-certificate:
+    file: ${GRAPH_MAIL_CERTIFICATE_FILE:?Set GRAPH_MAIL_CERTIFICATE_FILE to a host-owned certificate}
+  graph-mail-private-key:
+    file: ${GRAPH_MAIL_PRIVATE_KEY_FILE:?Set GRAPH_MAIL_PRIVATE_KEY_FILE to a host-owned private key}
+  data-protection-certificate:
+    file: ${DATA_PROTECTION_CERTIFICATE_FILE:?Set DATA_PROTECTION_CERTIFICATE_FILE to a host-owned certificate}
+  data-protection-private-key:
+    file: ${DATA_PROTECTION_PRIVATE_KEY_FILE:?Set DATA_PROTECTION_PRIVATE_KEY_FILE to a host-owned private key}

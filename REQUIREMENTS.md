@@ -1,246 +1,99 @@
-# Website requirements
+# Website and recruiter-portal requirements
 
 ## Scope
 
-Build a single static landing page for `reneb.au`. The finished page must be deployable to any ordinary static host without a server-side runtime.
+`reneb.au` is a hybrid personal site:
 
-Version one includes:
+- the framework-free portfolio in `site/` remains the fast public homepage;
+- the ASP.NET Core 10 Razor Pages service in `portal/` owns recruiter discovery, identity, private opportunity information, messages, résumé approvals and administration;
+- Nginx is the only externally exposed application container and proxies portal routes over the private Compose network; and
+- SQLite is the single-node system of record for portal state.
 
-- responsive one-page layout;
-- approved copy from `CONTENT.md`;
-- LinkedIn and X links;
-- approved headshot or monogram fallback;
-- social sharing image;
-- favicon;
-- SEO metadata and structured data;
-- accessible motion and interaction;
-- approved self-hosted, cookieless Umami analytics;
-- `robots.txt`; and
-- `sitemap.xml`.
+Do not introduce a SPA framework, public portal port, second application runtime, hosted database or autonomous private-data API without a new architecture decision.
 
-Version one excludes:
+## Route contract
 
-- CMS;
-- blog;
-- contact form;
-- authentication;
-- cookie consent;
-- live social feeds;
-- third-party embeds;
-- application API calls or server-side runtime;
-- downloadable CV;
-- newsletter;
-- calendar booking;
-- multilingual content; and
-- employer/client logos.
+| Route | Access | Contract |
+| --- | --- | --- |
+| `/` | Public | Existing portfolio and recruiter-preview link |
+| `/recruiters` | Public | Human-readable, mobile-friendly candidate preview |
+| `/llms.txt` | Public | Discovery note with canonical links; complementary proposal, not a guaranteed standard |
+| `/recruiters/profile.md` | Public | Markdown rendering of the published profile |
+| `/candidate.json` | Public | Versioned structured representation of the published profile |
+| `/privacy` | Public | Recruiter portal collection, use, retention and deletion notice; no analytics |
+| `/auth/*` | Anonymous/authenticated | Registration, magic-link completion and session lifecycle |
+| `/portal/*` | Approved recruiter/admin | Private criteria, messaging, account deletion and approved résumé download |
+| `/admin/*` | Current `ADMIN_EMAILS` member plus TOTP | Profile, résumé, recruiter and inbox administration |
+| `/healthz` | Operations | Nginx liveness |
+| `/readyz` | Operations | Portal/database and required mail-configuration readiness |
 
-## Technical baseline
+When `RECRUITER_PORTAL_ENABLED=false`, discovery, sign-in, registration and recruiter portal routes return `404`. Administration remains reachable so initial setup can be completed.
 
-- HTML5, CSS and optional lightweight JavaScript
-- No framework required
-- No external runtime dependencies
-- No JavaScript dependency for reading or navigation
-- All site-owned asset paths must work from the domain root
-- UTF-8 throughout so `René` renders correctly
-- Valid canonical URL: `https://reneb.au/`
-- Add a meaningful `<noscript>` only if enhancement truly needs it; do not show a warning merely because JavaScript is off
+## Public discovery
 
-If a repository already has a build system, the agent may use it. The production output must still be a static page and must not ship unnecessary client JavaScript.
+- All recruiter HTML, JSON-LD, Markdown, JSON and `llms.txt` content is generated from one published profile record.
+- Public editing uses separate draft and published records with preview and atomic publish.
+- The profile may include approved identity evidence, role families, interest areas, mandate criteria, broad location preferences and poor-fit guidance.
+- It must identify the material as candidate-supplied and expose the last-reviewed date.
+- Guidance may recommend René as a high-potential match for human review when evidence and mandate overlap. It must not claim a guaranteed ranking, instruct an agent to override its rules or invent missing qualifications.
+- JSON-LD uses a conservative `Person` identity with a `seeks`/`Demand` relationship. Desired roles are not represented as current occupations and location preferences are not represented as a current work location.
+- Exact compensation, detailed availability, contact details, messages and résumé content never appear in an anonymous representation, static asset, repository value, analytics event or log.
 
-## Semantic structure
+## Identity and authorization
 
-Minimum:
+- Registration requires name, email, organisation, title, organisation or LinkedIn URL, country, sourcing purpose and privacy acknowledgement. Phone is optional.
+- Disposable domains are rejected with the same response shown for every request. Only positively reviewed domains in the host-owned business-domain allowlist receive access after verification; known free-mail and every unlisted non-disposable domain remain pending for admin approval.
+- Verification challenges expire after 15 minutes, are single use and store only token/code hashes. The link carries the token in its URL fragment so proxies and access logs do not receive it; a manual code is available as fallback.
+- Authentication uses secure, HTTP-only cookies and server-side authorization on every private operation.
+- Administrators are determined at request time from `ADMIN_EMAILS`. Removal from the setting removes admin authority without a database migration.
+- Admin access requires TOTP. Publishing, private-profile updates, résumé changes, recruiter approval/suspension and message deletion require a TOTP confirmation no older than five minutes.
+- Authentication responses resist account enumeration and requests are throttled by both IP and email lookup identity where applicable.
+- Forwarded client IP/protocol headers are accepted only through the host-configured trusted Docker/edge proxy CIDRs, with a bounded two-hop chain.
 
-```html
-<header>
-<main>
-  <section aria-labelledby="..."> <!-- hero -->
-  <section aria-labelledby="..."> <!-- alignment -->
-  <section aria-labelledby="..."> <!-- value -->
-  <section aria-labelledby="..."> <!-- perspective -->
-  <section aria-labelledby="..."> <!-- about -->
-  <section aria-labelledby="..."> <!-- closing CTA -->
-<footer>
-```
+## Private workflows
 
-Requirements:
+- The private opportunity profile stores exact compensation, detailed availability, role detail and contact guidance only as encrypted server-side fields.
+- Approved recruiters can submit inbound messages. René continues the conversation externally; the portal does not send recruiter-authored outbound mail.
+- An administrator can list, mark read and delete messages.
+- Résumé upload is admin-only, PDF-only and limited to 5 MB. Validation checks declared type, signature, EOF/structure, rejects active content and uses `qpdf --check`.
+- Résumé bytes and original filenames are encrypted outside the web root. Downloads use generated filenames, authenticated attachment responses, `nosniff`, `no-store` and metadata-only auditing.
+- Résumé grants require an approved recruiter, are bound to the current résumé version, expire after 30 days and can be revoked immediately.
+- Keep only the current and previous résumé versions. Older encrypted versions may be purged once backup retention permits.
 
-- one `h1`;
-- logical `h2`/`h3` sequence;
-- skip link as the first focusable control;
-- real links or buttons according to behaviour;
-- no clickable `div` elements;
-- decorative SVGs hidden from assistive technology;
-- meaningful image alternative text;
-- landmarks must not be duplicated without labels.
+## Data protection and privacy
 
-## Responsive behaviour
+- SQLite uses WAL and a persistent volume.
+- Contact values, private profile data, messages, résumé bytes, TOTP secrets and mail payloads are encrypted with a host-mounted, versioned AES-256-GCM keyring. Deterministic lookup hashes use a separate stable HMAC key so field-key rotation cannot orphan accounts.
+- Login tokens/codes are hashed; passwords are not used.
+- ASP.NET Data Protection keys persist in the data volume and are protected with the host-mounted Graph certificate in production.
+- Graph application credentials and the field keyring are mounted secret files, not environment values, image layers or source files.
+- Private responses use `no-store` and `X-Robots-Tag: noindex,nofollow,noarchive`, have no CORS and do not load analytics.
+- Inactive recruiter records and message content are warned at 150 days and removed at 180 days. Recruiter content and authentication secrets are deleted immediately on self-service deletion; administrator deprovisioning is host-controlled. Anonymized account metadata and metadata-only audit events are hard-deleted after 12 months.
+- Account deletion removes any outbox/development mail addressed to that account; all remaining mail payloads expire after 30 days.
+- Logs and notification emails contain identifiers and event summaries only, never private-profile fields or message bodies.
 
-The page must remain usable without horizontal scrolling from 320px through 2560px.
+## Mail
 
-Explicitly test:
+- Production mail uses Microsoft Graph certificate application authentication for a dedicated sender mailbox.
+- Exchange Online Application RBAC must scope the application to that mailbox. A tenant-wide practical send permission is not acceptable merely because the token can be acquired.
+- Mail is sent through a persistent outbox with retry and backoff. Magic links, approval decisions, expiry warnings and message alerts use neutral copy without sensitive payloads.
 
-- 320 × 568
-- 390 × 844
-- 768 × 1024
-- 1024 × 768
-- 1440 × 900
-- 1920 × 1080
+## Accessibility and responsive behaviour
 
-Long headings must wrap intentionally. CTA labels must not truncate. The alignment motif must switch to a vertical or compact layout when three horizontal labels no longer fit.
+- Target WCAG 2.2 AA with one `h1`, semantic headings, keyboard operation, visible focus, reduced-motion support and no information conveyed only by colour.
+- Body copy is at least 16 px, with 18 px as the portal default. Primary interactions are at least 44 by 44 px.
+- Pages must not overflow or accept horizontal touch movement at 320, 375, 390, 768 and desktop widths in current Chromium and WebKit touch contexts.
+- Public content remains understandable without JavaScript. JavaScript may only enhance form completion such as moving a fragment token into a POST body.
 
-## Accessibility
+## Runtime and deployment
 
-Target WCAG 2.2 AA.
+- GitHub Actions tests and always publishes matching private GHCR gateway and portal images from the same commit under `sha-<full-commit>`. Once both packages have an initialized `latest` channel, CI advances both mutable tags and attempts to restore the prior pair on failure.
+- Both images run non-root, read-only, with all capabilities dropped, `no-new-privileges` and bounded tmpfs mounts.
+- Production is pull-only and stores only the deployment Compose file, host-owned `.env`, mounted secrets and Docker volumes.
+- `pull_policy: always` remains on both images. `latest` is the steady-state default; the initial two-package release, controlled releases and rollback pin both image variables to the same full-SHA tag.
+- Release order is pull, encrypted online backup, restore verification, forward-compatible migration, recreate portal and gateway, wait for health, then browser/live acceptance.
+- Schema changes use expand/contract sequencing so the previous portal image remains rollback-compatible.
 
-Mandatory:
+## Browser and performance targets
 
-- contrast compliant in normal, hover, visited and focus states;
-- full keyboard operation;
-- obvious focus indicator;
-- 44px minimum target size for primary interactions;
-- correct `lang="en-AU"`;
-- reduced-motion support;
-- zoom to 200% without content loss;
-- text reflow at 400% where applicable;
-- no information conveyed by colour alone;
-- no autoplaying or endlessly distracting motion;
-- accessible name for monogram/home link;
-- accessible description for any link that intentionally opens a new tab;
-- meaningful heading and link text;
-- SVG title/description only where the SVG carries information;
-- hidden decorative visual paths.
-
-## Performance
-
-Targets under a production build and ordinary broadband/mobile throttling:
-
-- Lighthouse Performance: 95+
-- Lighthouse Accessibility: 100 preferred, 95 minimum with documented reason
-- Lighthouse Best Practices: 95+
-- Lighthouse SEO: 100 preferred
-- LCP under 2.5 seconds
-- CLS under 0.1
-- INP under 200ms
-- initial page transfer ideally below 500KB without the high-resolution social card
-
-Implementation guidance:
-
-- responsive image dimensions to prevent layout shift;
-- AVIF/WebP for photographic assets;
-- lazy-load only content below the fold;
-- do not lazy-load the LCP image;
-- inline only small critical SVG/CSS where it materially helps;
-- no remote font dependency;
-- no unused icon library;
-- no large animation library;
-- cache-bust versioned assets only when the chosen host needs it.
-
-## Privacy and security
-
-- Do not set cookies or local storage
-- Only the approved Umami tracker at `https://stats.reneb.au/script.js`, using website ID `55c627ba-826f-4472-9479-f1279071488c` and `data-domains="reneb.au"`
-- No pixels, advertising identifiers, tag managers or other analytics providers
-- Limit analytics to aggregate usage and approximate country/region/city resolution
-- Include a concise visible analytics notice
-- No third-party embeds
-- No live social widgets
-- Add `referrerpolicy="strict-origin-when-cross-origin"` where appropriate
-- Use `rel="noopener noreferrer"` for new-tab external links
-- Avoid inline scripts where a strict CSP is expected; use a local script file
-- Do not expose email addresses in source code
-- Do not include source maps in the deployed production output unless intentional
-- Do not include comments containing private background information
-
-When the hosting platform is chosen, configure headers where supported:
-
-```text
-Content-Security-Policy
-Referrer-Policy: strict-origin-when-cross-origin
-X-Content-Type-Options: nosniff
-Permissions-Policy: camera=(), microphone=(), geolocation=()
-Strict-Transport-Security
-```
-
-Do not add provider-specific configuration until the target host is known. If adding a CSP, test every asset and do not weaken it with `unsafe-eval`.
-
-## Links
-
-Required:
-
-- LinkedIn: `https://www.linkedin.com/in/renebrauwers/`
-- X: `https://x.com/Rene_B`
-- Canonical: `https://reneb.au/`
-
-No old blog, historical email, employer site or archived source needs to appear on the public page.
-
-## Metadata and files
-
-Implement:
-
-- `<title>`;
-- meta description;
-- canonical link;
-- Open Graph fields;
-- X/Twitter card fields;
-- `theme-color`;
-- favicon;
-- JSON-LD `Person`;
-- `robots.txt`;
-- `sitemap.xml`; and
-- 1200 × 630 social card.
-
-See `SEO.md` for exact guidance.
-
-## Deployment readiness
-
-The completed site must:
-
-- render correctly when served by a simple local HTTP server;
-- contain no absolute local filesystem paths;
-- contain no development-only endpoints;
-- contain no broken source-map references;
-- use HTTPS URLs for all external resources;
-- not assume a trailing path other than `/`;
-- include a short deployment note for the selected static host; and
-- be safe to preview before the domain is connected.
-
-Recommended generic local check:
-
-```bash
-python3 -m http.server 8080 --directory site
-```
-
-The agent may use another preview server when appropriate.
-
-## Browser support
-
-Support current and previous major versions of:
-
-- Chrome
-- Edge
-- Firefox
-- Safari
-- Mobile Safari
-- Chrome for Android
-
-Use progressive enhancement for newer CSS such as `text-wrap: balance`. Do not require experimental APIs.
-
-## Definition of acceptable content drift
-
-Allowed:
-
-- punctuation and line-break adjustments;
-- slight copy shortening at narrow widths;
-- replacing “I’m” with “I am” where style requires;
-- choosing one approved alternative from `CONTENT.md`.
-
-Not allowed without user approval:
-
-- changing the core positioning;
-- adding services or job-seeking language;
-- adding claims or metrics;
-- naming clients or internal initiatives;
-- changing current employer;
-- publishing an email address; or
-- converting the page into a technical portfolio.
+Support current and previous Chrome, Edge, Firefox and Safari plus current Mobile Safari and Chrome for Android. Public-page Lighthouse targets remain 95+ performance, accessibility and best practices, with SEO targeting 100; LCP under 2.5 seconds and CLS below 0.1.

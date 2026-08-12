@@ -1,51 +1,21 @@
-# Master build prompt
+# Maintenance prompt
 
-Use the following prompt with a capable coding or website-building agent. Attach the complete creation pack.
+Use this prompt when another coding agent maintains `reneb.au`:
 
 ---
 
-Create the production-ready version-one website for `https://reneb.au/` using the attached website creation pack as the source of truth.
+Maintain the production website and recruiter portal for `https://reneb.au/` from this repository.
 
-Start by reading `AGENTS.md` and then every file in the order specified by `agent.md`. Do not begin implementation before you understand the resolved brand, content, privacy and QA decisions.
+Read `AGENTS.md`, then `agent.md` and every required document in its stated order before changing code. Preserve the approved hybrid architecture: framework-free public portfolio in `site/`, ASP.NET Core 10 Razor Pages portal in `portal/`, SQLite, and Nginx as the only exposed service. Do not add a SPA framework, second runtime/database or public portal port without an explicit architecture decision.
 
-Build a polished one-page static personal-brand site for René Brauwers. It should work as the next step after someone meets him or views his LinkedIn profile. The page must communicate that René is a business-first technology advisor and enterprise architecture leader who helps Business and Engineering make better technology decisions. His differentiator is the combination of executive decision judgment and hands-on builder credibility.
+The public recruiter preview must be evidence-led, candidate-supplied and useful to human-directed recruiting agents. It may say René is a high-potential match when published evidence and mandate criteria overlap, but it must never use hidden text, cloaking, prompt injection, fabricated ranking or invented qualifications. Generate `/recruiters`, `/llms.txt`, `/recruiters/profile.md`, `/candidate.json` and JSON-LD from the single published profile record.
 
-Use the approved copy in `CONTENT.md`, the visual system in `DESIGN.md`, the technical contract in `REQUIREMENTS.md`, and every publication boundary in `PRIVACY.md`.
+Treat exact compensation, detailed availability, recruiter PII, messages, résumé bytes, TOTP/authentication material and credentials as private. They must remain encrypted server-side and absent from public responses, source values, browser scripts, analytics, image layers and logs. Keep private pages non-cacheable, non-indexable and free of Umami.
 
-Implementation expectations:
+Implement the smallest coherent change, update tests and repository instructions, and run every relevant lane in `QA.md`. For UI work, verify 320, 375, 390, 768 and desktop widths plus forced horizontal touch movement in Chromium and WebKit. For identity/file/data work, test abuse and authorization paths, not only success paths.
 
-- Build in a new `site/` directory.
-- Prefer plain semantic HTML, CSS and only minimal progressive-enhancement JavaScript.
-- Do not add a framework or build pipeline unless the existing repository requires one.
-- Make the page fully readable with JavaScript disabled.
-- Use the Business ↔ Architecture ↔ Engineering connected-path motif with restraint.
-- Use the navy/slate/warm palette from the pack.
-- If an approved headshot is supplied locally, optimise and use it according to `DESIGN.md`.
-- If no approved headshot exists, create the specified `RB` monogram fallback and continue without asking.
-- Do not scrape LinkedIn or X imagery.
-- Do not add analytics, cookies, forms, third-party embeds, employer logos, testimonials, fake metrics, a résumé timeline or a technology logo wall.
-- Do not publish any email address.
-- Implement all SEO, social-card, favicon, robots, sitemap and JSON-LD requirements.
-- Meet WCAG 2.2 AA and the performance targets in the pack.
+Publishing occurs only through `.github/workflows/publish-container.yml`. Production is pull-only and receives matching private GHCR images. Never put tokens in the repository, never copy source/build tooling to production and never enable recruiter discovery until mail, admin TOTP, profiles, résumé, backup/restore and real-browser acceptance pass.
 
-Before handing off:
-
-1. Run relevant HTML, accessibility, link and performance checks.
-2. Render and visually inspect the page at every viewport listed in `QA.md`.
-3. Test keyboard-only, 200% zoom, reduced motion and JavaScript-disabled behaviour.
-4. Fix all material visual or functional defects.
-5. Confirm that no private or unapproved information appears anywhere in the production output.
-6. Provide desktop and mobile screenshots or equivalent visual proof.
-
-Deliver:
-
-- complete deployable static output;
-- source files;
-- social card and favicon;
-- a concise validation report;
-- deployment instructions for the selected static host; and
-- only a short list of genuinely optional future inputs, such as an approved headshot or public email.
-
-Do not stop after producing a mock-up. Complete and validate the actual site.
+Hand off the exact checks run, commit/image evidence, known risks and any external acceptance that remains pending. Do not claim deployment or M365 delivery without live evidence.
 
 ---

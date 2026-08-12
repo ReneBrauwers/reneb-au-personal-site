@@ -1,0 +1,22 @@
+@page "/auth/{mode:regex(^(login|admin)$)}"
+@model ReneB.Portal.Pages.Auth.LoginModel
+@{
+    ViewData["Title"] = Model.IsAdmin ? "Administrator sign in" : "Recruiter sign in";
+}
+<div class="form-shell">
+  <form method="post" class="form-card">
+    <p class="section-eyebrow">@(Model.IsAdmin ? "Administrator" : "Returning recruiter")</p>
+    <h1>Sign in without a password.</h1>
+    @if (Model.Submitted)
+    {
+      <div class="notice notice-success"><p>If this address is eligible, a single-use link has been sent. It expires after 15 minutes.</p></div>
+    }
+    else
+    {
+      <p>Enter the email address you previously verified. The response does not reveal whether an account exists.</p>
+      <div asp-validation-summary="ModelOnly"></div>
+      <div class="field"><label asp-for="Email"></label><input asp-for="Email" autocomplete="email" inputmode="email"><span asp-validation-for="Email"></span></div>
+      <div class="action-row"><button class="button" type="submit">Send a secure link</button></div>
+    }
+  </form>
+</div>

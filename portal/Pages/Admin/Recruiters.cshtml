@@ -1,0 +1,29 @@
+@page "/admin/recruiters"
+@model ReneB.Portal.Pages.Admin.RecruitersModel
+@{
+    ViewData["Title"] = "Recruiter access";
+}
+<section class="content-section"><div class="portal-shell">
+  <p class="section-eyebrow">Access control</p><h1>Recruiters and résumé grants.</h1>
+  @if (TempData["Status"] is string status) { <div class="notice notice-success"><p>@status</p></div> }
+  <div class="table-wrap"><table>
+    <thead><tr><th>Recruiter</th><th>Verification</th><th>Purpose</th><th>Actions</th></tr></thead>
+    <tbody>
+    @foreach (var recruiter in Model.Recruiters)
+    {
+      <tr>
+        <td><strong>@recruiter.Name</strong><br>@recruiter.Title · @recruiter.Organisation<br><a href="@recruiter.ProfileUrl">Profile</a></td>
+        <td>@recruiter.Status<br>@recruiter.DomainRisk domain<br>@recruiter.Email</td>
+        <td>@recruiter.Purpose</td>
+        <td><div class="stack-actions">
+          @if (recruiter.Status != RecruiterStatus.Active) { <form method="post" asp-page-handler="Approve"><input type="hidden" name="id" value="@recruiter.Id"><button type="submit">Approve</button></form> }
+          @if (recruiter.Status != RecruiterStatus.Suspended) { <form method="post" asp-page-handler="Suspend"><input type="hidden" name="id" value="@recruiter.Id"><button type="submit">Suspend</button></form> }
+          @if (recruiter.Status == RecruiterStatus.Active) { <form method="post" asp-page-handler="Grant"><input type="hidden" name="id" value="@recruiter.Id"><button type="submit">Grant résumé</button></form> }
+          <form method="post" asp-page-handler="Revoke"><input type="hidden" name="id" value="@recruiter.Id"><button type="submit">Revoke résumé</button></form>
+          <form method="post" asp-page-handler="Delete"><input type="hidden" name="id" value="@recruiter.Id"><button type="submit">Delete</button></form>
+        </div></td>
+      </tr>
+    }
+    </tbody>
+  </table></div>
+</div></section>

@@ -1,0 +1,25 @@
+@page "/admin/totp"
+@model ReneB.Portal.Pages.Admin.TotpModel
+@{
+    ViewData["Title"] = "Administrator verification";
+}
+<div class="form-shell">
+  <form method="post" class="form-card">
+    <p class="section-eyebrow">Administrator step-up</p>
+    <h1>Verify with your authenticator.</h1>
+    @if (Model.IsNew)
+    {
+      <div class="notice notice-warning">
+        <p>Add this account to an authenticator before continuing.</p>
+        <p><strong>Account:</strong> reneb.au (@Model.AdminEmail)</p>
+        <p><strong>Setup key:</strong> <code>@Model.SecretBase32</code></p>
+        <p class="field-hint">The setup key is encrypted at rest. Store a recovery copy in your password manager.</p>
+      </div>
+    }
+    <div asp-validation-summary="ModelOnly"></div>
+    <input type="hidden" asp-for="ReturnUrl">
+    <input type="hidden" asp-for="Enrollment">
+    <div class="field"><label asp-for="Code">Six-digit authenticator code</label><input asp-for="Code" autocomplete="one-time-code" inputmode="numeric" maxlength="6"><span asp-validation-for="Code"></span></div>
+    <div class="action-row"><button class="button" type="submit">Verify administrator access</button></div>
+  </form>
+</div>
