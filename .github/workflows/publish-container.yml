@@ -5,6 +5,12 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      initialize_latest:
+        description: Seed an incomplete latest pair from this verified commit
+        required: false
+        default: false
+        type: boolean
 
 concurrency:
   group: publish-container-${{ github.ref }}
@@ -234,8 +240,21 @@ jobs:
             exit 1
           fi
           if [[ "$old_web_digest" == "ABSENT" || "$old_portal_digest" == "ABSENT" ]]; then
-            echo "status=not-initialized" >> "$GITHUB_OUTPUT"
-            echo "::warning::The mutable latest channel is not initialized for both packages. Immutable SHA images were published, but neither latest tag was changed. Seed both latest tags deliberately from this matching SHA pair while production remains pinned to immutable tags."
+            if [[ "${{ github.event_name }}" != "workflow_dispatch" || "${{ inputs.initialize_latest }}" != "true" ]]; then
+              echo "status=not-initialized" >> "$GITHUB_OUTPUT"
+              echo "::warning::The mutable latest channel is not initialized for both packages. Immutable SHA images were published, but neither latest tag was changed. Dispatch this workflow with initialize_latest=true while production remains pinned to immutable tags."
+              exit 0
+            fi
+
+            echo "::warning::Explicitly initializing the mutable latest pair from ${GITHUB_SHA}. Production must remain pinned until both revision labels are verified."
+            if [[ "$old_portal_digest" == "ABSENT" ]]; then
+              docker buildx imagetools create --prefer-index=false --tag "${PORTAL_IMAGE_NAME}:latest" "${PORTAL_IMAGE_NAME}@${new_portal_digest}"
+              docker buildx imagetools create --prefer-index=false --tag "${WEB_IMAGE_NAME}:latest" "${WEB_IMAGE_NAME}@${new_web_digest}"
+            else
+              docker buildx imagetools create --prefer-index=false --tag "${WEB_IMAGE_NAME}:latest" "${WEB_IMAGE_NAME}@${new_web_digest}"
+              docker buildx imagetools create --prefer-index=false --tag "${PORTAL_IMAGE_NAME}:latest" "${PORTAL_IMAGE_NAME}@${new_portal_digest}"
+            fi
+            echo "status=initialized" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           rollback_latest() {
