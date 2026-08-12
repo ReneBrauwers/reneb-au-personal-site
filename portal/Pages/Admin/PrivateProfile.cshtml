@@ -1,0 +1,20 @@
+@page "/admin/private-profile"
+@model ReneB.Portal.Pages.Admin.PrivateProfileModel
+@{
+    ViewData["Title"] = "Edit private opportunity profile";
+}
+<div class="form-shell">
+  <form method="post" class="form-card">
+    <p class="section-eyebrow">Encrypted private profile</p>
+    <h1>Opportunity criteria and terms.</h1>
+    <p>These fields are encrypted before storage and never enter public source, metadata, analytics or static assets.</p>
+    @if (TempData["Status"] is string status) { <div class="notice notice-success"><p>@status</p></div> }
+    <div asp-validation-summary="ModelOnly"></div>
+    <div class="field"><label asp-for="Input.DetailedInterests"></label><textarea asp-for="Input.DetailedInterests"></textarea></div>
+    <div class="field"><label asp-for="Input.PermanentCompensation"></label><textarea asp-for="Input.PermanentCompensation"></textarea></div>
+    <div class="field"><label asp-for="Input.ContractCompensation"></label><textarea asp-for="Input.ContractCompensation"></textarea></div>
+    <div class="field"><label asp-for="Input.Availability"></label><textarea asp-for="Input.Availability"></textarea></div>
+    <div class="field"><label asp-for="Input.AdditionalGuidance"></label><textarea asp-for="Input.AdditionalGuidance"></textarea></div>
+    <div class="action-row"><button class="button" type="submit">Save encrypted profile</button></div>
+  </form>
+</div>

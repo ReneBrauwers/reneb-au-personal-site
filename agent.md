@@ -2,7 +2,7 @@
 
 ## Mission
 
-Create a polished, professional, one-page static personal-brand website for René Brauwers at `reneb.au`.
+Maintain a polished public personal-brand website and a secure recruiter-discovery portal for René Brauwers at `reneb.au`.
 
 The page must work as the useful next step after meeting René or viewing his LinkedIn profile. Within roughly one minute, a visitor should understand:
 
@@ -12,7 +12,7 @@ The page must work as the useful next step after meeting René or viewing his Li
 - why his perspective is credible; and
 - how to connect with him.
 
-The site must express executive judgment and hands-on technical credibility at the same time. It must not read like a résumé, vendor profile, architecture framework brochure or generic AI-generated leadership page.
+The public portfolio must express executive judgment and hands-on technical credibility at the same time. The recruiter preview must provide evidence-led fit signals without manipulating agents or exposing private terms. The authenticated portal owns exact opportunity criteria, recruiter messages and approval-controlled résumé access.
 
 ## Required reading order
 
@@ -50,7 +50,7 @@ His historical public work establishes a hands-on foundation in software, integr
 
 1. Inspect the project and confirm whether an approved headshot or existing brand assets were supplied.
 2. Create a concise implementation plan.
-3. Build the complete site in `site/`.
+3. Build public portfolio assets in `site/` and dynamic recruiter capabilities in `portal/`.
 4. Use the approved content and resolved decisions. Do not pause for optional preferences.
 5. If no headshot is available, implement the monogram fallback and continue.
 6. Validate HTML, responsive layout, keyboard access, reduced-motion behaviour, metadata and external links.
@@ -60,7 +60,7 @@ His historical public work establishes a hands-on foundation in software, integr
 
 ## Output structure
 
-Use this implementation structure unless an existing project reasonably requires a different one:
+Use this implementation structure:
 
 ```text
 site/
@@ -74,9 +74,13 @@ site/
 └── assets/
     ├── rene-headshot.*    # only when an approved source image exists
     └── fonts/             # only if fonts are self-hosted
+portal/                    # ASP.NET Core Razor Pages, SQLite and protected workflows
+portal.tests/              # behaviour and security tests
+nginx/                     # sole public gateway and route contract
+deploy/                    # pull-only production Compose and runbook
 ```
 
-Do not add a framework, package manager or build step for a page that does not need one. If the surrounding repository already uses a framework, integrate cleanly but ensure the deployed result remains a static page.
+Do not add a frontend framework or convert the public portfolio to a single-page application. Preserve Nginx as the only exposed service and the portal as the only approved application runtime.
 
 ## Implementation rules
 
@@ -88,8 +92,9 @@ Do not add a framework, package manager or build step for a page that does not n
 - Use the exact verified links from `DECISIONS.md`.
 - Open external profile links in the same tab by default. If a new tab is used, disclose it accessibly and add `rel="noopener noreferrer"`.
 - Load only the approved cookieless Umami tracker from `https://stats.reneb.au/script.js`, restricted to `reneb.au` with website ID `55c627ba-826f-4472-9479-f1279071488c`. Do not add any other analytics, tag managers, advertising, chat widgets, tracking pixels or cookie banners.
-- Do not add a contact form. There is no approved form endpoint or public email address.
-- Do not add a blog, navigation drawer, résumé download, client logo wall, skills meter, testimonial carousel, animated cursor or fake terminal.
+- Do not add a public contact form or public email address. The authenticated recruiter message box is approved and stores encrypted content.
+- Do not add a public résumé download. The authenticated, administrator-approved, revocable 30-day résumé grant is the only approved download path.
+- Do not add a blog, navigation drawer, client logo wall, skills meter, testimonial carousel, animated cursor or fake terminal.
 - Do not use vendor logos or turn the page into a product stack.
 - Do not use fabricated statistics such as “25+ years”, “100+ projects” or “millions saved”.
 - Do not use copied LinkedIn or X imagery as a substitute for an approved asset.
@@ -140,5 +145,8 @@ The work is complete only when:
 - the site passes the full `QA.md` checklist;
 - the page works with JavaScript disabled;
 - no placeholder copy, dead links or missing assets remain;
+- public recruiter HTML, JSON-LD, Markdown, JSON and `llms.txt` agree with the published profile record;
+- private values never appear in anonymous responses, source, static assets, image layers, analytics or logs;
+- authentication, revocable sessions, TOTP, account approval, messaging, résumé validation/grants, retention, backup and restore checks pass;
 - there is a graceful fallback when no headshot is available; and
 - the final result feels recognisably tailored to René rather than generated from a personal-site template.

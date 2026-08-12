@@ -14,6 +14,17 @@ The visual language combines:
 
 The result should feel premium and specific to René. Avoid common personal-site tropes such as giant floating headshots, résumé timelines, skill bars, neon technology clouds and walls of badges.
 
+## Recruiter portal extension
+
+The recruiter preview and protected portal extend the same editorial system rather than introducing a SaaS-dashboard aesthetic.
+
+- Public recruiter pages use the navy, paper and restrained warm-accent palette with evidence cards and explicit fit/non-fit groupings.
+- Protected pages show a clear private-information banner and use plain forms, definition lists and tables.
+- Body copy is at least 18px by default; every primary interaction has a 44px target.
+- The circular `RB` editorial mark must not resemble a shield, badge or tombstone.
+- Avoid charts, score meters or “AI match percentage” claims. Evidence and mandate overlap carry the argument.
+- Preserve `overflow-x: clip` and `overscroll-behavior-x: none`, and verify forced horizontal movement in Chromium and WebKit touch contexts.
+
 ## Core visual idea
 
 Use three connected paths or nodes to represent:

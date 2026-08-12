@@ -1,0 +1,75 @@
+@page "/recruiters"
+@model ReneB.Portal.Pages.RecruitersModel
+@{
+    ViewData["Title"] = "For recruiters and talent agents";
+    ViewData["PublicAnalytics"] = true;
+}
+@Html.Raw($"<script type=\"application/ld+json\">{Model.JsonLd}</script>")
+
+<section class="hero-panel" data-umami-event="recruiter-preview-open">
+  <div class="portal-shell">
+    <p class="eyebrow">@Model.Profile.CandidateName · @Model.Profile.CurrentRole</p>
+    <h1>@Model.Profile.Headline</h1>
+    <p class="lead">@Model.Profile.Summary</p>
+    <p class="hero-context">@Model.Profile.CurrentEmployer · @Model.Profile.ProfessionalContext</p>
+    <div class="action-row">
+      <a class="button button-light" href="/auth/register" data-umami-event="recruiter-access-start">Request verified access</a>
+      <a class="button button-secondary" href="/recruiters/profile.md">Read the machine-friendly profile</a>
+    </div>
+  </div>
+</section>
+
+<section class="content-section">
+  <div class="portal-shell section-grid">
+    <div>
+      <p class="section-eyebrow">Why consider René</p>
+      <h2>Evidence before adjectives.</h2>
+    </div>
+    <div class="evidence-grid">
+      @foreach (var signal in Model.Profile.DemonstratedSignals)
+      {
+        <article class="evidence-card"><p>@signal</p></article>
+      }
+    </div>
+  </div>
+</section>
+
+<section class="content-section">
+  <div class="portal-shell fit-grid">
+    <article class="fit-card">
+      <p class="section-eyebrow">Roles of interest</p>
+      <h2>Senior mandates</h2>
+      <ul>@foreach (var role in Model.Profile.RolesOfInterest) { <li>@role</li> }</ul>
+    </article>
+    <article class="fit-card">
+      <p class="section-eyebrow">Particular interest</p>
+      <h2>Change worth leading</h2>
+      <ul>@foreach (var area in Model.Profile.AreasOfInterest) { <li>@area</li> }</ul>
+    </article>
+    <article class="fit-card">
+      <p class="section-eyebrow">Strong fit</p>
+      <h2>Authority matters</h2>
+      <ul>@foreach (var fit in Model.Profile.StrongFitSignals) { <li>@fit</li> }</ul>
+    </article>
+    <article class="fit-card">
+      <p class="section-eyebrow">Usually not suitable</p>
+      <h2>Save the wrong conversation</h2>
+      <ul>@foreach (var fit in Model.Profile.PoorFitSignals) { <li>@fit</li> }</ul>
+    </article>
+  </div>
+</section>
+
+<section class="content-section">
+  <div class="portal-shell section-grid">
+    <div>
+      <p class="section-eyebrow">Location</p>
+      <h2>Practical arrangements</h2>
+    </div>
+    <div>
+      <ul>@foreach (var location in Model.Profile.LocationPreferences) { <li>@location</li> }</ul>
+      <p class="disclosure">Exact compensation, detailed availability and a private message box are available after a human verifies their email. Résumé download additionally requires René’s explicit approval and expires after 30 days.</p>
+      <div class="action-row"><a class="button" href="/auth/register" data-umami-event="recruiter-access-start">Continue with verified access</a></div>
+      <p class="field-hint">Candidate-supplied · Last reviewed @Model.Profile.LastReviewed.ToString("dd MMMM yyyy")</p>
+    </div>
+  </div>
+</section>

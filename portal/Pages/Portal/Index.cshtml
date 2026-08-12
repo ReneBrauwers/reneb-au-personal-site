@@ -1,0 +1,73 @@
+@page "/portal"
+@model ReneB.Portal.Pages.Portal.IndexModel
+@{
+    ViewData["Title"] = "Private opportunity profile";
+}
+<div class="private-banner"><div class="portal-shell">Private, verified-access information · Do not forward or republish</div></div>
+<section class="content-section">
+  <div class="portal-shell section-grid">
+    <div>
+      <p class="section-eyebrow">Opportunity profile</p>
+      <h1>Where the mandate and terms become specific.</h1>
+    </div>
+    <div>
+      @if (TempData["Status"] is string status) { <div class="notice notice-success"><p>@status</p></div> }
+      <dl class="data-list">
+        <div><dt>Detailed interests</dt><dd>@Display(Model.Profile.DetailedInterests)</dd></div>
+        <div><dt>Permanent roles</dt><dd>@Display(Model.Profile.PermanentCompensation)</dd></div>
+        <div><dt>Contract roles</dt><dd>@Display(Model.Profile.ContractCompensation)</dd></div>
+        <div><dt>Availability</dt><dd>@Display(Model.Profile.Availability)</dd></div>
+        <div><dt>Additional matching guidance</dt><dd>@Display(Model.Profile.AdditionalGuidance)</dd></div>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<section class="content-section">
+  <div class="portal-shell admin-grid">
+    <div class="form-card">
+      <p class="section-eyebrow">Résumé</p>
+      <h2>Approval-controlled access</h2>
+      @if (Model.ResumeAvailable && Model.GrantActive)
+      {
+        <p>Your download grant is active until @Model.GrantExpires?.ToString("dd MMMM yyyy 'at' HH:mm 'UTC'").</p>
+        <a class="button" href="/portal/resume">Download René’s résumé</a>
+      }
+      else if (Model.ResumeAvailable)
+      {
+        <p>Request access and René can approve a revocable 30-day download grant.</p>
+        <form method="post" asp-page-handler="RequestResume"><button class="button" type="submit">Request résumé access</button></form>
+      }
+      else
+      {
+        <p>No résumé is currently available for download.</p>
+      }
+    </div>
+    <form method="post" asp-page-handler="Message" class="form-card">
+      <p class="section-eyebrow">Private message box</p>
+      <h2>Leave the useful context.</h2>
+      <div asp-validation-summary="ModelOnly"></div>
+      <div class="field"><label asp-for="MessageSubject"></label><input asp-for="MessageSubject"><span asp-validation-for="MessageSubject"></span></div>
+      <div class="field"><label asp-for="MessageBody">Opportunity or message</label><textarea asp-for="MessageBody"></textarea><span asp-validation-for="MessageBody"></span></div>
+      <div class="action-row"><button class="button" type="submit">Send private message</button></div>
+    </form>
+  </div>
+</section>
+
+@if (Model.CanDeleteAccount)
+{
+<section class="content-section">
+  <div class="portal-shell form-card">
+    <p class="section-eyebrow">Your information</p>
+    <h2>Delete this recruiter account</h2>
+    <p>Deletion removes your contact details, messages, login challenges and résumé grants. Metadata-only audit events may remain for up to 12 months.</p>
+    <form method="post" asp-page-handler="DeleteAccount">
+      <div class="field"><label><input asp-for="ConfirmDeletion"> I understand this account and its content will be permanently deleted.</label></div>
+      <div class="action-row"><button class="button button-secondary" type="submit">Delete my account</button></div>
+    </form>
+  </div>
+</section>
+}
+@functions {
+    private static string Display(string? value) => string.IsNullOrWhiteSpace(value) ? "Not currently disclosed." : value;
+}

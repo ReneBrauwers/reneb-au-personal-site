@@ -1,28 +1,32 @@
-# reneb.au personal site
+# reneb.au
 
-The production source for [reneb.au](https://reneb.au/), René Brauwers' one-page personal website. It is a lightweight static site built with semantic HTML and CSS, served from a hardened non-root Nginx container.
+Production source for [reneb.au](https://reneb.au/): René Brauwers' public portfolio, evidence-led recruiter discovery and private candidate portal.
 
-The site deliberately has no cookies, form, CMS, frontend framework, remote fonts or application JavaScript. Its only client-side script is the cookieless, self-hosted Umami tracker at `stats.reneb.au`, restricted to this domain.
+The homepage remains semantic static HTML/CSS. A private ASP.NET Core 10 Razor Pages service provides the recruiter preview, structured machine representations, passwordless mailbox verification, encrypted opportunity details, inbound messages, approval-controlled résumé access and administration. Hardened Nginx is the only exposed container.
 
-## Docker development
+## Local development
 
-Docker is the only local prerequisite.
+Docker is the only runtime prerequisite:
 
 ```sh
-docker compose up -d --build web
+docker compose up -d --build portal web
 ```
 
-The local preview is available at `http://127.0.0.1:8091/`. Stop it with:
+Open `http://127.0.0.1:8091/`. Development mail is captured in the local database and exposed only inside the Development portal at `/dev/mail`; it is not routed through Nginx. Local data and backups use named Docker volumes.
+
+Stop the stack with:
 
 ```sh
 docker compose down
 ```
 
-## Testing
+Use `docker compose down --volumes` only when intentionally destroying local portal state.
 
-Build the Docker-based browser test image, then run the validation lanes:
+## Validation
 
 ```sh
+docker compose build web portal
+docker run --rm --volume "$PWD:/src" --workdir /src mcr.microsoft.com/dotnet/sdk:10.0.400-noble dotnet test portal.tests/ReneB.Portal.Tests.csproj --configuration Release
 docker compose --profile qa build qa
 docker compose --profile qa run --rm qa npm run html
 docker compose --profile qa run --rm qa npm run css
@@ -30,34 +34,38 @@ docker compose --profile qa run --rm qa npm run validate
 docker compose --profile qa run --rm qa npm run lighthouse
 ```
 
-The browser suite covers the required responsive viewports, accessibility, keyboard navigation, reduced motion, forced colours, JavaScript-disabled behaviour, the approved analytics contract, metadata, assets, security headers and real 404 handling. Screenshots and machine-readable results are written beneath `artifacts/`, which is intentionally ignored by Git.
+`QA.md` is the full acceptance contract. The suite includes public/private leakage, authentication, authorization, résumé grants, browser accessibility, 320–1440 px responsive checks and Chromium/WebKit touch movement.
 
-For final HTTPS checks, override `QA_BASE_URL` with the public URL when running the QA container.
-
-## Project structure
+## Repository map
 
 ```text
-site/              Deployable static website
-nginx/             Production web-server configuration
-design/            Source artwork for the social card
-qa/                Docker-only validation and browser checks
-deploy/            Pull-only production Compose manifest and runbook
-AGENTS.md           AI-agent entry point and repository workflow
-agent.md + *.md     Content, design, privacy, SEO and QA source of truth
-Dockerfile         Pinned non-root production image
-compose.yaml       Local preview and QA service definition
+site/                 Static public portfolio
+portal/               ASP.NET Core portal, encrypted SQLite data and operational commands
+portal.tests/         Behaviour and security tests
+nginx/                Public routing and header contract
+qa/                   Dockerised HTML/CSS/Playwright/Lighthouse lanes
+deploy/               Pull-only production Compose example and runbook
+docs/adr/             Architecture decisions
+AGENTS.md, agent.md    AI-agent entry point and workflow
+CONTENT.md             Approved public copy and recruiter discovery boundaries
+DESIGN.md              Visual and responsive contract
+REQUIREMENTS.md        Functional and non-functional contract
+PRIVACY.md             Publication, collection and retention rules
+SEO.md                 Human and machine discovery contract
+QA.md                  Required validation and release evidence
 ```
 
-## Deployment approach
+## Publishing and deployment
 
-GitHub Actions validates `main`, builds the production container and publishes private `latest` and immutable `sha-*` tags to GHCR. Production holds only the pull-only Compose manifest and its host-specific `.env`; it does not contain a repository checkout, source files or build scripts.
+Pushes to `main` run all gates and publish matching private GHCR images:
 
-The production manifest uses `pull_policy: always`, so each deployment checks GHCR for the newest selected image. `RENEB_AU_IMAGE` defaults to `ghcr.io/renebrauwers/reneb-au-personal-site:latest` and can be changed to an immutable tag or digest for a deliberate pin or rollback. See [`deploy/README.md`](deploy/README.md) for the operator workflow.
+- `ghcr.io/renebrauwers/reneb-au-personal-site`
+- `ghcr.io/renebrauwers/reneb-au-recruiter-portal`
 
-The container publishes only to an explicitly configured host interface, and the existing edge reverse proxy owns public HTTP, HTTPS, TLS and canonical-host redirects. Environment-specific addresses and registry credentials are never committed.
+Each always receives a matching `sha-<full-commit>` tag with SBOM/provenance. After the two-package `latest` channel has been deliberately initialized, CI advances both mutable tags and restores the previous pair if a later promotion command fails. Production is pull-only and never clones or builds this repository. Both Compose services use `pull_policy: always`; the initial launch and any controlled release or rollback pin both images to the same immutable tag.
 
-Unknown paths return a real `404`; `/index.html` permanently redirects to the canonical `/` path.
+See [`deploy/README.md`](deploy/README.md) for secret provisioning, backup/migration, release and rollback. Begin with `RECRUITER_PORTAL_ENABLED=false`; enable discovery only after Graph mail, admin/TOTP, both profiles, résumé and full browser acceptance pass.
 
-## Content and privacy
+## Privacy boundary
 
-The site publishes only approved professional information and links to René's LinkedIn and X profiles. It contains no public email address, employer branding, private infrastructure information or third-party embeds. Self-hosted Umami collects aggregate visits plus approximate country, region and city without cookies or advertising identifiers; the raw visitor IP address is not stored in its PostgreSQL schema.
+Only approved professional evidence and broad opportunity-fit signals are public. Exact compensation, detailed availability, recruiter contact data, messages, résumé bytes and security material are encrypted server-side and never baked into images or emitted to analytics. Private pages are non-cacheable, non-indexable and do not load Umami.
