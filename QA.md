@@ -75,6 +75,7 @@ Automate and visually inspect 320×568, 375×667, 390×844, 768×1024 and 1440×
 - [ ] HTML/CSS validators and .NET tests pass; NuGet and npm dependency audits report no known high/critical vulnerability.
 - [ ] Both images build from the same commit, run non-root/read-only and pass high/critical Trivy scans.
 - [ ] CI emits SBOM/provenance and matching immutable full-SHA tags. It never auto-promotes a partially initialized `latest` channel; once both mutable tags exist, a promotion failure attempts to restore both previous pointers.
+- [ ] Initial `latest` seeding requires an explicit `workflow_dispatch` with `initialize_latest=true`, promotes the absent tag first and leaves production pinned until both OCI revision labels match.
 - [ ] GitHub's package API reports both GHCR packages as `private`, and a full anonymous pull of each immutable tag fails with an authorization-specific error; network, registry, rate-limit, missing-tag and other failures do not count as privacy proof, and the production account can pull both.
 - [ ] Production contains only Compose, `.env`, secret files and Docker volumes—no repository, SDK, Dockerfile or QA/build tooling.
 - [ ] Encrypted online backup succeeds, the newest backup passes restore/integrity verification, and migration succeeds before start.

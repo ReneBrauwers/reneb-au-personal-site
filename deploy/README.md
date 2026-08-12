@@ -29,7 +29,9 @@ Use `sha-<full-commit>` for the initial release, a controlled release or rollbac
 
 CI always publishes both immutable SHA tags before considering either `latest` pointer. Two separate GHCR packages do not provide a cross-package atomic tag transaction. The workflow therefore refuses to auto-promote if either `latest` tag is absent. Once both pointers are initialized, it advances the pair and attempts to restore both previous pointers if a promotion command fails. Production acceptance must always prove that the two resolved OCI revision labels match before enabling discovery.
 
-For the first two-image release, keep production pinned to the matching immutable SHA pair. From a trusted administrative workstation, deliberately seed both mutable tags from that accepted pair:
+For the first two-image release, keep production pinned to the matching immutable SHA pair. Dispatch the `Publish container` workflow from the accepted `main` commit with `initialize_latest=true`. The workflow uses its repository-scoped package write permission, promotes the absent tag first, then the existing tag, and records `Latest channel: initialized`.
+
+If workflow dispatch is unavailable, a trusted administrative workstation with package write permission can deliberately seed both mutable tags from that accepted pair:
 
 ```sh
 docker buildx imagetools create --prefer-index=false --tag ghcr.io/renebrauwers/reneb-au-personal-site:latest ghcr.io/renebrauwers/reneb-au-personal-site:sha-<full-commit>
