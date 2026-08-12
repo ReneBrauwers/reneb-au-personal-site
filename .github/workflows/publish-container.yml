@@ -8,14 +8,15 @@ on:
 
 concurrency:
   group: publish-container-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 permissions:
   contents: read
   packages: write
 
 env:
-  IMAGE_NAME: ghcr.io/renebrauwers/reneb-au-personal-site
+  WEB_IMAGE_NAME: ghcr.io/renebrauwers/reneb-au-personal-site
+  PORTAL_IMAGE_NAME: ghcr.io/renebrauwers/reneb-au-recruiter-portal
 
 jobs:
   validate-and-publish:
@@ -29,8 +30,27 @@ jobs:
 
       - name: Build validation containers
         run: |
-          docker compose build web
+          docker compose build web portal
           docker compose --profile qa build qa
+
+      - name: Run portal application tests
+        run: >-
+          docker run --rm
+          --volume "$PWD:/src"
+          --workdir /src
+          mcr.microsoft.com/dotnet/sdk:10.0.400-noble@sha256:e1fc6e423f543119c406d24e2e687d67c569f18f04a37a8b0005d80ad0dcee80
+          dotnet test portal.tests/ReneB.Portal.Tests.csproj --configuration Release
+
+      - name: Audit .NET dependencies
+        run: >-
+          docker run --rm
+          --volume "$PWD:/src"
+          --workdir /src
+          mcr.microsoft.com/dotnet/sdk:10.0.400-noble@sha256:e1fc6e423f543119c406d24e2e687d67c569f18f04a37a8b0005d80ad0dcee80
+          dotnet restore portal/ReneB.Portal.csproj --force-evaluate
+
+      - name: Audit browser-test dependencies
+        run: docker compose --profile qa run --rm qa npm audit --audit-level=high
 
       - name: Validate HTML
         run: docker compose --profile qa run --rm qa npm run html
@@ -43,6 +63,39 @@ jobs:
 
       - name: Run Lighthouse
         run: docker compose --profile qa run --rm qa npm run lighthouse
+
+      - name: Scan source and final filesystems for private financial values
+        shell: bash
+        run: |
+          if git grep -InE 'A\$[[:space:]]*[0-9]' -- .; then
+            echo "A private Australian-dollar value was found in tracked source." >&2
+            exit 1
+          fi
+          for image in reneb-au-personal-site:local reneb-au-recruiter-portal:local; do
+            docker run --rm --entrypoint sh "$image" -c \
+              'for target in /app/ReneB.Portal.dll /app/appsettings.json /usr/share/nginx/html; do
+                 if [ -f "$target" ] && grep -a -q -E '\''A\$[[:space:]]*[0-9]'\'' "$target"; then exit 1; fi
+                 if [ -d "$target" ] && grep -R -I -q -E '\''A\$[[:space:]]*[0-9]'\'' "$target"; then exit 1; fi
+               done'
+          done
+
+      - name: Scan public gateway image
+        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
+        with:
+          image-ref: reneb-au-personal-site:local
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH
+
+      - name: Scan recruiter portal image
+        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
+        with:
+          image-ref: reneb-au-recruiter-portal:local
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH
 
       - name: Clean up validation containers
         if: always()
@@ -58,36 +111,151 @@ jobs:
       - name: Set up Buildx
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
 
-      - name: Generate image metadata
-        id: metadata
+      - name: Generate public gateway metadata
+        id: web-metadata
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         with:
-          images: ${{ env.IMAGE_NAME }}
+          images: ${{ env.WEB_IMAGE_NAME }}
           flavor: latest=false
           tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
             type=sha,prefix=sha-,format=long
 
-      - name: Build and publish image
-        id: publish
+      - name: Generate recruiter portal metadata
+        id: portal-metadata
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        with:
+          images: ${{ env.PORTAL_IMAGE_NAME }}
+          flavor: latest=false
+          tags: |
+            type=sha,prefix=sha-,format=long
+
+      - name: Build and publish public gateway
+        id: publish-web
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: .
           file: ./Dockerfile
           platforms: linux/amd64
           push: true
-          tags: ${{ steps.metadata.outputs.tags }}
-          labels: ${{ steps.metadata.outputs.labels }}
+          tags: ${{ steps.web-metadata.outputs.tags }}
+          labels: ${{ steps.web-metadata.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           provenance: mode=max
           sbom: true
 
+      - name: Build and publish recruiter portal
+        id: publish-portal
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          file: ./portal/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.portal-metadata.outputs.tags }}
+          labels: ${{ steps.portal-metadata.outputs.labels }}
+          cache-from: type=gha,scope=portal
+          cache-to: type=gha,mode=max,scope=portal
+          provenance: mode=max
+          sbom: true
+
+      - name: Prove both immutable GHCR images require authentication
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          require_private_package() {
+            local image="$1"
+            local package_name="${image##*/}"
+            local visibility
+            visibility="$(curl --fail --silent --show-error \
+              --header "Authorization: Bearer ${GH_TOKEN}" \
+              --header 'Accept: application/vnd.github+json' \
+              --header 'X-GitHub-Api-Version: 2022-11-28' \
+              "https://api.github.com/users/${GITHUB_REPOSITORY_OWNER}/packages/container/${package_name}" | jq -r '.visibility')"
+            if [[ "$visibility" != "private" ]]; then
+              echo "GitHub reports ${package_name} visibility as ${visibility}, not private." >&2
+              exit 1
+            fi
+
+            local anonymous_config pull_log
+            anonymous_config="$(mktemp -d)"
+            pull_log="$(mktemp)"
+            if DOCKER_CONFIG="$anonymous_config" docker pull "${image}:sha-${GITHUB_SHA}" >"$pull_log" 2>&1; then
+              rm -rf "$anonymous_config" "$pull_log"
+              echo "Anonymous pull unexpectedly succeeded for ${package_name}." >&2
+              exit 1
+            fi
+            if ! grep -Eiq 'denied|unauthorized|authentication required' "$pull_log"; then
+              rm -rf "$anonymous_config" "$pull_log"
+              echo "Anonymous pull for ${package_name} failed without an authorization-specific error." >&2
+              exit 1
+            fi
+            rm -rf "$anonymous_config" "$pull_log"
+          }
+          require_private_package "$WEB_IMAGE_NAME"
+          require_private_package "$PORTAL_IMAGE_NAME"
+
+      - name: Promote the verified image pair to latest
+        if: github.ref == 'refs/heads/main'
+        id: promote-latest
+        shell: bash
+        run: |
+          inspect_previous() {
+            local reference="$1"
+            local output error digest
+            output="$(mktemp)"
+            error="$(mktemp)"
+            if docker buildx imagetools inspect "$reference" >"$output" 2>"$error"; then
+              digest="$(awk '$1 == "Digest:" { print $2; exit }' "$output")"
+              rm -f "$output" "$error"
+              if [[ ! "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+                echo "Could not parse the existing digest for ${reference}." >&2
+                return 1
+              fi
+              printf '%s\n' "$digest"
+              return 0
+            fi
+            if grep -Eiq 'manifest unknown|not found' "$error"; then
+              rm -f "$output" "$error"
+              printf '%s\n' 'ABSENT'
+              return 0
+            fi
+            rm -f "$output" "$error"
+            echo "Could not inspect ${reference}; refusing to change either latest tag." >&2
+            return 1
+          }
+          old_web_digest="$(inspect_previous "${WEB_IMAGE_NAME}:latest")"
+          old_portal_digest="$(inspect_previous "${PORTAL_IMAGE_NAME}:latest")"
+          new_web_digest="${{ steps.publish-web.outputs.digest }}"
+          new_portal_digest="${{ steps.publish-portal.outputs.digest }}"
+          if [[ ! "$new_web_digest" =~ ^sha256:[0-9a-f]{64}$ || ! "$new_portal_digest" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+            echo "Published image digests are missing or invalid; refusing latest promotion." >&2
+            exit 1
+          fi
+          if [[ "$old_web_digest" == "ABSENT" || "$old_portal_digest" == "ABSENT" ]]; then
+            echo "status=not-initialized" >> "$GITHUB_OUTPUT"
+            echo "::warning::The mutable latest channel is not initialized for both packages. Immutable SHA images were published, but neither latest tag was changed. Seed both latest tags deliberately from this matching SHA pair while production remains pinned to immutable tags."
+            exit 0
+          fi
+          rollback_latest() {
+            docker buildx imagetools create --prefer-index=false --tag "${WEB_IMAGE_NAME}:latest" "${WEB_IMAGE_NAME}@${old_web_digest}" || true
+            docker buildx imagetools create --prefer-index=false --tag "${PORTAL_IMAGE_NAME}:latest" "${PORTAL_IMAGE_NAME}@${old_portal_digest}" || true
+          }
+          trap rollback_latest ERR
+          docker buildx imagetools create --prefer-index=false --tag "${WEB_IMAGE_NAME}:latest" "${WEB_IMAGE_NAME}@${new_web_digest}"
+          docker buildx imagetools create --prefer-index=false --tag "${PORTAL_IMAGE_NAME}:latest" "${PORTAL_IMAGE_NAME}@${new_portal_digest}"
+          trap - ERR
+          echo "status=promoted" >> "$GITHUB_OUTPUT"
+
       - name: Publish summary
         run: |
           {
             echo "### Published container"
-            echo "- Image: \`${IMAGE_NAME}\`"
+            echo "- Public gateway: \`${WEB_IMAGE_NAME}\`"
+            echo "- Gateway digest: \`${{ steps.publish-web.outputs.digest }}\`"
+            echo "- Recruiter portal: \`${PORTAL_IMAGE_NAME}\`"
+            echo "- Portal digest: \`${{ steps.publish-portal.outputs.digest }}\`"
             echo "- Commit: \`${GITHUB_SHA}\`"
-            echo "- Digest: \`${{ steps.publish.outputs.digest }}\`"
+            echo "- Latest channel: \`${{ steps.promote-latest.outputs.status || 'not-applicable' }}\`"
           } >> "$GITHUB_STEP_SUMMARY"

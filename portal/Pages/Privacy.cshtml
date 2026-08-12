@@ -1,0 +1,29 @@
+@page "/privacy"
+@{
+    ViewData["Title"] = "Recruiter portal privacy notice";
+}
+<section class="content-section">
+  <div class="portal-shell section-grid">
+    <div>
+      <p class="section-eyebrow">Privacy notice</p>
+      <h1>Recruiter access should not cost you control of your information.</h1>
+    </div>
+    <div class="prose-stack">
+      <h2>What is collected</h2>
+      <p>When you request access, this portal collects your name, email address, organisation, role, country, sourcing purpose, organisation or LinkedIn URL, and an optional phone number. If you continue, it also stores your access status, messages, résumé requests and security events.</p>
+
+      <h2>Why it is collected</h2>
+      <p>The information is used only to verify that you are a genuine recruiter or hiring representative, assess access to private candidate information, communicate about a possible opportunity, protect the portal and meet security and audit obligations.</p>
+
+      <h2>How it is handled</h2>
+      <p>Private profile values, contact details, messages and résumé files are encrypted at rest. Transactional email is sent through a dedicated Microsoft 365 mailbox. Notification emails do not include private profile values or message bodies. Private portal pages do not load Umami or other analytics.</p>
+
+      <h2>Access, retention and deletion</h2>
+      <p>Résumé access is separately approved, expires after 30 days and can be revoked sooner. Inactive recruiter records and message content receive a warning before deletion at 180 days. Non-content security audit metadata may be kept for 12 months. You can permanently delete your account and its content from the authenticated portal, or contact René through the public LinkedIn link to request access or correction.</p>
+
+      <h2>Your choice</h2>
+      <p>Registration is optional. Do not submit confidential client or candidate information in the sourcing-purpose or message fields. This notice uses the Australian Privacy Principles as its baseline and was last reviewed on 12 August 2026.</p>
+      <p><a class="button button-secondary" href="/auth/register">Return to access request</a></p>
+    </div>
+  </div>
+</section>

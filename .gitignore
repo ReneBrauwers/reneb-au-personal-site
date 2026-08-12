@@ -6,5 +6,9 @@ node_modules/
 *.log
 *.bak
 *.old
+portal/bin/
+portal/obj/
+portal.tests/bin/
+portal.tests/obj/
 Thumbs.db
 .DS_Store

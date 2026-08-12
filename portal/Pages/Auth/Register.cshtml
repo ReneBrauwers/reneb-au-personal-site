@@ -1,0 +1,37 @@
+@page "/auth/register"
+@model ReneB.Portal.Pages.Auth.RegisterModel
+@{
+    ViewData["Title"] = "Request recruiter access";
+}
+<div class="form-shell">
+  @if (Model.Submitted)
+  {
+    <div class="notice notice-success">
+      <h1>Check your email</h1>
+      <p>If the address can receive access messages, a 15-minute sign-in link is on its way. This response is deliberately the same for every submission.</p>
+    </div>
+  }
+  else
+  {
+    <form method="post" class="form-card">
+      <p class="section-eyebrow">Verified recruiter access</p>
+      <h1>Continue the conversation with context.</h1>
+      <p>Business-domain addresses normally receive immediate access to René’s detailed opportunity criteria. Free or higher-risk domains may require approval. Résumé access always requires René’s separate approval.</p>
+      <div asp-validation-summary="ModelOnly"></div>
+      <div class="field"><label asp-for="Input.Name"></label><input asp-for="Input.Name" autocomplete="name"><span asp-validation-for="Input.Name"></span></div>
+      <div class="field"><label asp-for="Input.Email"></label><input asp-for="Input.Email" autocomplete="email" inputmode="email"><span asp-validation-for="Input.Email"></span></div>
+      <div class="field"><label asp-for="Input.Organisation"></label><input asp-for="Input.Organisation" autocomplete="organization"><span asp-validation-for="Input.Organisation"></span></div>
+      <div class="field"><label asp-for="Input.Title"></label><input asp-for="Input.Title" autocomplete="organization-title"><span asp-validation-for="Input.Title"></span></div>
+      <div class="field"><label asp-for="Input.ProfileUrl">Organisation or LinkedIn URL</label><input asp-for="Input.ProfileUrl" type="url" inputmode="url"><span asp-validation-for="Input.ProfileUrl"></span></div>
+      <div class="field"><label asp-for="Input.Country"></label><input asp-for="Input.Country" autocomplete="country-name"><span asp-validation-for="Input.Country"></span></div>
+      <div class="field"><label asp-for="Input.Phone">Phone (optional)</label><input asp-for="Input.Phone" autocomplete="tel" inputmode="tel"><span asp-validation-for="Input.Phone"></span></div>
+      <div class="field"><label asp-for="Input.Purpose">Mandate or sourcing purpose</label><textarea asp-for="Input.Purpose"></textarea><span asp-validation-for="Input.Purpose"></span></div>
+      <div class="field">
+        <label><input asp-for="Input.PrivacyAccepted"> I understand these details are collected to verify recruiter access, communicate about a possible opportunity and protect private candidate information.</label>
+        <span asp-validation-for="Input.PrivacyAccepted"></span>
+        <span class="field-hint">Inactive records and message content expire after 180 days. You can delete your account from the portal at any time. Read the <a href="/privacy">recruiter portal privacy notice</a>.</span>
+      </div>
+      <div class="action-row"><button class="button" type="submit">Send my verification link</button></div>
+    </form>
+  }
+</div>

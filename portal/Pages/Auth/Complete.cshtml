@@ -1,0 +1,25 @@
+@page "/auth/complete"
+@model ReneB.Portal.Pages.Auth.CompleteModel
+@{
+    ViewData["Title"] = "Complete secure sign in";
+}
+<div class="form-shell">
+  <div class="form-card">
+    <p class="section-eyebrow">One-time verification</p>
+    <h1>Complete your secure sign in.</h1>
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+      <div class="notice notice-warning"><p>@Model.ErrorMessage</p></div>
+    }
+    <form method="post" asp-page-handler="Token" data-token-form>
+      <input type="hidden" name="Token" value="">
+      <noscript><p>The secure link handoff needs JavaScript. Use the one-time code below instead.</p></noscript>
+    </form>
+    <form method="post" asp-page-handler="Code">
+      <p>If the link did not complete automatically, enter the email and code from the message.</p>
+      <div class="field"><label asp-for="Email"></label><input asp-for="Email" autocomplete="email" inputmode="email"></div>
+      <div class="field"><label asp-for="Code"></label><input asp-for="Code" autocomplete="one-time-code" maxlength="8"></div>
+      <div class="action-row"><button class="button" type="submit">Verify code</button></div>
+    </form>
+  </div>
+</div>

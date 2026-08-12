@@ -1,0 +1,69 @@
+@{
+    var title = ViewData["Title"] as string ?? "Recruiter portal";
+    var publicAnalytics = ViewData["PublicAnalytics"] as bool? == true;
+}
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>@title — René Brauwers</title>
+  <meta name="referrer" content="no-referrer">
+  @if (publicAnalytics)
+  {
+    <meta name="robots" content="index,follow,max-image-preview:large">
+    <link rel="canonical" href="https://reneb.au/recruiters">
+    <link rel="alternate" type="text/markdown" href="https://reneb.au/recruiters/profile.md" title="Markdown recruiter profile">
+    <link rel="describedby" type="application/json" href="https://reneb.au/candidate.json" title="Structured candidate profile">
+  }
+  else
+  {
+    <meta name="robots" content="noindex,nofollow,noarchive">
+  }
+  <link rel="icon" href="/favicon.svg?v=20260803-1" type="image/svg+xml">
+  <link rel="stylesheet" href="/portal-assets/portal.css?v=1">
+  @if (publicAnalytics)
+  {
+    <script defer src="https://stats.reneb.au/script.js"
+            data-website-id="55c627ba-826f-4472-9479-f1279071488c"
+            data-domains="reneb.au"
+            data-exclude-search="true"
+            data-do-not-track="true"></script>
+  }
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <header class="portal-header">
+    <div class="portal-shell header-row">
+      <a class="portal-brand" href="/" aria-label="René Brauwers — home">
+        <span class="brand-mark" aria-hidden="true">R<span>B</span></span>
+        <span><strong>René Brauwers</strong><small>Recruiter access</small></span>
+      </a>
+      <nav class="portal-nav" aria-label="Portal navigation">
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+          <a href="/portal">Opportunity profile</a>
+          <form method="post" action="/auth/logout" class="inline-form">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="link-button">Sign out</button>
+          </form>
+        }
+        else
+        {
+          <a href="/auth/login">Sign in</a>
+        }
+      </nav>
+    </div>
+  </header>
+  <main id="main-content" class="portal-main" tabindex="-1">
+    @RenderBody()
+  </main>
+  <footer class="portal-footer">
+    <div class="portal-shell footer-row">
+      <span>© 2026 René Brauwers</span>
+      <span><a href="/privacy">Privacy</a> · Personal site. Views are my own.</span>
+    </div>
+  </footer>
+  <script src="/portal-assets/portal.js?v=1" defer></script>
+</body>
+</html>
