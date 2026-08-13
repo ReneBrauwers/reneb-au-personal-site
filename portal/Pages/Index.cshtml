@@ -1,0 +1,85 @@
+@page "/"
+@model ReneB.Portal.Pages.IndexModel
+@{
+  Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>@Model.Settings.SeoTitle</title>
+  <meta name="description" content="@Model.Settings.MetaDescription">
+  <meta name="robots" content="index,follow,max-image-preview:large">
+  <meta name="theme-color" content="#0A1624">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <link rel="canonical" href="https://reneb.au/">
+  <link rel="alternate" type="text/plain" href="https://reneb.au/llms.txt" title="Candidate discovery note for language models">
+  <link rel="icon" href="/favicon.svg?v=20260803-1" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css?v=20260813-2">
+  <meta property="og:type" content="profile">
+  <meta property="og:site_name" content="@Model.Settings.DisplayName">
+  <meta property="og:title" content="@Model.Settings.SocialTitle">
+  <meta property="og:description" content="@Model.Settings.SocialDescription">
+  <meta property="og:url" content="https://reneb.au/">
+  <meta property="og:image" content="@Model.Settings.SocialImageUrl">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:creator" content="@Model.Settings.XHandle">
+  <meta name="twitter:title" content="@Model.Settings.SocialTitle">
+  <meta name="twitter:description" content="@Model.Settings.SocialDescription">
+  <meta name="twitter:image" content="@Model.Settings.SocialImageUrl">
+  @Html.Raw($"<script type=\"application/ld+json\" nonce=\"{Model.ScriptNonce}\">{Model.JsonLd}</script>")
+  @if (Model.Settings.AnalyticsEnabled)
+  {
+    <script nonce="@Model.ScriptNonce" defer src="@Model.Settings.UmamiScriptUrl"
+            data-website-id="@Model.Settings.UmamiWebsiteId"
+            data-domains="@Model.Settings.UmamiDomains"
+            data-exclude-search="@(Model.Settings.UmamiExcludeSearch ? "true" : "false")"
+            data-do-not-track="@(Model.Settings.UmamiDoNotTrack ? "true" : "false")"></script>
+  }
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <header class="site-header">
+    <div class="shell header-inner">
+      <a class="brand-home" href="/" aria-label="@Model.Settings.DisplayName — home">
+        <span class="brand-dot" aria-hidden="true"></span>
+        <span class="brand-copy"><strong>@Model.Settings.DisplayName</strong><small>@Model.PageContent.HeaderDescriptor</small></span>
+      </a>
+      <nav class="header-nav" aria-label="Primary navigation">
+        <a class="header-link" href="#perspective">@Model.PageContent.PerspectiveNavigationLabel</a>
+        <a class="header-link" href="/recruiters" data-umami-event="recruiter-preview-link">@Model.PageContent.RecruiterNavigationLabel</a>
+        <a class="header-cta" href="@Model.Settings.LinkedInUrl">@Model.PageContent.HeroPrimaryAction</a>
+      </nav>
+    </div>
+  </header>
+  <main id="main-content" tabindex="-1">
+    <section class="hero" aria-labelledby="hero-heading">
+      <div class="shell hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow"><span>@Model.PageContent.HeroEyebrow</span></p>
+          <h1 id="hero-heading">@Model.PageContent.HeroHeadingLineOne<span>@Model.PageContent.HeroHeadingLineTwo</span></h1>
+          <div class="hero-intro rich-copy">@Html.Raw(ReneB.Portal.Pages.IndexModel.Html(Model.PageContent.HeroIntroduction))</div>
+          <div class="hero-actions"><a class="button button-primary" href="@Model.Settings.LinkedInUrl">@Model.PageContent.HeroPrimaryAction</a><a class="text-link" href="#contribution">@Model.PageContent.HeroSecondaryAction <span aria-hidden="true">↓</span></a></div>
+          <ul class="proof-list">
+            @for (var i = 0; i < Model.PageContent.ProofItems.Count; i++)
+            {
+              <li><span class="proof-icon" aria-hidden="true">@((i + 1).ToString("00"))</span><span><strong>@Model.PageContent.ProofItems[i].Heading</strong><small>@Model.PageContent.ProofItems[i].Detail</small></span></li>
+            }
+          </ul>
+        </div>
+        <figure class="hero-portrait">
+          <div class="portrait-frame"><img src="/assets/human-ai-collaboration.webp" width="1200" height="900" fetchpriority="high" decoding="async" alt="@Model.PageContent.HeroImageAlt"></div>
+          <figcaption>@Model.PageContent.HeroImageCaption</figcaption>
+        </figure>
+      </div>
+    </section>
+    <section class="contribution section" id="contribution" aria-labelledby="contribution-heading"><div class="shell section-grid"><div class="section-number" aria-hidden="true"><span>02</span></div><div><div class="section-heading"><p class="eyebrow">@Model.PageContent.ContributionEyebrow</p><h2 id="contribution-heading">@Model.PageContent.ContributionHeading</h2></div><ol class="contribution-flow">@for(var i=0;i<Model.PageContent.Contributions.Count;i++){<li><span class="flow-number" aria-hidden="true">@((i+1).ToString("00"))</span><h3>@Model.PageContent.Contributions[i].Heading</h3><div class="rich-copy">@Html.Raw(ReneB.Portal.Pages.IndexModel.Html(Model.PageContent.Contributions[i].Body))</div></li>}</ol></div></div></section>
+    <section class="foundation section" aria-labelledby="foundation-heading"><div class="shell section-grid"><div class="section-number" aria-hidden="true"><span>03</span></div><div class="foundation-grid"><div class="section-heading"><p class="eyebrow">@Model.PageContent.FoundationEyebrow</p><h2 id="foundation-heading">@Model.PageContent.FoundationHeading</h2></div><div class="foundation-copy rich-copy">@Html.Raw(ReneB.Portal.Pages.IndexModel.Html(Model.PageContent.FoundationBody))</div></div></div></section>
+    <section class="perspective section" id="perspective" aria-labelledby="perspective-heading"><div class="shell section-grid section-grid-inverse"><div class="section-number" aria-hidden="true"><span>04</span></div><div><div class="section-heading perspective-heading"><p class="eyebrow eyebrow-inverse">@Model.PageContent.PerspectiveEyebrow</p><h2 id="perspective-heading">@Model.PageContent.PerspectiveHeading</h2><div class="perspective-intro rich-copy">@Html.Raw(ReneB.Portal.Pages.IndexModel.Html(Model.PageContent.PerspectiveIntroduction))</div></div><div class="principles">@for(var i=0;i<Model.PageContent.Principles.Count;i++){<article><span aria-hidden="true">@((i+1).ToString("00"))</span><h3>@Model.PageContent.Principles[i].Heading</h3><div class="rich-copy">@Html.Raw(ReneB.Portal.Pages.IndexModel.Html(Model.PageContent.Principles[i].Body))</div></article>}</div><blockquote><p>@Model.PageContent.PullQuote</p><footer>— @Model.PageContent.PullQuoteAttribution</footer></blockquote></div></div></section>
+    <section class="ai-section section" aria-labelledby="ai-heading"><div class="shell section-grid"><div class="section-number" aria-hidden="true"><span>05</span></div><div class="ai-grid"><div class="section-heading"><p class="eyebrow">@Model.PageContent.AiEyebrow</p><h2 id="ai-heading">@Model.PageContent.AiHeading</h2></div><div class="ai-copy rich-copy">@Html.Raw(ReneB.Portal.Pages.IndexModel.Html(Model.PageContent.AiBody))</div></div></div></section>
+    <section class="closing section" aria-labelledby="closing-heading"><div class="shell closing-grid"><div><p class="eyebrow eyebrow-inverse">@Model.PageContent.ClosingEyebrow</p><h2 id="closing-heading">@Model.PageContent.ClosingHeading</h2></div><div class="closing-copy"><div class="rich-copy">@Html.Raw(ReneB.Portal.Pages.IndexModel.Html(Model.PageContent.ClosingBody))</div><div class="closing-actions"><a class="button button-light" href="@Model.Settings.LinkedInUrl">@Model.PageContent.ClosingPrimaryAction</a><a class="text-link text-link-light" href="@Model.Settings.XUrl">@Model.PageContent.ClosingSecondaryAction <span aria-hidden="true">↗</span></a></div></div></div></section>
+  </main>
+  <footer class="site-footer"><div class="shell footer-inner"><div><p>© @DateTime.UtcNow.Year @Model.Settings.DisplayName</p><p>@Model.Settings.Location</p></div><div class="footer-notice"><p>@Model.Settings.FooterNotice</p><p>@Model.Settings.AnalyticsNotice</p></div><nav aria-label="Social links"><a href="/recruiters">Recruiters</a><a href="@Model.Settings.LinkedInUrl">LinkedIn</a><a href="@Model.Settings.XUrl">X</a></nav></div></footer>
+</body>
+</html>

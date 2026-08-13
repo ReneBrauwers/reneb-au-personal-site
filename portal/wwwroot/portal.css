@@ -59,6 +59,7 @@ button, .button { min-height: 44px; }
 .evidence-card li + li, .fit-card li + li { margin-top: .55rem; }
 .disclosure { border-block: 1px solid var(--line); padding-block: 1.2rem; color: var(--ink-soft); }
 .form-shell { width: min(760px, calc(100% - 2rem)); margin: clamp(2rem, 6vw, 5rem) auto; }
+.form-shell-wide { width: min(1040px, calc(100% - 2rem)); }
 .form-card { padding: clamp(1.2rem, 5vw, 2.5rem); }
 .field { display: grid; gap: .35rem; margin-top: 1rem; }
 .field label { font-weight: 700; }
@@ -88,6 +89,19 @@ th, td { padding: .7rem; border: 1px solid var(--line); text-align: left; vertic
 code, pre { overflow-wrap: anywhere; }
 .portal-footer { border-top: 1px solid var(--line); color: #536273; font-size: .82rem; }
 .portal-footer a { display: inline-flex; align-items: center; min-height: 44px; }
+.visually-hidden { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0, 0, 0, 0) !important; white-space: nowrap !important; border: 0 !important; }
+.content-rich-editors { display: grid; gap: 1.4rem; }
+.editor-group, .repeater { min-width: 0; border-top: 1px solid var(--line); padding-top: 1.2rem; }
+.editor-group h2, .repeater h2 { margin: 0 0 .7rem; font-size: 1.1rem; }
+.ql-toolbar.ql-snow, .ql-container.ql-snow { border-color: #8793a0; background: #fff; }
+.ql-editor { min-height: 9rem; font: inherit; line-height: 1.6; }
+.ql-editor p, .rich-copy p { margin: 0 0 .8rem; }
+.ql-editor p:last-child, .rich-copy p:last-child { margin-bottom: 0; }
+.repeater-item { min-width: 0; margin: 1rem 0; padding: 1rem; border: 1px solid var(--line); background: #fbfaf7; }
+.repeater-item legend { padding-inline: .4rem; font-weight: 800; }
+.preview-surface { margin-block: 1.5rem; padding: clamp(1rem, 3vw, 2rem); border: 1px solid var(--line); background: var(--white); }
+.preview-surface > * + * { margin-top: 1rem; }
+.generated-preview { max-width: 100%; max-height: 34rem; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; padding: 1rem; background: #081522; color: #f5f7fa; font-size: .9rem; }
 
 @media (max-width: 760px) {
   .section-grid, .evidence-grid, .fit-grid, .admin-grid { grid-template-columns: 1fr; }
@@ -96,6 +110,7 @@ code, pre { overflow-wrap: anywhere; }
   .portal-nav a, .portal-nav form { flex: 0 1 auto; }
   .footer-row { align-items: flex-start; flex-direction: column; }
   .portal-shell, .form-shell { width: min(100% - 1.25rem, 1120px); }
+  .ql-toolbar.ql-snow { display: flex; flex-wrap: wrap; }
 }
 
 @media (forced-colors: active) {

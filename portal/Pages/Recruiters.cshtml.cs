@@ -9,10 +9,13 @@ public sealed class RecruitersModel(PortalDatabase database) : PageModel
 {
     public PublicCandidateProfile Profile { get; private set; } = new();
     public string JsonLd { get; private set; } = string.Empty;
+    public DiscoveryGuidanceContent Guidance { get; private set; } = ContentDefaults.Discovery();
+    public string ScriptNonce => HttpContext.Items["ScriptNonce"] as string ?? string.Empty;
 
     public async Task OnGetAsync(CancellationToken cancellationToken)
     {
         Profile = await database.GetPublicProfileAsync(false, cancellationToken);
+        Guidance = (await database.GetContentAsync<DiscoveryGuidanceContent>(ContentDocumentKeys.Discovery, false, cancellationToken)).Content;
         JsonLd = PublicProfileRenderer.ToJsonLd(Profile).Replace("</", "<\\/", StringComparison.Ordinal);
     }
 }

@@ -72,8 +72,8 @@ public sealed class PublicDiscoveryTests : IClassFixture<PortalFactory>
         Assert.Contains("data-exclude-search=\"true\"", recruiter, StringComparison.Ordinal);
         Assert.Contains("data-do-not-track=\"true\"", recruiter, StringComparison.Ordinal);
         Assert.Contains("application/ld+json", recruiter, StringComparison.Ordinal);
-        var start = recruiter.IndexOf("<script type=\"application/ld+json\">", StringComparison.Ordinal)
-            + "<script type=\"application/ld+json\">".Length;
+        var scriptStart = recruiter.IndexOf("<script type=\"application/ld+json\"", StringComparison.Ordinal);
+        var start = recruiter.IndexOf('>', scriptStart) + 1;
         var end = recruiter.IndexOf("</script>", start, StringComparison.Ordinal);
         using var jsonLd = JsonDocument.Parse(recruiter[start..end]);
         Assert.Equal("https://schema.org", jsonLd.RootElement.GetProperty("@context").GetString());

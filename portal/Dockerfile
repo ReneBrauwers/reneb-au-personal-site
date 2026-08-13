@@ -8,7 +8,7 @@ RUN dotnet publish portal/ReneB.Portal.csproj --configuration Release --no-resto
 FROM mcr.microsoft.com/dotnet/aspnet:10.0.11-noble@sha256:207cc51496778557731c81ff670333d8ade4a4fec22768fd1be8e78474a84ecf
 USER root
 RUN apt-get update \
-    && apt-get install --yes --no-install-recommends ca-certificates curl qpdf \
+    && apt-get install --yes --no-install-recommends ca-certificates curl poppler-utils qpdf \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd --gid 10001 portal \
     && useradd --uid 10001 --gid portal --no-create-home --shell /usr/sbin/nologin portal

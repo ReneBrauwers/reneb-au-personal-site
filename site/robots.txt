@@ -1,7 +1,0 @@
-User-agent: *
-Allow: /
-Disallow: /auth/
-Disallow: /portal
-Disallow: /admin/
-
-Sitemap: https://reneb.au/sitemap.xml

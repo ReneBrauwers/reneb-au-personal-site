@@ -5,6 +5,6 @@ WORKDIR /work/qa
 COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund
 
-COPY validate.mjs portal-validate.mjs lighthouse.mjs html-validate.mjs css-validate.mjs ./
+COPY validate.mjs portal-validate.mjs visual-proof.mjs lighthouse.mjs html-validate.mjs css-validate.mjs ./
 
 CMD ["npm", "run", "validate"]

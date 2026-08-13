@@ -28,6 +28,9 @@ public sealed class PortalFactory : WebApplicationFactory<Program>
             ["Portal:DisposableEmailDomains:0"] = "mailinator.com",
             ["Encryption:AllowDevelopmentKey"] = "true",
             ["Encryption:KeyFile"] = Path.Combine(_directory, "missing-keyring.json"),
+            ["AiCredentialEncryption:AllowDevelopmentKey"] = "true",
+            ["AiCredentialEncryption:KeyFile"] = Path.Combine(_directory, "missing-ai-keyring.json"),
+            ["Ai:EgressEnabled"] = "false",
             ["Mail:Mode"] = "Development",
             ["AllowedHosts"] = "localhost;127.0.0.1"
         }));

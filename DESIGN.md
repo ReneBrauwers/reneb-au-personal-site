@@ -24,6 +24,9 @@ The recruiter preview and protected portal extend the same editorial system rath
 - The circular `RB` editorial mark must not resemble a shield, badge or tombstone.
 - Avoid charts, score meters or “AI match percentage” claims. Evidence and mandate overlap carry the argument.
 - Preserve `overflow-x: clip` and `overscroll-behavior-x: none`, and verify forced horizontal movement in Chromium and WebKit touch contexts.
+- Content Studio uses a minimal self-hosted Quill toolbar for headings, emphasis, lists and safe links. Typed fields and repeaters must look like ordinary labelled forms, not raw JSON or a page-builder canvas.
+- Draft previews use the real semantic content hierarchy and remain usable at 390px and desktop widths. Diffs, history, provider settings and generated machine previews may scroll inside their own bounded container but never widen the page root.
+- AI authoring clearly distinguishes provider/model, selected public/private context, retention disclosure, proposal diff and human-only publication. Egress-disabled and untested-provider states must be obvious.
 
 ## Core visual idea
 

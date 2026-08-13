@@ -9,22 +9,28 @@ using ReneB.Portal.Security;
 
 namespace ReneB.Portal.Data;
 
-public sealed class PortalDatabase
+public sealed partial class PortalDatabase
 {
     private readonly string _connectionString;
     private readonly string _backupDirectory;
     private readonly FieldEncryptionService _encryption;
+    private readonly AiCredentialEncryptionService _aiCredentials;
     private readonly TimeProvider _time;
+    private readonly AiOptions _aiOptions;
     private readonly SemaphoreSlim _migrationLock = new(1, 1);
 
     public PortalDatabase(
         IOptions<PortalOptions> portalOptions,
+        IOptions<AiOptions> aiOptions,
         FieldEncryptionService encryption,
+        AiCredentialEncryptionService aiCredentials,
         TimeProvider time)
     {
         Directory.CreateDirectory(portalOptions.Value.DataDirectory);
         _backupDirectory = portalOptions.Value.BackupDirectory;
+        _aiOptions = aiOptions.Value;
         _encryption = encryption;
+        _aiCredentials = aiCredentials;
         _time = time;
         _connectionString = new SqliteConnectionStringBuilder
         {
@@ -64,6 +70,9 @@ public sealed class PortalDatabase
                 insert.Parameters.AddWithValue("$now", Format(_time.GetUtcNow()));
                 await insert.ExecuteNonQueryAsync(cancellationToken);
             }
+            await ExecuteAsync(connection, ExtendedSchema, cancellationToken);
+            await ExecuteAsync(connection, AiSchema, cancellationToken);
+            await InitializeContentDocumentsAsync(connection, cancellationToken);
         }
         finally
         {
@@ -87,61 +96,27 @@ public sealed class PortalDatabase
     }
 
     public async Task<PublicCandidateProfile> GetPublicProfileAsync(bool draft, CancellationToken cancellationToken = default)
-    {
-        await using var connection = await OpenAsync(cancellationToken);
-        await using var command = connection.CreateCommand();
-        command.CommandText = draft
-            ? "SELECT DraftPublicJson FROM CandidateProfiles WHERE Id = 1;"
-            : "SELECT PublishedPublicJson FROM CandidateProfiles WHERE Id = 1;";
-        var json = (string?)await command.ExecuteScalarAsync(cancellationToken)
-            ?? throw new InvalidOperationException("Candidate profile has not been initialized.");
-        return JsonSerializer.Deserialize<PublicCandidateProfile>(json, JsonOptions)
-            ?? throw new InvalidOperationException("Candidate profile is invalid.");
-    }
+        => (await GetContentAsync<PublicCandidateProfile>(ContentDocumentKeys.RecruiterProfile, draft, cancellationToken)).Content;
 
     public async Task SavePublicDraftAsync(PublicCandidateProfile profile, Guid actorId, CancellationToken cancellationToken = default)
     {
-        var json = JsonSerializer.Serialize(profile, JsonOptions);
-        await using var connection = await OpenAsync(cancellationToken);
-        await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
-        await ExecuteAsync(connection, "UPDATE CandidateProfiles SET DraftPublicJson = $json, UpdatedAt = $now WHERE Id = 1;", cancellationToken,
-            ("$json", json), ("$now", Format(_time.GetUtcNow())));
-        await InsertAuditAsync(connection, actorId, "public_profile.draft_saved", "candidate-profile", cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+        var current = await GetContentAsync<PublicCandidateProfile>(ContentDocumentKeys.RecruiterProfile, true, cancellationToken);
+        await SaveContentDraftAsync(ContentDocumentKeys.RecruiterProfile, profile, current.Revision, actorId, cancellationToken);
     }
 
     public async Task PublishPublicProfileAsync(PublicCandidateProfile profile, Guid actorId, CancellationToken cancellationToken = default)
     {
-        var json = JsonSerializer.Serialize(profile, JsonOptions);
-        await using var connection = await OpenAsync(cancellationToken);
-        await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
-        await ExecuteAsync(connection, "UPDATE CandidateProfiles SET DraftPublicJson = $json, PublishedPublicJson = $json, PublishedAt = $now, UpdatedAt = $now WHERE Id = 1;", cancellationToken,
-            ("$json", json), ("$now", Format(_time.GetUtcNow())));
-        await InsertAuditAsync(connection, actorId, "public_profile.draft_saved", "candidate-profile", cancellationToken);
-        await InsertAuditAsync(connection, actorId, "public_profile.published", "candidate-profile", cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+        var current = await GetContentAsync<PublicCandidateProfile>(ContentDocumentKeys.RecruiterProfile, true, cancellationToken);
+        await PublishContentAsync(ContentDocumentKeys.RecruiterProfile, profile, current.Revision, actorId, cancellationToken);
     }
 
     public async Task<PrivateCandidateProfile> GetPrivateProfileAsync(CancellationToken cancellationToken = default)
-    {
-        await using var connection = await OpenAsync(cancellationToken);
-        await using var command = connection.CreateCommand();
-        command.CommandText = "SELECT PrivateEncrypted FROM CandidateProfiles WHERE Id = 1;";
-        var encrypted = (string?)await command.ExecuteScalarAsync(cancellationToken)
-            ?? throw new InvalidOperationException("Private candidate profile has not been initialized.");
-        return JsonSerializer.Deserialize<PrivateCandidateProfile>(_encryption.Decrypt(encrypted), JsonOptions)
-            ?? new PrivateCandidateProfile();
-    }
+        => (await GetContentAsync<PrivateCandidateProfile>(ContentDocumentKeys.OpportunityProfile, false, cancellationToken)).Content;
 
     public async Task SavePrivateProfileAsync(PrivateCandidateProfile profile, Guid actorId, CancellationToken cancellationToken = default)
     {
-        var encrypted = _encryption.Encrypt(JsonSerializer.Serialize(profile, JsonOptions));
-        await using var connection = await OpenAsync(cancellationToken);
-        await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
-        await ExecuteAsync(connection, "UPDATE CandidateProfiles SET PrivateEncrypted = $private, UpdatedAt = $now WHERE Id = 1;", cancellationToken,
-            ("$private", encrypted), ("$now", Format(_time.GetUtcNow())));
-        await InsertAuditAsync(connection, actorId, "private_profile.updated", "candidate-profile", cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+        var current = await GetContentAsync<PrivateCandidateProfile>(ContentDocumentKeys.OpportunityProfile, true, cancellationToken);
+        await PublishContentAsync(ContentDocumentKeys.OpportunityProfile, profile, current.Revision, actorId, cancellationToken);
     }
 
     public async Task<RecruiterRecord> UpsertPendingRecruiterAsync(RecruiterRegistration registration, DomainRisk domainRisk, CancellationToken cancellationToken = default)
@@ -740,6 +715,17 @@ public sealed class PortalDatabase
             : null;
     }
 
+    public async Task<(ResumeRecord Record, byte[] Content)?> GetActiveResumeContentForAdminAsync(CancellationToken cancellationToken = default)
+    {
+        await using var connection = await OpenAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT Id, OriginalFileNameEncrypted, ContentEncrypted, Sha256, Size, UploadedAt, IsActive FROM ResumeVersions WHERE IsActive = 1 LIMIT 1;";
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        if (!await reader.ReadAsync(cancellationToken)) return null;
+        var record = new ResumeRecord(Guid.Parse(reader.GetString(0)), _encryption.Decrypt(reader.GetString(1)), reader.GetString(3), reader.GetInt64(4), Parse(reader.GetString(5)), reader.GetBoolean(6));
+        return (record, _encryption.DecryptBytes((byte[])reader[2]));
+    }
+
     internal async Task<List<Guid>> GetResumeVersionIdsAsync(CancellationToken cancellationToken = default)
     {
         var ids = new List<Guid>();
@@ -1003,6 +989,10 @@ public sealed class PortalDatabase
             ("$mailCutoff", Format(mailCutoff)));
         await ExecuteAsync(connection, "DELETE FROM DevelopmentMail WHERE CreatedAt < $mailCutoff;", cancellationToken,
             ("$mailCutoff", Format(mailCutoff)));
+        await ExecuteAsync(connection, "DELETE FROM AiConversations WHERE LastActiveAt < $cutoff;", cancellationToken,
+            ("$cutoff", Format(now.AddDays(-_aiOptions.ConversationRetentionDays))));
+        await ExecuteAsync(connection, "UPDATE AiUsageLedger SET Status = 'Failed', CompletedAt = $now WHERE Status = 'Reserved' AND CreatedAt < $cutoff;", cancellationToken,
+            ("$now", Format(now)), ("$cutoff", Format(now.AddHours(-1))));
         await ExecuteAsync(connection, "DELETE FROM AuditEvents WHERE OccurredAt < $auditCutoff;", cancellationToken,
             ("$auditCutoff", Format(auditCutoff)));
         await ExecuteAsync(connection, "DELETE FROM Recruiters WHERE IsAdmin = 0 AND DeletedAt IS NOT NULL AND DeletedAt < $auditCutoff;", cancellationToken,

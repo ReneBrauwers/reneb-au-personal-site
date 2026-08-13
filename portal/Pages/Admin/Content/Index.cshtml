@@ -1,0 +1,17 @@
+@page "/admin/content"
+@model ReneB.Portal.Pages.Admin.Content.IndexModel
+@{ ViewData["Title"] = "Content studio"; }
+<section class="content-section"><div class="portal-shell">
+  <p class="section-eyebrow">Governed publishing</p><h1>Content studio.</h1>
+  <p class="lead">Edit one authoritative source for each page. Machine representations are generated from the published profile and guidance so they cannot drift.</p>
+  <div class="admin-grid">
+    @foreach (var document in Model.Documents)
+    {
+      <a class="evidence-card" href="/admin/content/@document.Key">
+        <h2>@ReneB.Portal.Pages.Admin.Content.IndexModel.Label(document.Key)</h2>
+        <p>Draft revision @document.DraftRevision · Published revision @document.PublishedRevision</p>
+        <p class="field-hint">Updated @document.UpdatedAt.ToString("dd MMM yyyy HH:mm 'UTC'")</p>
+      </a>
+    }
+  </div>
+</div></section>

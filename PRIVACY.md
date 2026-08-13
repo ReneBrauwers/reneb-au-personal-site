@@ -42,6 +42,9 @@ The visible `/privacy` notice must explain collection, purpose, encryption, mail
 - Require TOTP step-up for administrator access and a confirmation no older than five minutes for sensitive mutations.
 - Determine administrators from the current host-owned `ADMIN_EMAILS` value; a database record alone never grants admin rights.
 - Redact logs and keep notification email free of private-profile values and message bodies.
+- Encrypt editorial revisions, AI conversations, proposals, uploaded context originals/extracted text/filenames and provider credentials. Provider credentials use a separate host-mounted AI keyring so compromise or rotation of one protection domain does not expose another.
+- Never make recruiter accounts, messages, provider keys, TOTP material, audit records or mail payloads available as AI context. Private opportunity content, résumé text and context uploads require explicit per-request administrator acknowledgement before their extracted text leaves the host.
+- Treat uploaded content as untrusted evidence. Models receive no tools, autonomous web access or publishing authority.
 
 ## Retention and deletion
 
@@ -52,16 +55,19 @@ The visible `/privacy` notice must explain collection, purpose, encryption, mail
 - Retain anonymized account metadata and metadata-only audit events for no more than 12 months, then hard-delete both.
 - Résumé grants expire after 30 days and remain revocable.
 - Keep only the current and one previous résumé version; securely expire older encrypted versions in accordance with the backup policy.
+- Delete encrypted AI conversations after 30 inactive days. Context-library documents persist only until an administrator explicitly deletes them.
 
 ## Analytics
 
-The homepage and `/recruiters` may load the approved self-hosted Umami tracker from `https://stats.reneb.au/script.js` using website ID `55c627ba-826f-4472-9479-f1279071488c`, `data-domains="reneb.au"`, `data-exclude-search="true"` and `data-do-not-track="true"`.
+The homepage and `/recruiters` may load one administrator-published cookieless Umami tracker. The default is `https://stats.reneb.au/script.js` using website ID `55c627ba-826f-4472-9479-f1279071488c`, `data-domains="reneb.au"`, `data-exclude-search="true"` and `data-do-not-track="true"`. Typed validation permits only a plain HTTPS JavaScript URL without credentials, query or fragment values; the response CSP is regenerated from its origin. The setting is not an arbitrary script editor.
 
 Only anonymous events such as `recruiter-preview-open` and `recruiter-access-start` are permitted. Never attach contact, compensation, résumé, message, organisation, sourcing-purpose or authentication data. Do not load Umami anywhere under `/auth`, `/portal`, `/admin` or on `/privacy`.
 
 ## Mail and credentials
 
-Microsoft Graph uses certificate-based application authentication and a dedicated sender mailbox. Exchange Online Application RBAC grants `Application Mail.Send` only within that mailbox's resource scope. The Entra app must not also hold unscoped Graph `Mail.Send`, because Entra and Exchange grants are additive. Certificates, private keys and the portal field-encryption keyring are host-mounted files outside source control and `.env`.
+Microsoft Graph uses certificate-based application authentication and a dedicated sender mailbox. Exchange Online Application RBAC grants `Application Mail.Send` only within that mailbox's resource scope. The Entra app must not also hold unscoped Graph `Mail.Send`, because Entra and Exchange grants are additive. Graph and Data Protection certificates/private keys, the portal field-encryption keyring and the separate AI credential keyring are host-mounted files outside source control and `.env`.
+
+AI provider keys are entered only by an authenticated administrator after recent TOTP, encrypted with the AI credential keyring and never returned by the UI. Prompt/response content is not logged or emitted to analytics. OpenRouter is constrained to endpoints denying data collection; xAI retention is shown as observed from its response header, with the default external 30-day retention disclosed when ZDR is not active.
 
 ## Employer, imagery and historical sources
 

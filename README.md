@@ -2,7 +2,9 @@
 
 Production source for [reneb.au](https://reneb.au/): René Brauwers' public portfolio, evidence-led recruiter discovery and private candidate portal.
 
-The homepage remains semantic static HTML/CSS. A private ASP.NET Core 10 Razor Pages service provides the recruiter preview, structured machine representations, passwordless mailbox verification, encrypted opportunity details, inbound messages, approval-controlled résumé access and administration. Hardened Nginx is the only exposed container.
+The homepage remains semantic, server-rendered HTML with framework-free CSS and no client application framework. A private ASP.NET Core 10 Razor Pages service provides governed content publishing, recruiter discovery, structured machine representations, passwordless mailbox verification, encrypted opportunity details, inbound messages, approval-controlled résumé access and administration. Hardened Nginx is the only exposed container and continues to serve static assets directly.
+
+Administrators can edit the homepage, global/Umami settings, recruiter and opportunity profiles, privacy and machine guidance through versioned drafts, restricted Quill rich text, diff, preview, TOTP publishing and rollback. Optional OpenRouter/xAI authoring creates validated draft proposals only; provider keys and selected context are encrypted and cost-limited.
 
 ## Local development
 
@@ -34,13 +36,13 @@ docker compose --profile qa run --rm qa npm run validate
 docker compose --profile qa run --rm qa npm run lighthouse
 ```
 
-`QA.md` is the full acceptance contract. The suite includes public/private leakage, authentication, authorization, résumé grants, browser accessibility, 320–1440 px responsive checks and Chromium/WebKit touch movement.
+`QA.md` is the full acceptance contract. The suite includes public/private leakage, content/AI security, authentication, authorization, résumé grants, browser accessibility, 320–1440 px responsive checks, Chromium/WebKit touch movement and authenticated screenshots for every admin surface under `artifacts/`.
 
 ## Repository map
 
 ```text
-site/                 Static public portfolio
-portal/               ASP.NET Core portal, encrypted SQLite data and operational commands
+site/                 Framework-free CSS, images, icons and social assets
+portal/               Server-rendered public pages, Content Studio, recruiter portal, encrypted SQLite and operational commands
 portal.tests/         Behaviour and security tests
 nginx/                Public routing and header contract
 qa/                   Dockerised HTML/CSS/Playwright/Lighthouse lanes
@@ -64,7 +66,7 @@ Pushes to `main` run all gates and publish matching private GHCR images:
 
 Each always receives a matching `sha-<full-commit>` tag with SBOM/provenance. After the two-package `latest` channel has been deliberately initialized, CI advances both mutable tags and restores the previous pair if a later promotion command fails. Production is pull-only and never clones or builds this repository. Both Compose services use `pull_policy: always`; the initial launch and any controlled release or rollback pin both images to the same immutable tag.
 
-See [`deploy/README.md`](deploy/README.md) for secret provisioning, backup/migration, release and rollback, and [`docs/entra/RECRUITER_PORTAL_MAIL_IDENTITY.md`](docs/entra/RECRUITER_PORTAL_MAIL_IDENTITY.md) for both Entra ClickOps and Azure CLI provisioning. Begin with `RECRUITER_PORTAL_ENABLED=false`; enable discovery only after Graph mail, admin/TOTP, both profiles, résumé and full browser acceptance pass.
+See [`deploy/README.md`](deploy/README.md) for secret provisioning, backup/migration, release and rollback, [`docs/entra/RECRUITER_PORTAL_MAIL_IDENTITY.md`](docs/entra/RECRUITER_PORTAL_MAIL_IDENTITY.md) for both Entra ClickOps and Azure CLI provisioning, and [`docs/ai/AI_AUTHORING_PROVIDERS.md`](docs/ai/AI_AUTHORING_PROVIDERS.md) for provider/privacy/cost setup. Begin with `RECRUITER_PORTAL_ENABLED=false` and `AI_EGRESS_ENABLED=false`; enable them only after their separate acceptance gates pass.
 
 ## Privacy boundary
 

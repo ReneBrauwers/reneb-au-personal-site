@@ -22,6 +22,8 @@ public sealed class PublicCandidateProfile
     [Required, StringLength(900)]
     public string Summary { get; set; } = string.Empty;
 
+    public RichTextContent SummaryRichText { get; set; } = new();
+
     public List<string> DemonstratedSignals { get; set; } = [];
     public List<string> RolesOfInterest { get; set; } = [];
     public List<string> AreasOfInterest { get; set; } = [];
@@ -35,8 +37,16 @@ public sealed class PublicCandidateProfile
 
 public sealed class PrivateCandidateProfile
 {
+    [Required, StringLength(180)]
+    public string PageHeading { get; set; } = "Where the mandate and terms become specific.";
+
+    [Required]
+    public RichTextContent PageIntroduction { get; set; } = RichTextContent.FromParagraphs("Verified recruiters can review the detailed mandate, compensation and availability criteria below.");
+
     [StringLength(4000)]
     public string? DetailedInterests { get; set; }
+
+    public RichTextContent DetailedInterestsRichText { get; set; } = new();
 
     [StringLength(500)]
     public string? PermanentCompensation { get; set; }
@@ -49,6 +59,8 @@ public sealed class PrivateCandidateProfile
 
     [StringLength(3000)]
     public string? AdditionalGuidance { get; set; }
+
+    public RichTextContent AdditionalGuidanceRichText { get; set; } = new();
 }
 
 public sealed record RecruiterRegistration(

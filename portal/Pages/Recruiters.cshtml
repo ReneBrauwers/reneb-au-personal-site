@@ -4,7 +4,7 @@
     ViewData["Title"] = "For recruiters and talent agents";
     ViewData["PublicAnalytics"] = true;
 }
-@Html.Raw($"<script type=\"application/ld+json\">{Model.JsonLd}</script>")
+@Html.Raw($"<script type=\"application/ld+json\" nonce=\"{Model.ScriptNonce}\">{Model.JsonLd}</script>")
 
 <section class="hero-panel" data-umami-event="recruiter-preview-open">
   <div class="portal-shell">
@@ -67,7 +67,7 @@
     </div>
     <div>
       <ul>@foreach (var location in Model.Profile.LocationPreferences) { <li>@location</li> }</ul>
-      <p class="disclosure">Exact compensation, detailed availability and a private message box are available after a human verifies their email. Résumé download additionally requires René’s explicit approval and expires after 30 days.</p>
+      <p class="disclosure">Compensation: @Model.Guidance.CompensationDisclosure. Detailed availability: @Model.Guidance.AvailabilityDisclosure. Résumé: @Model.Guidance.ResumeDisclosure. A private message box is available after a human verifies their email.</p>
       <div class="action-row"><a class="button" href="/auth/register" data-umami-event="recruiter-access-start">Continue with verified access</a></div>
       <p class="field-hint">Candidate-supplied · Last reviewed @Model.Profile.LastReviewed.ToString("dd MMMM yyyy")</p>
     </div>

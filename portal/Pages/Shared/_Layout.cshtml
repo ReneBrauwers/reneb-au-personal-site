@@ -1,13 +1,16 @@
+@inject ReneB.Portal.Services.SiteContentService SiteContent
 @{
     var title = ViewData["Title"] as string ?? "Recruiter portal";
     var publicAnalytics = ViewData["PublicAnalytics"] as bool? == true;
+    var adminEditor = ViewData["AdminEditor"] as bool? == true;
+    var settings = await SiteContent.GetSettingsAsync(Context.RequestAborted);
 }
 <!DOCTYPE html>
 <html lang="en-AU">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>@title — René Brauwers</title>
+  <title>@title — @settings.DisplayName</title>
   <meta name="referrer" content="no-referrer">
   @if (publicAnalytics)
   {
@@ -22,27 +25,35 @@
   }
   <link rel="icon" href="/favicon.svg?v=20260803-1" type="image/svg+xml">
   <link rel="stylesheet" href="/portal-assets/portal.css?v=1">
+  @if (adminEditor) { <link rel="stylesheet" href="/portal-assets/vendor/quill/quill.snow.css?v=2.0.3"> }
   @if (publicAnalytics)
   {
-    <script defer src="https://stats.reneb.au/script.js"
-            data-website-id="55c627ba-826f-4472-9479-f1279071488c"
-            data-domains="reneb.au"
-            data-exclude-search="true"
-            data-do-not-track="true"></script>
+    @if (settings.AnalyticsEnabled)
+    {
+      <script defer src="@settings.UmamiScriptUrl"
+              data-website-id="@settings.UmamiWebsiteId"
+              data-domains="@settings.UmamiDomains"
+              data-exclude-search="@(settings.UmamiExcludeSearch ? "true" : "false")"
+              data-do-not-track="@(settings.UmamiDoNotTrack ? "true" : "false")"></script>
+    }
   }
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
   <header class="portal-header">
     <div class="portal-shell header-row">
-      <a class="portal-brand" href="/" aria-label="René Brauwers — home">
+      <a class="portal-brand" href="/" aria-label="@settings.DisplayName — home">
         <span class="brand-mark" aria-hidden="true">R<span>B</span></span>
-        <span><strong>René Brauwers</strong><small>Recruiter access</small></span>
+        <span><strong>@settings.DisplayName</strong><small>Recruiter access</small></span>
       </a>
       <nav class="portal-nav" aria-label="Portal navigation">
         @if (User.Identity?.IsAuthenticated == true)
         {
           <a href="/portal">Opportunity profile</a>
+          @if (User.FindFirst(System.Security.Claims.ClaimTypes.Email) is { Value: var email } && Context.RequestServices.GetRequiredService<ReneB.Portal.Security.IdentityService>().IsAdminEmail(email))
+          {
+            <a href="/admin">Admin</a>
+          }
           <form method="post" action="/auth/logout" class="inline-form">
             @Html.AntiForgeryToken()
             <button type="submit" class="link-button">Sign out</button>
@@ -60,10 +71,15 @@
   </main>
   <footer class="portal-footer">
     <div class="portal-shell footer-row">
-      <span>© 2026 René Brauwers</span>
-      <span><a href="/privacy">Privacy</a> · Personal site. Views are my own.</span>
+      <span>© @DateTime.UtcNow.Year @settings.DisplayName</span>
+      <span><a href="/privacy">Privacy</a> · @settings.FooterNotice</span>
     </div>
   </footer>
   <script src="/portal-assets/portal.js?v=1" defer></script>
+  @if (adminEditor)
+  {
+    <script src="/portal-assets/vendor/quill/quill.js?v=2.0.3" defer></script>
+    <script src="/portal-assets/content-editor.js?v=1" defer></script>
+  }
 </body>
 </html>

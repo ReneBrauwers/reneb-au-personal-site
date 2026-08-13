@@ -23,6 +23,7 @@ Keep both image references on matching tags:
 RENEB_AU_IMAGE=ghcr.io/renebrauwers/reneb-au-personal-site:latest
 RENEB_AU_PORTAL_IMAGE=ghcr.io/renebrauwers/reneb-au-recruiter-portal:latest
 RECRUITER_PORTAL_ENABLED=false
+AI_EGRESS_ENABLED=false
 ```
 
 Use `sha-<full-commit>` for the initial release, a controlled release or rollback. `pull_policy: always` applies to both services even when an immutable tag is selected.
@@ -62,6 +63,19 @@ Create the secret directory with mode `0700`. Generate two independent 32-byte r
 
 Point `PORTAL_KEYRING_FILE` at that absolute host path. The lookup key makes normalized email/code hashes stable when the active encryption key changes; do not replace it without an atomic hash-migration procedure. Back up the keyring separately from the encrypted database backup. Never remove an older key ID while database fields or backups still reference it; rotate field encryption by adding a new key and changing `activeKeyId`, then re-encrypt data through a reviewed migration.
 
+Create a separate AI provider-credential keyring and point `AI_CREDENTIAL_KEYRING_FILE` at it:
+
+```json
+{
+  "activeKeyId": "v1",
+  "keys": {
+    "v1": "BASE64_OF_EXACTLY_32_RANDOM_BYTES"
+  }
+}
+```
+
+Generate a new random value; do not reuse either field-encryption value, the deterministic lookup key, a Graph credential or Data Protection key. The portal uses this keyring only for OpenRouter/xAI API credentials entered through the admin UI. Keep every older key ID required by database backups. A restore containing provider settings is not operational until the matching field and AI credential keyrings are both available.
+
 ## 4. Microsoft 365 sender
 
 Provision a dedicated Exchange Online mailbox and an Entra application using certificate credentials. Upload only the public certificate to Entra; mount its PEM certificate and private key as host files. Set the tenant ID, client ID and dedicated sender address in `.env`.
@@ -72,7 +86,7 @@ The complete ClickOps, Azure CLI, Exchange Online PowerShell, rotation and verif
 
 Provision a separate self-signed RSA certificate/key pair for ASP.NET Data Protection and mount it through the `DATA_PROTECTION_*` paths. Do not reuse the Graph credential. The private key protects persisted cookie-key material in the data volume. Retain the old certificate/private key and test cookie-key recovery before rotating this pair; deleting it while old Data Protection keys remain makes active cookies and protected state unreadable.
 
-The portal runs as UID/GID `10001`. Standalone Docker Compose bind-mounts file-backed secrets without remapping ownership, so make each of the five secret files owned by `10001:10001` and mode `0400`; keep the parent directory root-owned and non-listable to other users. Verify readability as UID 10001 before launch without printing the contents. Compose mounts them at the exact `.json`/`.pem` filenames configured under `/run/secrets`.
+The portal runs as UID/GID `10001`. Standalone Docker Compose bind-mounts file-backed secrets without remapping ownership, so make each of the six secret files owned by `10001:10001` and mode `0400`; keep the parent directory root-owned and non-listable to other users. Verify readability as UID 10001 before launch without printing the contents. Compose mounts them at the exact `.json`/`.pem` filenames configured under `/run/secrets`.
 
 References:
 
@@ -102,10 +116,13 @@ Confirm `/healthz` succeeds and `/readyz` reports ready. Recruiter discovery and
 Through the admin UI:
 
 1. enrol TOTP and store a recovery copy of the seed in the password manager;
-2. review/edit the public draft and publish it;
-3. enter exact compensation, detailed availability and opportunity criteria in the encrypted private editor;
-4. upload and validate the PDF résumé; and
-5. test Graph delivery to an external mailbox, business/free/disposable domain flows, approval, message, résumé grant/download/revocation and account deletion.
+2. review Content Studio's seeded homepage, global/Umami settings, public recruiter profile, private opportunity profile, privacy notice and machine guidance; preview and publish each intended draft;
+3. enter exact compensation, detailed availability and opportunity criteria only in the encrypted opportunity document;
+4. upload and validate the PDF résumé;
+5. test Graph delivery to an external mailbox, business/free/disposable domain flows, approval, message, résumé grant/download/revocation and account deletion; and
+6. run the authenticated visual lane and retain its mobile/desktop screenshot report.
+
+Leave `AI_EGRESS_ENABLED=false` during this phase. You may prepare provider settings only after the separate AI credential keyring is mounted. When the content migration and editing flows pass, set `AI_EGRESS_ENABLED=true`, recreate both services, enter a provider key through `/admin/ai/providers`, refresh compatible models, configure both the provider cap and site-wide monthly ceiling, and run the minimal structured-output test. AI authoring remains disabled until that test succeeds. Confirm OpenRouter private-routing settings or the xAI ZDR response status in the UI before selecting private opportunity, résumé or uploaded context.
 
 ## 6. Normal release
 
@@ -132,6 +149,8 @@ docker inspect "$(docker compose --env-file .env -f compose.yaml ps -q portal)" 
 
 Then run the production browser lane with `QA_BASE_URL=https://reneb.au` and verify live TLS, apex/www/HTTP canonical redirects, real 404s, headers, touch behaviour, persistence after restart, external mail and zero Umami requests on private pages.
 
+Production does not expose `/dev/mail`, so authenticated visual acceptance must use the real dedicated mailbox and a human-completed magic link/TOTP. Do not add a production test bypass. The administrator screenshots and their JSON report are release evidence but must not capture provider keys, TOTP setup material, private messages or compensation values for broad distribution.
+
 ## 7. Enable discovery
 
 Only after the disabled-mode acceptance above, set:
@@ -150,4 +169,4 @@ Migrations follow expand/contract compatibility, so the previous portal should r
 
 ## 9. Backup operations
 
-Encrypted backups remain in the `portal-backups` volume and are useless without an appropriate field keyring. Copy both into independently protected backup storage, test restore verification periodically and record retention. Keep production `.env`, registry credentials, certificate private key and keyring out of routine logs and support bundles.
+Encrypted backups remain in the `portal-backups` volume and are useless without the appropriate field keyring. AI provider credentials inside a restored database additionally require the matching AI credential keyring. Copy the backup and both keyrings into separate independently protected storage, test restore verification periodically and record retention. Keep production `.env`, registry credentials, certificate private keys and keyrings out of routine logs and support bundles.
