@@ -30,7 +30,7 @@ public sealed class PublicCandidateProfile
     public List<string> PoorFitSignals { get; set; } = [];
 
     [Required]
-    public DateOnly LastReviewed { get; set; } = new(2026, 8, 12);
+    public DateOnly LastReviewed { get; set; } = new(2026, 8, 13);
 }
 
 public sealed class PrivateCandidateProfile
