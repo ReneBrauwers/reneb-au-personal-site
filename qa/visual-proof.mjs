@@ -45,12 +45,29 @@ async function inspectRoutes(context, routes, sessionLabel) {
         bodyScrollWidth: document.body.scrollWidth,
         bodyFontSize: Number.parseFloat(getComputedStyle(document.body).fontSize),
         h1Count: document.querySelectorAll("h1").length,
-        title: document.title
+        title: document.title,
+        validSummaryVisible: [...document.querySelectorAll(".validation-summary-valid")].some(element => {
+          const rect = element.getBoundingClientRect();
+          return getComputedStyle(element).display !== "none" && rect.width > 0 && rect.height > 0;
+        }),
+        editorHeights: [...document.querySelectorAll(".ql-container")].map(element => element.getBoundingClientRect().height),
+        editorActionOverlap: (() => {
+          const action = document.querySelector("[data-content-editor] > .action-row");
+          if (!action) return false;
+          const actionTop = action.getBoundingClientRect().top;
+          return [...document.querySelectorAll("[data-content-editor] .ql-container")]
+            .some(element => element.getBoundingClientRect().bottom > actionTop + 1);
+        })(),
+        aiFormWidth: document.querySelector(".ai-authoring-grid .form-card")?.getBoundingClientRect().width || null
       }));
       check(metrics.scrollWidth <= metrics.clientWidth, `${sessionLabel}/${name}/${viewport.name}: root overflow ${metrics.scrollWidth}/${metrics.clientWidth}`);
       check(metrics.bodyScrollWidth <= metrics.clientWidth, `${sessionLabel}/${name}/${viewport.name}: body overflow ${metrics.bodyScrollWidth}/${metrics.clientWidth}`);
       check(metrics.bodyFontSize >= 16, `${sessionLabel}/${name}/${viewport.name}: body font ${metrics.bodyFontSize}px`);
       check(metrics.h1Count === 1, `${sessionLabel}/${name}/${viewport.name}: ${metrics.h1Count} h1 elements`);
+      check(!metrics.validSummaryVisible, `${sessionLabel}/${name}/${viewport.name}: empty validation summary is visible`);
+      check(metrics.editorHeights.every(height => height <= 450), `${sessionLabel}/${name}/${viewport.name}: editor height ${metrics.editorHeights.join(", ")}`);
+      check(!metrics.editorActionOverlap, `${sessionLabel}/${name}/${viewport.name}: editor overlaps the action row`);
+      if (name === "ai-authoring" && viewport.width >= 1000) check(metrics.aiFormWidth >= 380, `${sessionLabel}/${name}/${viewport.name}: authoring form width ${metrics.aiFormWidth}px`);
       const axe = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"]).analyze();
       const serious = axe.violations.filter(item => ["serious", "critical"].includes(item.impact));
       check(serious.length === 0, `${sessionLabel}/${name}/${viewport.name}: accessibility ${serious.map(item => item.id).join(", ")}`);
@@ -70,6 +87,14 @@ await anonymous.close();
 
 const admin = await browser.newContext();
 const login = await admin.newPage();
+const existingTokens = new Set();
+const existingMail = await login.request.get(mailUrl);
+if (existingMail.ok()) {
+  for (const message of await existingMail.json()) {
+    const existingToken = message.body?.match(/#token=([^"<]+)/)?.[1];
+    if (existingToken) existingTokens.add(existingToken);
+  }
+}
 await login.goto(`${baseUrl}/auth/admin`, { waitUntil: "networkidle" });
 await login.locator('input[name="Email"]').fill("admin@example.invalid");
 await login.getByRole("button", { name: "Send a secure link" }).click();
@@ -79,8 +104,8 @@ for (let attempt = 0; attempt < 20 && !token; attempt += 1) {
   const response = await login.request.get(mailUrl);
   if (response.ok()) {
     const mail = await response.json();
-    const message = mail.find(item => item.recipient === "admin@example.invalid");
-    token = message?.body.match(/#token=([^"<]+)/)?.[1];
+    const messages = mail.filter(item => item.recipient === "admin@example.invalid" && item.subject.includes("secure reneb.au sign-in link"));
+    token = messages.map(message => message.body.match(/#token=([^"<]+)/)?.[1]).find(value => value && !existingTokens.has(value));
   }
   if (!token) await new Promise(resolve => setTimeout(resolve, 500));
 }
