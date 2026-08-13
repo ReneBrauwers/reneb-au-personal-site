@@ -5,6 +5,12 @@ const htmlvalidate = new HtmlValidate({
   extends: ["html-validate:recommended"],
   rules: {
     "long-title": "off",
+    // Razor Tag Helpers emit antiforgery inputs using valid XML-style void syntax,
+    // while hand-authored HTML uses the omitted-end-tag style.
+    "void-style": "off",
+    // ASP.NET emits a same-name hidden false value after each checkbox so an
+    // unchecked control still binds deterministically on the server.
+    "form-dup-name": "off",
     "no-inline-style": "error",
     "wcag/h30": "error",
     "wcag/h37": "error",
