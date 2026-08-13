@@ -25,10 +25,15 @@ public sealed class PublicDiscoveryTests : IClassFixture<PortalFactory>
             var content = await response.Content.ReadAsStringAsync();
             Assert.Contains("Ren", content, StringComparison.Ordinal);
             Assert.Contains("enterprise architecture", content, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("annual investment planning", content, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("architecture review", content, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("operational resilience", content, StringComparison.OrdinalIgnoreCase);
             Assert.Contains("https://reneb.au", content, StringComparison.OrdinalIgnoreCase);
             Assert.DoesNotContain("A$", content, StringComparison.OrdinalIgnoreCase);
             Assert.DoesNotContain("per day", content, StringComparison.OrdinalIgnoreCase);
             Assert.DoesNotContain("transition payment", content, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("citizenship", content, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("26+ years", content, StringComparison.OrdinalIgnoreCase);
         }
     }
 

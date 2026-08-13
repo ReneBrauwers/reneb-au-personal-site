@@ -41,6 +41,10 @@
   },
   "approvedCurrentClaims": [
     "René leads Enterprise Architecture at Perpetual Corporate Trust.",
+    "He leads an enterprise architecture function and provides matrix architecture leadership across multiple delivery squads.",
+    "He advises senior business and technology leaders, engages executive and governance forums, and contributes to annual investment planning and business cases.",
+    "He has established technology governance spanning architecture review, standards, decisions, exceptions, risk and audit traceability.",
+    "His regulated-environment experience includes operational resilience, privacy, security and design risk.",
     "He works across Business, Engineering, Product, Data, Security and Risk.",
     "His professional context is regulated financial services in Sydney.",
     "His focus is helping Business and Engineering make better technology decisions."
@@ -62,14 +66,17 @@
     "precise residence",
     "date of birth or age",
     "family information",
-    "citizenship or nationality matters",
+    "citizenship, nationality or immigration status",
     "financial information",
     "health information",
     "travel plans",
     "internal employer projects",
     "internal stakeholders",
     "private infrastructure or repositories",
-    "historical email addresses"
+    "historical email addresses",
+    "public résumé content or detailed employment chronology",
+    "exact team, squad or influence counts",
+    "detailed employer initiatives, risk exposures or delivery percentages"
   ],
   "copy": {
     "heroEyebrow": "Sydney · Enterprise technology · Regulated financial services",
