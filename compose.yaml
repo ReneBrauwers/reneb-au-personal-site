@@ -14,7 +14,10 @@ services:
       DISPOSABLE_EMAIL_DOMAINS: mailinator.com,10minutemail.com,yopmail.com
       Portal__DataDirectory: /app/data
       Portal__BackupDirectory: /app/backups
+      Portal__AuthRequestsPerMinute: "100"
       Encryption__AllowDevelopmentKey: "true"
+      AiCredentialEncryption__AllowDevelopmentKey: "true"
+      Ai__EgressEnabled: "false"
       Mail__Mode: Development
       AllowedHosts: reneb.au;localhost;127.0.0.1;portal;web
     restart: unless-stopped

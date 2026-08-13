@@ -1,0 +1,25 @@
+@page "/admin/ai/providers"
+@model ReneB.Portal.Pages.Admin.Ai.ProvidersModel
+@{ ViewData["Title"] = "AI providers"; }
+<section class="content-section"><div class="portal-shell">
+  <p class="section-eyebrow">Administrator AI settings</p><h1>Providers, models and cost controls.</h1>
+  <p>Keys are encrypted with a separate host-mounted keyring, are never shown again, and remain disabled until model discovery and a structured-output test succeed.</p>
+  @if(!Model.EgressEnabled){<div class="notice notice-warning"><p>AI egress is disabled by the host. Configuration can be prepared, but discovery, tests and authoring remain unavailable.</p></div>}
+  @if(TempData["Status"] is string status){<div class="notice notice-success"><p>@status</p></div>} @if(TempData["Error"] is string error){<div class="notice notice-warning"><p>@error</p></div>}
+  <form method="post" asp-page-handler="GlobalBudget" class="form-card"><h2>Site-wide monthly ceiling</h2><p>All provider calls share this hard ceiling. Provider caps below can be lower, but their combined reservations can never exceed this value.</p><div class="field"><label asp-for="GlobalMonthlyBudgetUsd">Global cap (USD)</label><input asp-for="GlobalMonthlyBudgetUsd" type="number" min="0.01" max="10000" step="0.01"></div><p>US$@Model.GlobalBudget.UsedUsd.ToString("0.0000") used · US$@Model.GlobalBudget.ReservedUsd.ToString("0.0000") reserved · US$@Model.GlobalBudget.RemainingUsd.ToString("0.0000") remaining</p><button class="button" type="submit">Save site-wide ceiling</button></form>
+  <div class="admin-grid">
+  @foreach(var provider in Enum.GetValues<AiProviderKind>())
+  {
+    var config=Model.Configurations.FirstOrDefault(item=>item.Provider==provider); var models=Model.Models[provider]; var budget=Model.Budgets[provider];
+    <article class="form-card"><h2>@provider</h2>
+      @if(config is null){<p>Not configured.</p>}else{<dl class="data-list"><div><dt>Key</dt><dd>•••• @config.KeyLastFour · fingerprint @config.KeyFingerprint</dd></div><div><dt>Status</dt><dd>@config.Status</dd></div><div><dt>Model</dt><dd>@(config.SelectedModel??"Not selected")</dd></div><div><dt>ZDR observed</dt><dd>@(config.ZeroDataRetentionObserved?.ToString()??"Not reported")</dd></div><div><dt>Monthly usage</dt><dd>US$@budget.UsedUsd.ToString("0.0000") used · US$@budget.RemainingUsd.ToString("0.0000") remaining</dd></div></dl>}
+      <form method="post" asp-page-handler="Key"><input type="hidden" asp-for="Provider" value="@provider"><div class="field"><label for="key-@provider">@(config is null?"API key":"Replacement API key")</label><input id="key-@provider" asp-for="ApiKey" type="password" autocomplete="new-password"></div><button class="button" type="submit">Store key</button></form>
+      @if(config is not null){
+        <form method="post" asp-page-handler="Refresh" class="inline-form"><input type="hidden" asp-for="Provider" value="@provider"><button class="button button-secondary" type="submit">Refresh compatible models</button></form>
+        <form method="post" asp-page-handler="Settings"><input type="hidden" asp-for="Provider" value="@provider"><div class="field"><label for="model-@provider">Model</label><select id="model-@provider" asp-for="ModelId"><option value="">Select a compatible model</option>@foreach(var item in models){if(config.SelectedModel==item.Id){<option value="@item.Id" selected>@item.Name · context @(item.ContextLength?.ToString()??"not reported")</option>}else{<option value="@item.Id">@item.Name · context @(item.ContextLength?.ToString()??"not reported")</option>}}</select></div><div class="field"><label for="budget-@provider">Monthly cap (USD)</label><input id="budget-@provider" asp-for="MonthlyBudgetUsd" type="number" step="0.01" value="@config.MonthlyBudgetUsd"></div><div class="field"><label for="tokens-@provider">Maximum output tokens per request</label><input id="tokens-@provider" asp-for="MaximumOutputTokens" type="number" value="@config.MaximumOutputTokens"></div><button class="button" type="submit">Save model and budget</button></form>
+        <div class="action-row"><form method="post" asp-page-handler="Test"><input type="hidden" asp-for="Provider" value="@provider"><button class="button button-secondary" type="submit">Run connection test</button></form><form method="post" asp-page-handler="Delete"><input type="hidden" asp-for="Provider" value="@provider"><button class="button button-secondary" type="submit">Delete provider</button></form></div>
+      }
+    </article>
+  }
+  </div><p><a class="button button-secondary" href="/admin/ai">AI authoring</a> <a class="button button-secondary" href="/admin/ai/context">Context library</a></p>
+</div></section>

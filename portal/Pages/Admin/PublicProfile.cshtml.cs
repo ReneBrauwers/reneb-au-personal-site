@@ -16,8 +16,7 @@ public sealed class PublicProfileModel(PortalDatabase database, IdentityService 
 
     public PublicCandidateProfile? PreviewProfile { get; private set; }
 
-    public async Task OnGetAsync(CancellationToken cancellationToken)
-        => Input = PublicProfileInput.From(await database.GetPublicProfileAsync(true, cancellationToken));
+    public IActionResult OnGet() => Redirect("/admin/content/recruiter-profile");
 
     public async Task<IActionResult> OnPostSaveAsync(CancellationToken cancellationToken)
     {
@@ -67,18 +66,36 @@ public sealed class PublicProfileModel(PortalDatabase database, IdentityService 
 
         public PublicCandidateProfile ToProfile() => new()
         {
-            CandidateName = CandidateName.Trim(), Headline = Headline.Trim(), CurrentRole = CurrentRole.Trim(), CurrentEmployer = CurrentEmployer.Trim(),
-            ProfessionalContext = ProfessionalContext.Trim(), Summary = Summary.Trim(), LastReviewed = LastReviewed,
-            DemonstratedSignals = Lines(DemonstratedSignals), RolesOfInterest = Lines(RolesOfInterest), AreasOfInterest = Lines(AreasOfInterest),
-            LocationPreferences = Lines(LocationPreferences), StrongFitSignals = Lines(StrongFitSignals), PoorFitSignals = Lines(PoorFitSignals)
+            CandidateName = CandidateName.Trim(),
+            Headline = Headline.Trim(),
+            CurrentRole = CurrentRole.Trim(),
+            CurrentEmployer = CurrentEmployer.Trim(),
+            ProfessionalContext = ProfessionalContext.Trim(),
+            Summary = Summary.Trim(),
+            LastReviewed = LastReviewed,
+            DemonstratedSignals = Lines(DemonstratedSignals),
+            RolesOfInterest = Lines(RolesOfInterest),
+            AreasOfInterest = Lines(AreasOfInterest),
+            LocationPreferences = Lines(LocationPreferences),
+            StrongFitSignals = Lines(StrongFitSignals),
+            PoorFitSignals = Lines(PoorFitSignals)
         };
 
         public static PublicProfileInput From(PublicCandidateProfile profile) => new()
         {
-            CandidateName = profile.CandidateName, Headline = profile.Headline, CurrentRole = profile.CurrentRole, CurrentEmployer = profile.CurrentEmployer,
-            ProfessionalContext = profile.ProfessionalContext, Summary = profile.Summary, LastReviewed = profile.LastReviewed,
-            DemonstratedSignals = Join(profile.DemonstratedSignals), RolesOfInterest = Join(profile.RolesOfInterest), AreasOfInterest = Join(profile.AreasOfInterest),
-            LocationPreferences = Join(profile.LocationPreferences), StrongFitSignals = Join(profile.StrongFitSignals), PoorFitSignals = Join(profile.PoorFitSignals)
+            CandidateName = profile.CandidateName,
+            Headline = profile.Headline,
+            CurrentRole = profile.CurrentRole,
+            CurrentEmployer = profile.CurrentEmployer,
+            ProfessionalContext = profile.ProfessionalContext,
+            Summary = profile.Summary,
+            LastReviewed = profile.LastReviewed,
+            DemonstratedSignals = Join(profile.DemonstratedSignals),
+            RolesOfInterest = Join(profile.RolesOfInterest),
+            AreasOfInterest = Join(profile.AreasOfInterest),
+            LocationPreferences = Join(profile.LocationPreferences),
+            StrongFitSignals = Join(profile.StrongFitSignals),
+            PoorFitSignals = Join(profile.PoorFitSignals)
         };
 
         private static List<string> Lines(string value) => value.Split(['\r', '\n'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).Distinct(StringComparer.OrdinalIgnoreCase).ToList();

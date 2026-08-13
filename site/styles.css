@@ -23,6 +23,9 @@
   box-sizing: border-box;
 }
 
+.rich-copy > :first-child { margin-top: 0; }
+.rich-copy > :last-child { margin-bottom: 0; }
+
 html {
   overflow-x: clip;
   overscroll-behavior-x: none;

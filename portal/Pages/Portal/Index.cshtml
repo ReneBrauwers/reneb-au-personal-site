@@ -8,16 +8,18 @@
   <div class="portal-shell section-grid">
     <div>
       <p class="section-eyebrow">Opportunity profile</p>
-      <h1>Where the mandate and terms become specific.</h1>
+      <h1>@Model.Profile.PageHeading</h1>
+      <div class="rich-copy">@Html.Raw(Model.Html(Model.Profile.PageIntroduction))</div>
+      @if (Model.IsAdmin) { <p><a class="button button-secondary" href="/admin/content/opportunity-profile">Edit opportunity profile</a></p> }
     </div>
     <div>
       @if (TempData["Status"] is string status) { <div class="notice notice-success"><p>@status</p></div> }
       <dl class="data-list">
-        <div><dt>Detailed interests</dt><dd>@Display(Model.Profile.DetailedInterests)</dd></div>
+        <div><dt>Detailed interests</dt><dd>@Html.Raw(Model.HtmlOrFallback(Model.Profile.DetailedInterestsRichText))</dd></div>
         <div><dt>Permanent roles</dt><dd>@Display(Model.Profile.PermanentCompensation)</dd></div>
         <div><dt>Contract roles</dt><dd>@Display(Model.Profile.ContractCompensation)</dd></div>
         <div><dt>Availability</dt><dd>@Display(Model.Profile.Availability)</dd></div>
-        <div><dt>Additional matching guidance</dt><dd>@Display(Model.Profile.AdditionalGuidance)</dd></div>
+        <div><dt>Additional matching guidance</dt><dd>@Html.Raw(Model.HtmlOrFallback(Model.Profile.AdditionalGuidanceRichText))</dd></div>
       </dl>
     </div>
   </div>
@@ -47,7 +49,7 @@
       <p class="section-eyebrow">Private message box</p>
       <h2>Leave the useful context.</h2>
       <div asp-validation-summary="ModelOnly"></div>
-      <div class="field"><label asp-for="MessageSubject"></label><input asp-for="MessageSubject"><span asp-validation-for="MessageSubject"></span></div>
+      <div class="field"><label asp-for="MessageSubject">Message subject</label><input asp-for="MessageSubject"><span asp-validation-for="MessageSubject"></span></div>
       <div class="field"><label asp-for="MessageBody">Opportunity or message</label><textarea asp-for="MessageBody"></textarea><span asp-validation-for="MessageBody"></span></div>
       <div class="action-row"><button class="button" type="submit">Send private message</button></div>
     </form>

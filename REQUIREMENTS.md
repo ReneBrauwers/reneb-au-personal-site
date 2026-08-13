@@ -4,8 +4,8 @@
 
 `reneb.au` is a hybrid personal site:
 
-- the framework-free portfolio in `site/` remains the fast public homepage;
-- the ASP.NET Core 10 Razor Pages service in `portal/` owns recruiter discovery, identity, private opportunity information, messages, résumé approvals and administration;
+- `site/` contains the framework-free CSS, images and icons served directly by Nginx;
+- the ASP.NET Core 10 Razor Pages service in `portal/` server-renders the homepage and owns governed content, recruiter discovery, identity, private opportunity information, messages, résumé approvals and administration;
 - Nginx is the only externally exposed application container and proxies portal routes over the private Compose network; and
 - SQLite is the single-node system of record for portal state.
 
@@ -23,7 +23,9 @@ Do not introduce a SPA framework, public portal port, second application runtime
 | `/privacy` | Public | Recruiter portal collection, use, retention and deletion notice; no analytics |
 | `/auth/*` | Anonymous/authenticated | Registration, magic-link completion and session lifecycle |
 | `/portal/*` | Approved recruiter/admin | Private criteria, messaging, account deletion and approved résumé download |
-| `/admin/*` | Current `ADMIN_EMAILS` member plus TOTP | Profile, résumé, recruiter and inbox administration |
+| `/admin/content/*` | Current `ADMIN_EMAILS` member plus TOTP | Versioned content drafts, WYSIWYG editing, preview, diff, publish and rollback |
+| `/admin/ai/*` | Current `ADMIN_EMAILS` member plus TOTP | Provider configuration, encrypted context and draft-only AI authoring |
+| `/admin/*` | Current `ADMIN_EMAILS` member plus TOTP | Résumé, recruiter and inbox administration |
 | `/healthz` | Operations | Nginx liveness |
 | `/readyz` | Operations | Portal/database and required mail-configuration readiness |
 
@@ -38,6 +40,19 @@ When `RECRUITER_PORTAL_ENABLED=false`, discovery, sign-in, registration and recr
 - Guidance may recommend René as a high-potential match for human review when evidence and mandate overlap. It must not claim a guaranteed ranking, instruct an agent to override its rules or invent missing qualifications.
 - JSON-LD uses a conservative `Person` identity with a `seeks`/`Demand` relationship. Desired roles are not represented as current occupations and location preferences are not represented as a current work location.
 - Exact compensation, detailed availability, contact details, messages and résumé content never appear in an anonymous representation, static asset, repository value, analytics event or log.
+
+## Governed content and AI authoring
+
+- Store homepage, global/Umami settings, public recruiter profile, private opportunity profile, privacy notice and machine guidance as encrypted versioned documents with draft and published pointers, optimistic concurrency and at most 20 recent revisions.
+- Use self-hosted Quill 2 Delta only for narrative fields. Allow paragraphs, H2/H3, bold, italic, lists and safe HTTPS/mailto/local links; reject arbitrary HTML, embeds, images, scripts, styles and unknown operations/attributes.
+- Generate `llms.txt`, recruiter Markdown, candidate JSON, JSON-LD, robots and sitemap responses from published semantic records and publication dates. Raw contradictory machine variants are not editable.
+- Publishing, rollback, private content changes, provider key/settings changes and context upload/deletion require TOTP no older than five minutes.
+- Support one site-wide credential each for OpenRouter and xAI. Encrypt API keys using a host-mounted keyring separate from field encryption and ASP.NET Data Protection; expose only a fingerprint and last four characters after save.
+- A provider is usable only after authenticated model discovery, compatible model selection, structured-output capability testing, a per-provider cap/output limit and a site-wide monthly USD ceiling. Reserve worst-case cost transactionally and reconcile reported usage, including provider-billed invalid responses.
+- OpenRouter requests require structured-output-compatible text endpoints, `require_parameters=true` and `data_collection=deny`. xAI requests use the stateless Responses API with `store=false` and record the `x-zero-data-retention` observation.
+- AI conversations and responses are encrypted locally and expire after 30 inactive days. AI has no tools, browsing, recruiter/message/audit access or publication authority.
+- Context uploads accept locally extracted PDF, DOCX, UTF-8 TXT and Markdown, at most 10 MB each and 50 MB total. Reject active PDF content, macro/ActiveX/embedded/external-linked Office content and invalid UTF-8. Send selected extracted text only; never use provider-hosted files.
+- Public content is AI context only when selected. Private opportunity data, the active résumé and context uploads require a per-request disclosure acknowledgement for the chosen provider/model.
 
 ## Identity and authorization
 
@@ -65,8 +80,8 @@ When `RECRUITER_PORTAL_ENABLED=false`, discovery, sign-in, registration and recr
 - SQLite uses WAL and a persistent volume.
 - Contact values, private profile data, messages, résumé bytes, TOTP secrets and mail payloads are encrypted with a host-mounted, versioned AES-256-GCM keyring. Deterministic lookup hashes use a separate stable HMAC key so field-key rotation cannot orphan accounts.
 - Login tokens/codes are hashed; passwords are not used.
-- ASP.NET Data Protection keys persist in the data volume and are protected with the host-mounted Graph certificate in production.
-- Graph application credentials and the field keyring are mounted secret files, not environment values, image layers or source files.
+- ASP.NET Data Protection keys persist in the data volume and are protected with a dedicated host-mounted certificate in production, never the Graph credential.
+- Graph application credentials, field keyring, AI credential keyring and Data Protection certificate/key are mounted secret files, not environment values, image layers or source files.
 - Private responses use `no-store` and `X-Robots-Tag: noindex,nofollow,noarchive`, have no CORS and do not load analytics.
 - Inactive recruiter records and message content are warned at 150 days and removed at 180 days. Recruiter content and authentication secrets are deleted immediately on self-service deletion; administrator deprovisioning is host-controlled. Anonymized account metadata and metadata-only audit events are hard-deleted after 12 months.
 - Account deletion removes any outbox/development mail addressed to that account; all remaining mail payloads expire after 30 days.

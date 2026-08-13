@@ -1,0 +1,45 @@
+@page "/admin/content/preview/{key}"
+@model ReneB.Portal.Pages.Admin.Content.PreviewModel
+@using ReneB.Portal.Models
+@{ ViewData["Title"] = $"Draft preview · {Model.Key}"; }
+<section class="content-section"><div class="portal-shell">
+  <p class="section-eyebrow">Unpublished draft preview</p>
+  <h1>@Model.Key</h1>
+  <div class="notice notice-warning"><p>This is the encrypted draft, visible only to administrators. Publishing still requires a recent TOTP confirmation.</p></div>
+  <p><a class="button button-secondary" href="/admin/content/@Model.Key">Back to editor</a></p>
+
+  @switch (Model.Draft)
+  {
+    case HomePageContent home:
+      <article class="preview-surface"><p class="section-eyebrow">@home.HeroEyebrow</p><h2>@home.HeroHeadingLineOne @home.HeroHeadingLineTwo</h2><div class="rich-copy">@Html.Raw(ReneB.Portal.Pages.Admin.Content.PreviewModel.Html(home.HeroIntroduction))</div>
+      <div class="evidence-grid">@foreach(var proof in home.ProofItems){<section class="evidence-card"><h3>@proof.Heading</h3><p>@proof.Detail</p></section>}</div>
+      <h2>@home.ContributionHeading</h2>@foreach(var card in home.Contributions){<section class="evidence-card"><h3>@card.Heading</h3><div class="rich-copy">@Html.Raw(ReneB.Portal.Pages.Admin.Content.PreviewModel.Html(card.Body))</div></section>}
+      <h2>@home.FoundationHeading</h2><div class="rich-copy">@Html.Raw(ReneB.Portal.Pages.Admin.Content.PreviewModel.Html(home.FoundationBody))</div><h2>@home.PerspectiveHeading</h2><div class="rich-copy">@Html.Raw(ReneB.Portal.Pages.Admin.Content.PreviewModel.Html(home.PerspectiveIntroduction))</div>
+      @foreach(var card in home.Principles){<section class="evidence-card"><h3>@card.Heading</h3><div class="rich-copy">@Html.Raw(ReneB.Portal.Pages.Admin.Content.PreviewModel.Html(card.Body))</div></section>}<blockquote>@home.PullQuote — @home.PullQuoteAttribution</blockquote>
+      <h2>@home.AiHeading</h2><div class="rich-copy">@Html.Raw(ReneB.Portal.Pages.Admin.Content.PreviewModel.Html(home.AiBody))</div><h2>@home.ClosingHeading</h2><div class="rich-copy">@Html.Raw(ReneB.Portal.Pages.Admin.Content.PreviewModel.Html(home.ClosingBody))</div></article>
+      break;
+    case SiteSettingsContent settings:
+      <article class="preview-surface"><h2>@settings.SeoTitle</h2><p>@settings.MetaDescription</p><dl class="data-list"><div><dt>Social title</dt><dd>@settings.SocialTitle</dd></div><div><dt>Social description</dt><dd>@settings.SocialDescription</dd></div><div><dt>Umami enabled</dt><dd>@settings.AnalyticsEnabled</dd></div><div><dt>Script</dt><dd>@settings.UmamiScriptUrl</dd></div><div><dt>Website ID</dt><dd><code>@settings.UmamiWebsiteId</code></dd></div><div><dt>Domains</dt><dd>@settings.UmamiDomains</dd></div><div><dt>Privacy flags</dt><dd>Exclude search: @settings.UmamiExcludeSearch · Do Not Track: @settings.UmamiDoNotTrack</dd></div></dl></article>
+      break;
+    case PublicCandidateProfile profile:
+      <article class="preview-surface"><p class="section-eyebrow">@profile.CandidateName · @profile.CurrentRole</p><h2>@profile.Headline</h2><div class="rich-copy">@Html.Raw(ReneB.Portal.Pages.Admin.Content.PreviewModel.Html(profile.SummaryRichText))</div><h3>Demonstrated signals</h3><ul>@foreach(var item in profile.DemonstratedSignals){<li>@item</li>}</ul><h3>Roles of interest</h3><ul>@foreach(var item in profile.RolesOfInterest){<li>@item</li>}</ul><h3>Areas of interest</h3><ul>@foreach(var item in profile.AreasOfInterest){<li>@item</li>}</ul><h3>Locations</h3><ul>@foreach(var item in profile.LocationPreferences){<li>@item</li>}</ul></article>
+      break;
+    case PrivateCandidateProfile opportunity:
+      <article class="preview-surface"><p class="section-eyebrow">Private opportunity profile</p><h2>@opportunity.PageHeading</h2><div class="rich-copy">@Html.Raw(ReneB.Portal.Pages.Admin.Content.PreviewModel.Html(opportunity.PageIntroduction))</div><dl class="data-list"><div><dt>Detailed interests</dt><dd>@Html.Raw(ReneB.Portal.Pages.Admin.Content.PreviewModel.Html(opportunity.DetailedInterestsRichText))</dd></div><div><dt>Permanent roles</dt><dd>@opportunity.PermanentCompensation</dd></div><div><dt>Contract roles</dt><dd>@opportunity.ContractCompensation</dd></div><div><dt>Availability</dt><dd>@opportunity.Availability</dd></div><div><dt>Additional guidance</dt><dd>@Html.Raw(ReneB.Portal.Pages.Admin.Content.PreviewModel.Html(opportunity.AdditionalGuidanceRichText))</dd></div></dl></article>
+      break;
+    case PrivacyNoticeContent privacy:
+      <article class="preview-surface"><p class="section-eyebrow">@privacy.Eyebrow</p><h2>@privacy.Heading</h2><h3>What is collected</h3><div class="rich-copy">@Html.Raw(ReneB.Portal.Pages.Admin.Content.PreviewModel.Html(privacy.WhatIsCollected))</div><h3>Why it is collected</h3><div class="rich-copy">@Html.Raw(ReneB.Portal.Pages.Admin.Content.PreviewModel.Html(privacy.WhyItIsCollected))</div><h3>How it is handled</h3><div class="rich-copy">@Html.Raw(ReneB.Portal.Pages.Admin.Content.PreviewModel.Html(privacy.HowItIsHandled))</div><h3>Access, retention and deletion</h3><div class="rich-copy">@Html.Raw(ReneB.Portal.Pages.Admin.Content.PreviewModel.Html(privacy.AccessRetentionDeletion))</div><h3>Your choice</h3><div class="rich-copy">@Html.Raw(ReneB.Portal.Pages.Admin.Content.PreviewModel.Html(privacy.YourChoice))</div></article>
+      break;
+    case DiscoveryGuidanceContent discovery:
+      <article class="preview-surface"><h2>Discovery guidance</h2><p>@discovery.CandidateSuppliedNotice</p><p>@discovery.MatchingGuidance</p><dl class="data-list"><div><dt>Compensation</dt><dd>@discovery.CompensationDisclosure</dd></div><div><dt>Availability</dt><dd>@discovery.AvailabilityDisclosure</dd></div><div><dt>Résumé</dt><dd>@discovery.ResumeDisclosure</dd></div></dl></article>
+      break;
+  }
+
+  @if (Model.LlmsText is not null)
+  {
+    <h2>Generated machine surfaces</h2>
+    <details><summary>llms.txt</summary><pre class="generated-preview">@Model.LlmsText</pre></details>
+    <details><summary>Recruiter Markdown</summary><pre class="generated-preview">@Model.Markdown</pre></details>
+    <details><summary>candidate.json</summary><pre class="generated-preview">@Model.CandidateJson</pre></details>
+  }
+</div></section>

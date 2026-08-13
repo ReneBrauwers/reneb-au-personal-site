@@ -242,8 +242,10 @@ for (const viewport of viewports) {
   const headers = home.headers();
   const contentSecurityPolicy = headers["content-security-policy"] || "";
   check(Boolean(contentSecurityPolicy), "Content-Security-Policy header missing");
-  check(contentSecurityPolicy.includes("script-src 'self' https://stats.reneb.au"), "CSP does not allow only the approved analytics script origin");
-  check(contentSecurityPolicy.includes("connect-src 'self' https://stats.reneb.au"), "CSP does not allow analytics collection at the approved origin");
+  const scriptDirective = contentSecurityPolicy.split(";").find(value => value.trim().startsWith("script-src")) || "";
+  const connectDirective = contentSecurityPolicy.split(";").find(value => value.trim().startsWith("connect-src")) || "";
+  check(scriptDirective.includes("'self'") && scriptDirective.includes("https://stats.reneb.au"), "CSP does not allow the approved analytics script origin");
+  check(connectDirective.includes("'self'") && connectDirective.includes("https://stats.reneb.au"), "CSP does not allow analytics collection at the approved origin");
   check(headers["x-content-type-options"] === "nosniff", "X-Content-Type-Options header missing or incorrect");
   check(Boolean(headers["permissions-policy"]), "Permissions-Policy header missing");
   check(headers["referrer-policy"] === "strict-origin-when-cross-origin", "Referrer-Policy header missing or incorrect");

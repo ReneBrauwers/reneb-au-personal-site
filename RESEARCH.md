@@ -1,6 +1,6 @@
 # Research ledger
 
-Research date: **31 July 2026 (Australia/Sydney)**.
+Research date: **31 July 2026 (Australia/Sydney)**. Provider-control references last reviewed **13 August 2026**.
 
 This file documents the evidence used to shape the pack. It is not a request to place all findings on the public page.
 
@@ -269,3 +269,22 @@ Prior user-approved brand direction from related LinkedIn work called for:
 - Wayback snapshots can be incomplete and include stale assets.
 - Search results may surface namesakes; only results that matched René's known profiles, domains and professional history were used.
 - The research did not treat social likes, personal posts or cached contact details as endorsement for publication.
+
+## AI provider-control references
+
+The optional Content Studio authoring feature is grounded in the providers' official interfaces rather than provider-specific assumptions leaking into the application model:
+
+- OpenRouter uses its authenticated user-model catalogue, strict structured outputs, `require_parameters` routing and `data_collection: deny`.
+- xAI uses `/v1/language-models`, stateless Responses requests with `store: false`, strict structured output and records the returned Zero Data Retention status. The UI does not claim ZDR unless the provider reports it.
+- Both providers remain behind an administrator-controlled egress switch, tested model selection and hard per-provider plus site-wide monthly ceilings.
+
+Primary references:
+
+- `https://openrouter.ai/docs/api/api-reference/models/list-models-user`
+- `https://openrouter.ai/docs/guides/features/structured-outputs`
+- `https://openrouter.ai/docs/guides/routing/provider-selection`
+- `https://docs.x.ai/developers/rest-api-reference/inference/models`
+- `https://docs.x.ai/developers/model-capabilities/text/structured-outputs`
+- `https://docs.x.ai/developers/model-capabilities/text/comparison`
+- `https://docs.x.ai/developers/faq/security`
+- `https://docs.x.ai/developers/cost-tracking`

@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 using ReneB.Portal.Configuration;
 using ReneB.Portal.Data;
+using ReneB.Portal.Models;
 using ReneB.Portal.Security;
 using ReneB.Portal.Services;
 
@@ -18,6 +19,8 @@ builder.Services.AddOptions<PortalOptions>().Bind(builder.Configuration.GetSecti
 builder.Services.AddOptions<EncryptionOptions>().Bind(builder.Configuration.GetSection("Encryption"));
 builder.Services.AddOptions<MailOptions>().Bind(builder.Configuration.GetSection("Mail"));
 builder.Services.AddOptions<CookieKeyProtectionOptions>().Bind(builder.Configuration.GetSection("CookieKeyProtection"));
+builder.Services.AddOptions<AiOptions>().Bind(builder.Configuration.GetSection("Ai"));
+builder.Services.AddOptions<AiCredentialEncryptionOptions>().Bind(builder.Configuration.GetSection("AiCredentialEncryption"));
 builder.Services.PostConfigure<PortalOptions>(options =>
 {
     var adminEmails = builder.Configuration["ADMIN_EMAILS"];
@@ -59,10 +62,17 @@ else if (!builder.Environment.IsDevelopment())
 
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<FieldEncryptionService>();
+builder.Services.AddSingleton<AiCredentialEncryptionService>();
 builder.Services.AddSingleton<PortalDatabase>();
 builder.Services.AddSingleton<IdentityService>();
 builder.Services.AddScoped<SessionCookieEvents>();
 builder.Services.AddSingleton<PdfValidator>();
+builder.Services.AddScoped<SiteContentService>();
+builder.Services.AddSingleton<AiContextExtractor>();
+builder.Services.AddHttpClient("ai-authoring", client => client.Timeout = TimeSpan.FromSeconds(90));
+builder.Services.AddSingleton<IContentAuthoringProvider, OpenRouterAuthoringProvider>();
+builder.Services.AddSingleton<IContentAuthoringProvider, XaiAuthoringProvider>();
+builder.Services.AddScoped<AiAuthoringService>();
 builder.Services.AddScoped<IAuthorizationHandler, RecruiterAccessHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, AdminBaseHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, AdminTotpHandler>();
@@ -226,11 +236,26 @@ app.MapGet("/readyz", async (PortalDatabase database, IOptions<MailOptions> mail
         : Results.Text("not ready\n", "text/plain", statusCode: StatusCodes.Status503ServiceUnavailable);
 });
 app.MapGet("/llms.txt", async (PortalDatabase database, CancellationToken cancellationToken) =>
-    Results.Text(PublicProfileRenderer.ToLlmsText(await database.GetPublicProfileAsync(false, cancellationToken)), "text/plain; charset=utf-8"));
+    Results.Text(PublicProfileRenderer.ToLlmsText(
+        await database.GetPublicProfileAsync(false, cancellationToken),
+        (await database.GetContentAsync<DiscoveryGuidanceContent>(ContentDocumentKeys.Discovery, false, cancellationToken)).Content), "text/plain; charset=utf-8"));
 app.MapGet("/recruiters/profile.md", async (PortalDatabase database, CancellationToken cancellationToken) =>
-    Results.Text(PublicProfileRenderer.ToMarkdown(await database.GetPublicProfileAsync(false, cancellationToken)), "text/markdown; charset=utf-8"));
+    Results.Text(PublicProfileRenderer.ToMarkdown(
+        await database.GetPublicProfileAsync(false, cancellationToken),
+        (await database.GetContentAsync<DiscoveryGuidanceContent>(ContentDocumentKeys.Discovery, false, cancellationToken)).Content), "text/markdown; charset=utf-8"));
 app.MapGet("/candidate.json", async (PortalDatabase database, CancellationToken cancellationToken) =>
-    Results.Text(PublicProfileRenderer.ToJson(await database.GetPublicProfileAsync(false, cancellationToken)), "application/json; charset=utf-8"));
+    Results.Text(PublicProfileRenderer.ToJson(
+        await database.GetPublicProfileAsync(false, cancellationToken),
+        (await database.GetContentAsync<DiscoveryGuidanceContent>(ContentDocumentKeys.Discovery, false, cancellationToken)).Content), "application/json; charset=utf-8"));
+app.MapGet("/robots.txt", () => Results.Text("User-agent: *\nAllow: /\nDisallow: /auth\nDisallow: /auth/\nDisallow: /portal\nDisallow: /portal/\nDisallow: /admin\nDisallow: /admin/\n\nSitemap: https://reneb.au/sitemap.xml\n", "text/plain; charset=utf-8"));
+app.MapGet("/sitemap.xml", async (PortalDatabase database, CancellationToken cancellationToken) =>
+{
+    var documents = await database.ListContentDocumentsAsync(cancellationToken);
+    var homeDate = documents.Single(item => item.Key == ContentDocumentKeys.Home).PublishedAt.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+    var recruiterDate = documents.Single(item => item.Key == ContentDocumentKeys.RecruiterProfile).PublishedAt.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+    var privacyDate = documents.Single(item => item.Key == ContentDocumentKeys.Privacy).PublishedAt.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+    return Results.Text($"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n  <url><loc>https://reneb.au/</loc><lastmod>{homeDate}</lastmod></url>\n  <url><loc>https://reneb.au/recruiters</loc><lastmod>{recruiterDate}</lastmod></url>\n  <url><loc>https://reneb.au/privacy</loc><lastmod>{privacyDate}</lastmod></url>\n</urlset>\n", "application/xml; charset=utf-8");
+});
 
 if (app.Environment.IsDevelopment())
 {

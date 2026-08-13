@@ -16,7 +16,7 @@ The objective is accurate identity resolution and evidence-led recruiter discove
 
 ## Portfolio metadata
 
-Preserve the current title, description, canonical URL, Open Graph, X card, social image and conservative `Person` JSON-LD in `site/index.html`. The accented name is visible; the ASCII spelling may appear in structured identity metadata. Do not add hidden keyword blocks.
+Preserve the current title, description, canonical URL, Open Graph, X card, social image and conservative `Person` JSON-LD in the server-rendered homepage. Those values are governed in the published homepage/global settings documents. The accented name is visible; the ASCII spelling may appear in structured identity metadata. Do not add hidden keyword blocks.
 
 ## Recruiter discovery contract
 
@@ -48,7 +48,7 @@ References: [Schema.org Person](https://schema.org/Person), [Schema.org seeks](h
 
 ## Crawling
 
-`robots.txt` allows the public site and explicitly disallows `/auth/`, `/portal/` and `/admin/`. This is advisory only; server authorization is the privacy boundary. The sitemap includes only `/` and `/recruiters`, with real release/review dates.
+The generated `robots.txt` allows the public site and explicitly disallows both exact and nested `/auth`, `/portal` and `/admin` routes. This is advisory only; server authorization is the privacy boundary. The generated sitemap includes `/`, `/recruiters` and `/privacy` with published revision dates.
 
 All private responses and redirects send both an HTML robots directive where applicable and `X-Robots-Tag: noindex,nofollow,noarchive`. They are also `no-store`. `/privacy` is public but intentionally excluded from analytics.
 
@@ -56,7 +56,7 @@ Unknown paths return a real `404`; `/index.html` permanently redirects to `/`. T
 
 ## Analytics
 
-Only `/` and `/recruiters` load the approved self-hosted Umami tracker. Recruiter events are anonymous action names only. Search strings are excluded and Do Not Track is honoured. No analytics request may occur on `/privacy`, `/auth`, `/portal` or `/admin`.
+Only `/` and `/recruiters` load the single typed, administrator-published Umami tracker. Recruiter events are anonymous action names only. Search strings are excluded and Do Not Track is honoured by default. No analytics request may occur on `/privacy`, `/auth`, `/portal` or `/admin`.
 
 ## Release checks
 

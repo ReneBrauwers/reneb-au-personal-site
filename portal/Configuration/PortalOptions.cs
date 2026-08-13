@@ -34,3 +34,19 @@ public sealed class CookieKeyProtectionOptions
     public string CertificatePath { get; set; } = "/run/secrets/data-protection-certificate.pem";
     public string PrivateKeyPath { get; set; } = "/run/secrets/data-protection-private-key.pem";
 }
+
+public sealed class AiOptions
+{
+    public bool EgressEnabled { get; set; }
+    public int ConversationRetentionDays { get; set; } = 30;
+    public long MaximumContextFileBytes { get; set; } = 10 * 1024 * 1024;
+    public long MaximumContextLibraryBytes { get; set; } = 50 * 1024 * 1024;
+    public string OpenRouterBaseUrl { get; set; } = "https://openrouter.ai/api/v1/";
+    public string XaiBaseUrl { get; set; } = "https://api.x.ai/v1/";
+}
+
+public sealed class AiCredentialEncryptionOptions
+{
+    public string KeyFile { get; set; } = "/run/secrets/ai-credential-keyring.json";
+    public bool AllowDevelopmentKey { get; set; }
+}

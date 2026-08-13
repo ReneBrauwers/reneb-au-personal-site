@@ -37,6 +37,20 @@ Scan source, anonymous responses, static assets, sitemap, the application assemb
 - [ ] `/privacy` and all private routes make no Umami request.
 - [ ] Registration provides a clear collection notice and self-service deletion is available after sign-in.
 
+## Content Studio and AI authoring
+
+- [ ] Migration preserves the published homepage/recruiter/privacy copy and creates all six governed content documents without exposing encrypted revisions.
+- [ ] Save draft, responsive preview, field-level diff, optimistic-concurrency conflict, recent-TOTP publish, rollback and 20-revision trimming pass.
+- [ ] Publication updates homepage or every recruiter HTML/JSON-LD/Markdown/JSON/`llms.txt` surface consistently; exact private terms remain absent from all anonymous routes, assets, layers and logs.
+- [ ] Quill Delta fuzzing rejects embeds, raw HTML operations, unknown attributes, unsafe links and malformed JSON; rendered inserted markup is encoded.
+- [ ] Umami URL, website ID, domains, enable switch and DNT/search flags are editable typed fields. Unsafe schemes, credentials, query/fragment values and non-JavaScript paths are rejected, CSP changes to the published origin, and disabling analytics removes the script/origin.
+- [ ] OpenRouter/xAI fake-service contract tests cover discovery/filtering, strict structured output, private routing or stateless storage settings, authentication, throttling, timeout, malformed response, removed model and no provider fallback.
+- [ ] Provider keys, prompts, responses, uploads and proposals are absent from logs, telemetry, HTML, analytics, image layers and unencrypted database values.
+- [ ] Provider and site-wide monthly ceilings reserve concurrently, include charged invalid responses and block requests that exceed either remaining value.
+- [ ] PDF/DOCX/TXT/Markdown context validation rejects oversized, malformed, active, macro, embedded, external-linked and invalid UTF-8 content. Private/resume/context selection requires explicit disclosure acknowledgement.
+- [ ] AI egress disabled, untested, degraded, disabled-key and stale-model states prevent authoring; a valid AI proposal may update only the current draft and still requires human TOTP publication.
+- [ ] Encrypted conversations expire after 30 inactive days; explicit conversation/context deletion is immediate and metadata-only audit retention remains.
+
 ## Authentication and authorization
 
 - [ ] Registration requires every contracted field and a privacy acknowledgement; repeat anonymous registration cannot rewrite or demote an existing account.
@@ -69,6 +83,8 @@ Automate and visually inspect 320×568, 375×667, 390×844, 768×1024 and 1440×
 - [ ] No serious/critical axe issues; colour contrast meets WCAG 2.2 AA.
 - [ ] 200% zoom, text reflow, forced colours, reduced motion and JavaScript-disabled reading are usable; the authenticated header and actions also pass at 320×568.
 - [ ] Forms expose validation accessibly and do not lose entered context unnecessarily.
+- [ ] `npm run visual` signs in through a real Development magic-link/TOTP flow and captures every public, auth, portal, Content Studio and AI/admin page at 390×844 and 1440×900 with zero root overflow and no serious/critical axe finding.
+- [ ] The local Compose harness raises only the development authentication request ceiling so the deliberate screenshot crawl does not trip abuse controls; production keeps its host-owned configured limit.
 
 ## Runtime and operations
 

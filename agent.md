@@ -50,7 +50,7 @@ His historical public work establishes a hands-on foundation in software, integr
 
 1. Inspect the project and confirm whether an approved headshot or existing brand assets were supplied.
 2. Create a concise implementation plan.
-3. Build public portfolio assets in `site/` and dynamic recruiter capabilities in `portal/`.
+3. Build public assets in `site/` and all server-rendered pages, content publishing and recruiter capabilities in `portal/`.
 4. Use the approved content and resolved decisions. Do not pause for optional preferences.
 5. If no headshot is available, implement the monogram fallback and continue.
 6. Validate HTML, responsive layout, keyboard access, reduced-motion behaviour, metadata and external links.
@@ -64,13 +64,9 @@ Use this implementation structure:
 
 ```text
 site/
-├── index.html
 ├── styles.css
-├── script.js              # only if progressive enhancement needs it
 ├── favicon.svg
 ├── social-card.svg        # or an optimised social-card.webp/png
-├── robots.txt
-├── sitemap.xml
 └── assets/
     ├── rene-headshot.*    # only when an approved source image exists
     └── fonts/             # only if fonts are self-hosted
@@ -91,7 +87,8 @@ Do not add a frontend framework or convert the public portfolio to a single-page
 - Keep the primary CTA visible without scrolling at common desktop sizes.
 - Use the exact verified links from `DECISIONS.md`.
 - Open external profile links in the same tab by default. If a new tab is used, disclose it accessibly and add `rel="noopener noreferrer"`.
-- Load only the approved cookieless Umami tracker from `https://stats.reneb.au/script.js`, restricted to `reneb.au` with website ID `55c627ba-826f-4472-9479-f1279071488c`. Do not add any other analytics, tag managers, advertising, chat widgets, tracking pixels or cookie banners.
+- Load only the single administrator-published cookieless Umami tracker on `/` and `/recruiters`. Its typed settings default to `https://stats.reneb.au/script.js`, `reneb.au` and website ID `55c627ba-826f-4472-9479-f1279071488c`; never replace the governed fields with arbitrary script/HTML injection. Do not add any other analytics, tag managers, advertising, chat widgets, tracking pixels or cookie banners.
+- Treat Content Studio as the only editorial source. Rich text is validated Quill Delta; layouts, routes, security text and machine schemas remain code-governed. AI may propose drafts only and never publishes.
 - Do not add a public contact form or public email address. The authenticated recruiter message box is approved and stores encrypted content.
 - Do not add a public résumé download. The authenticated, administrator-approved, revocable 30-day résumé grant is the only approved download path.
 - Do not add a blog, navigation drawer, client logo wall, skills meter, testimonial carousel, animated cursor or fake terminal.
@@ -146,6 +143,9 @@ The work is complete only when:
 - the page works with JavaScript disabled;
 - no placeholder copy, dead links or missing assets remain;
 - public recruiter HTML, JSON-LD, Markdown, JSON and `llms.txt` agree with the published profile record;
+- homepage, footer, privacy, opportunity and discovery copy are editable through versioned drafts with diff, preview, TOTP publish and rollback;
+- Umami settings are editable only through typed validated fields and private/admin pages remain analytics-free;
+- configured OpenRouter/xAI credentials remain separately encrypted, cost-limited and disabled until authenticated discovery plus structured-output testing succeeds;
 - private values never appear in anonymous responses, source, static assets, image layers, analytics or logs;
 - authentication, revocable sessions, TOTP, account approval, messaging, résumé validation/grants, retention, backup and restore checks pass;
 - there is a graceful fallback when no headshot is available; and

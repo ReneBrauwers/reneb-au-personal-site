@@ -19,6 +19,7 @@ public sealed class IndexModel(PortalDatabase database, IOptions<PortalOptions> 
     public bool GrantActive { get; private set; }
     public DateTimeOffset? GrantExpires { get; private set; }
     public bool CanDeleteAccount { get; private set; }
+    public bool IsAdmin { get; private set; }
 
     [BindProperty, Required, StringLength(160)]
     public string MessageSubject { get; set; } = string.Empty;
@@ -87,7 +88,12 @@ public sealed class IndexModel(PortalDatabase database, IOptions<PortalOptions> 
         ResumeAvailable = resume is not null;
         GrantActive = resume is not null && grant is { RevokedAt: null } && grant.ResumeId == resume.Id && grant.ExpiresAt > time.GetUtcNow();
         GrantExpires = GrantActive ? grant!.ExpiresAt : null;
-        CanDeleteAccount = User.FindFirstValue(ClaimTypes.Email) is not { } email || !identity.IsAdminEmail(email);
+        IsAdmin = User.FindFirstValue(ClaimTypes.Email) is { } email && identity.IsAdminEmail(email);
+        CanDeleteAccount = !IsAdmin;
         await database.TouchRecruiterAsync(id, cancellationToken);
     }
+
+    public string Html(RichTextContent value) => RichTextDelta.ToHtml(value);
+    public string HtmlOrFallback(RichTextContent value)
+        => string.IsNullOrWhiteSpace(RichTextDelta.ToPlainText(value)) ? "<p>Not currently disclosed.</p>" : RichTextDelta.ToHtml(value);
 }

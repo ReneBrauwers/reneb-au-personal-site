@@ -32,7 +32,7 @@ The page is not aimed at entry-level technical audiences and should not attempt 
 
 ## Page model
 
-- The primary portfolio remains a one-page, framework-free public site
+- The primary portfolio remains a one-page, server-rendered public site with framework-free browser HTML/CSS
 - English only
 - Add a visible `/recruiters` preview plus `/llms.txt`, `/recruiters/profile.md` and `/candidate.json`
 - Add an authenticated ASP.NET Core recruiter portal under `/auth`, `/portal` and `/admin`
@@ -42,6 +42,8 @@ The page is not aimed at entry-level technical audiences and should not attempt 
 - Résumé download requires an explicit revocable 30-day administrator grant
 - No testimonials until real, approved statements exist
 - No employer, client or technology logo wall
+- Content Studio owns governed drafts and publication for homepage, global/Umami settings, public recruiter content, private opportunity content, privacy and machine guidance
+- AI authoring is an administrator-only draft assistant, not a CMS runtime, agent or publisher
 
 ## Approved link strategy
 
@@ -100,8 +102,8 @@ Do not state exact MVP years or award counts without fresh confirmation.
 
 ## Behaviour and privacy
 
-- Public portfolio and recruiter preview remain fast and server-rendered/static
-- Self-hosted, cookieless Umami analytics at `stats.reneb.au` is permitted only on `/` and `/recruiters`, limited to aggregate usage and approximate country/region/city
+- Public portfolio and recruiter preview remain fast, server-rendered and usable without client JavaScript
+- One cookieless Umami tracker is permitted only on `/` and `/recruiters`, limited to aggregate usage and approximate country/region/city. Its URL/origin, website ID, domain restriction and privacy flags are typed administrator-published settings; arbitrary script injection is forbidden
 - No analytics, session replay or tracking on `/auth`, `/portal` or `/admin`
 - Essential secure, HTTP-only authentication and antiforgery cookies are permitted only for protected workflows
 - No tracking pixels
@@ -110,6 +112,7 @@ Do not state exact MVP years or award counts without fresh confirmation.
 - Public personal details remain limited to approved professional facts and recruiter fit signals
 - Private recruiter and candidate information is encrypted before SQLite storage
 - Authentication cookies are backed by revocable server-side sessions; persisted cookie-key material uses a certificate separate from Microsoft Graph credentials
+- OpenRouter/xAI credentials use a third, independent host-mounted AES-256 keyring. API egress is host-disabled by default; AI output can only be applied to a draft and still needs human TOTP publication
 
 ## Future options, not part of version one
 

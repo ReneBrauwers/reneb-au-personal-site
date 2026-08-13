@@ -3,8 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "validate": "node validate.mjs && node portal-validate.mjs",
+    "validate": "node validate.mjs && node portal-validate.mjs && node visual-proof.mjs",
     "portal": "node portal-validate.mjs",
+    "visual": "node visual-proof.mjs",
     "lighthouse": "node lighthouse.mjs",
     "html": "node html-validate.mjs",
     "css": "node css-validate.mjs"

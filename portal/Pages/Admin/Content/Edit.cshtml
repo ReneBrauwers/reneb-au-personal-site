@@ -1,0 +1,22 @@
+@page "/admin/content/{key}"
+@model ReneB.Portal.Pages.Admin.Content.EditModel
+@{ ViewData["Title"] = "Edit content"; ViewData["AdminEditor"] = true; }
+<div class="form-shell form-shell-wide">
+  <form method="post" class="form-card" data-content-editor>
+    <p class="section-eyebrow">Content document · @Model.Key</p><h1>Edit, preview and publish.</h1>
+    <p>Rich-text values have a basic toolbar. Lists and settings use structured controls, while AI proposals and revision diffs share the same governed content schema.</p>
+    @if (TempData["Status"] is string status) { <div class="notice notice-success"><p>@status</p></div> }
+    <div asp-validation-summary="All"></div>
+    <input asp-for="Key" type="hidden"><input asp-for="Revision" type="hidden">
+    <div id="content-rich-editors" class="content-rich-editors" aria-live="polite"></div>
+    <div class="field"><label class="visually-hidden" asp-for="Json">Content JSON</label><textarea asp-for="Json" rows="24" data-content-json spellcheck="false" hidden></textarea></div>
+    <div class="action-row"><button class="button" type="submit" asp-page-handler="Save">Save draft</button><button class="button button-secondary" type="submit" asp-page-handler="Publish">Publish draft</button>@if(!string.IsNullOrEmpty(Model.DraftPreviewUrl)){<a class="button button-secondary" href="@Model.DraftPreviewUrl">Preview draft</a>}<a class="button button-secondary" href="/admin/content">All content</a></div>
+  </form>
+</div>
+<section class="content-section"><div class="portal-shell">
+  <h2>Changes from published revision</h2>
+  @if (Model.Diff.Count == 0) { <p>No unpublished differences.</p> }
+  else { <div class="table-wrap"><table><thead><tr><th>Field</th><th>Published</th><th>Draft</th></tr></thead><tbody>@foreach(var item in Model.Diff){<tr><td><code>@item.Path</code></td><td>@item.PublishedValue</td><td>@item.DraftValue</td></tr>}</tbody></table></div> }
+  <h2>Revision history</h2>
+  <div class="table-wrap"><table><thead><tr><th>Revision</th><th>Created</th><th>Status</th><th>Action</th></tr></thead><tbody>@foreach(var revision in Model.Revisions){<tr><td>@revision.Revision</td><td>@revision.CreatedAt.ToString("dd MMM yyyy HH:mm 'UTC'")</td><td>@(revision.IsPublished?"Published":revision.IsDraft?"Draft":"Historical")</td><td>@if(!revision.IsPublished){<form method="post" asp-page-handler="Rollback"><input asp-for="Key" type="hidden"><input name="revisionId" value="@revision.Id" type="hidden"><button class="button button-secondary" type="submit">Restore and publish</button></form>}</td></tr>}</tbody></table></div>
+</div></section>

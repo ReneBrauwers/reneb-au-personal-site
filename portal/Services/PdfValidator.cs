@@ -15,11 +15,11 @@ public sealed class PdfValidator
         "/SubmitForm", "/ImportData", "/GoToE"
     };
 
-    public async Task<(bool Valid, string Error)> ValidateAsync(IFormFile upload, CancellationToken cancellationToken)
+    public async Task<(bool Valid, string Error)> ValidateAsync(IFormFile upload, CancellationToken cancellationToken, int maximumBytes = MaximumBytes)
     {
-        if (upload.Length is <= 0 or > MaximumBytes)
+        if (upload.Length <= 0 || upload.Length > maximumBytes)
         {
-            return (false, "Select a non-empty PDF no larger than 5 MB.");
+            return (false, $"Select a non-empty PDF no larger than {maximumBytes / 1024 / 1024} MB.");
         }
         if (!string.Equals(Path.GetExtension(upload.FileName), ".pdf", StringComparison.OrdinalIgnoreCase)
             || !string.Equals(upload.ContentType, "application/pdf", StringComparison.OrdinalIgnoreCase))

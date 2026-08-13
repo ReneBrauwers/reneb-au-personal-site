@@ -1,8 +1,6 @@
-import fs from "node:fs/promises";
 import { HtmlValidate } from "html-validate";
 
-const htmlPath = "/work/site/index.html";
-const html = await fs.readFile(htmlPath, "utf8");
+const baseUrl = (process.env.QA_BASE_URL || "http://web:8080").replace(/\/$/, "");
 const htmlvalidate = new HtmlValidate({
   extends: ["html-validate:recommended"],
   rules: {
@@ -13,15 +11,24 @@ const htmlvalidate = new HtmlValidate({
     "wcag/h63": "error"
   }
 });
-const report = await htmlvalidate.validateString(html, htmlPath);
-
-if (!report.valid) {
-  for (const result of report.results) {
-    for (const message of result.messages) {
-      console.error(`${result.filePath}:${message.line}:${message.column} ${message.ruleId} ${message.message}`);
+let failed = false;
+for (const route of ["/", "/recruiters", "/privacy", "/auth/register", "/auth/login"]) {
+  const response = await fetch(`${baseUrl}${route}`);
+  if (!response.ok) {
+    console.error(`${route}: returned ${response.status}`);
+    failed = true;
+    continue;
+  }
+  const report = await htmlvalidate.validateString(await response.text(), route);
+  if (!report.valid) {
+    failed = true;
+    for (const result of report.results) {
+      for (const message of result.messages) {
+        console.error(`${route}:${message.line}:${message.column} ${message.ruleId} ${message.message}`);
+      }
     }
   }
-  process.exit(1);
 }
+if (failed) process.exit(1);
 
-console.log("HTML validation passed.");
+console.log("Dynamic HTML validation passed for public and authentication pages.");
