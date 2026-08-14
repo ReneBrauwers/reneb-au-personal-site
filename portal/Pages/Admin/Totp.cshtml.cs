@@ -18,7 +18,9 @@ public sealed class TotpModel(PortalDatabase database, IdentityService identity,
     internal const string EnrollmentProtectionPurpose = "reneb-au-totp-enrollment-v1";
     private readonly IDataProtector _enrollmentProtector = dataProtection.CreateProtector(EnrollmentProtectionPurpose);
 
-    [BindProperty, Required, RegularExpression("^[0-9]{6}$")]
+    [BindProperty]
+    [Required(ErrorMessage = "Enter the six-digit number from your authenticator app.")]
+    [RegularExpression("^[0-9]{6}$", ErrorMessage = "Enter the six-digit number from your authenticator app. The email code does not work on this step.")]
     public string Code { get; set; } = string.Empty;
     [BindProperty] public string? ReturnUrl { get; set; }
     [BindProperty] public string Enrollment { get; set; } = string.Empty;
@@ -41,6 +43,11 @@ public sealed class TotpModel(PortalDatabase database, IdentityService identity,
             await LoadAsync(token);
             return Page();
         }
+        if (!ModelState.IsValid)
+        {
+            await LoadAsync(token);
+            return Page();
+        }
         var secret = await database.GetAdminTotpSecretAsync(id, token);
         var enrolling = secret is null;
         if (enrolling)
@@ -56,7 +63,7 @@ public sealed class TotpModel(PortalDatabase database, IdentityService identity,
         }
         if (secret is null || !TotpService.Validate(secret, Code, time.GetUtcNow()))
         {
-            ModelState.AddModelError(nameof(Code), "The authenticator code is invalid or expired.");
+            ModelState.AddModelError(nameof(Code), "That authenticator code is invalid or expired. Enter the current six-digit number shown in your authenticator app.");
             await LoadAsync(token);
             return Page();
         }

@@ -53,6 +53,8 @@ public sealed class SecurityPrimitiveTests : IClassFixture<PortalFactory>
         var code = TotpService.GenerateCode(secret, now);
         Assert.True(TotpService.Validate(secret, code, now));
         Assert.False(TotpService.Validate(secret, code == "000000" ? "000001" : "000000", now));
+        Assert.False(TotpService.Validate(secret, $"A{code}B", now));
+        Assert.False(TotpService.Validate(secret, $"{code[..3]}-{code[3..]}", now));
     }
 
     [Fact]

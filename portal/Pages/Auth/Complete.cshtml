@@ -5,8 +5,9 @@
 }
 <div class="form-shell">
   <div class="form-card">
-    <p class="section-eyebrow">One-time verification</p>
-    <h1>Complete your secure sign in.</h1>
+    <p class="section-eyebrow">Email verification</p>
+    <h1>Verify access to your mailbox.</h1>
+    <p>This step uses the link or eight-character code from your email. Administrators then complete a separate check using the six-digit number from their authenticator app.</p>
     @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
     {
       <div class="notice notice-warning"><p>@Model.ErrorMessage</p></div>
@@ -16,10 +17,14 @@
       <noscript><p>The secure link handoff needs JavaScript. Use the one-time code below instead.</p></noscript>
     </form>
     <form method="post" asp-page-handler="Code">
-      <p>If the link did not complete automatically, enter the email and code from the message.</p>
+      <p>If the link did not complete automatically, enter the email address and eight-character code from the message.</p>
       <div class="field"><label asp-for="Email"></label><input asp-for="Email" autocomplete="email" inputmode="email"></div>
-      <div class="field"><label asp-for="Code"></label><input asp-for="Code" autocomplete="one-time-code" maxlength="8"></div>
-      <div class="action-row"><button class="button" type="submit">Verify code</button></div>
+      <div class="field">
+        <label asp-for="Code">Eight-character email verification code</label>
+        <input asp-for="Code" autocomplete="one-time-code" maxlength="8" autocapitalize="characters" spellcheck="false" aria-describedby="email-code-hint">
+        <span id="email-code-hint" class="field-hint">Letters and numbers from the email. This is not an authenticator-app code.</span>
+      </div>
+      <div class="action-row"><button class="button" type="submit">Verify email code</button></div>
     </form>
   </div>
 </div>

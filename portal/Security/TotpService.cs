@@ -11,13 +11,12 @@ public static class TotpService
 
     public static bool Validate(byte[] secret, string code, DateTimeOffset now)
     {
-        var normalized = new string(code.Where(char.IsDigit).ToArray());
-        if (normalized.Length != 6)
+        if (code.Length != 6 || code.Any(value => value is < '0' or > '9'))
         {
             return false;
         }
 
-        var supplied = int.Parse(normalized, System.Globalization.CultureInfo.InvariantCulture);
+        var supplied = int.Parse(code, System.Globalization.CultureInfo.InvariantCulture);
         var counter = now.ToUnixTimeSeconds() / 30;
         for (var offset = -1; offset <= 1; offset++)
         {
