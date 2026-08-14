@@ -167,7 +167,8 @@ public sealed class IdentityService
         var body = $"""
             <p>Use this private link to continue to René Brauwers' recruiter portal. It expires in 15 minutes and can be used once.</p>
             <p><a href="{System.Net.WebUtility.HtmlEncode(link)}">Continue to the recruiter portal</a></p>
-            <p>If the link cannot be opened, enter this one-time code on the completion page: <strong>{code}</strong></p>
+            <p>If the link cannot be opened, enter this eight-character email verification code on the completion page: <strong>{code}</strong></p>
+            <p>This code verifies mailbox access only. Administrators will then be asked for a separate six-digit number from their authenticator app.</p>
             <p>If you did not request this message, no action is required.</p>
             """;
         await _database.EnqueueMailAsync("magic-link", recruiter.Email, "Your secure reneb.au sign-in link", body, cancellationToken);

@@ -108,6 +108,8 @@ public sealed class IdentityFlowTests : IClassFixture<PortalFactory>
         var identity = _factory.Services.GetRequiredService<ReneB.Portal.Security.IdentityService>();
         var outbox = await database.FindPendingMailForRecipientAsync(email, "magic-link");
         Assert.NotNull(outbox);
+        Assert.Contains("eight-character email verification code", outbox.Body, StringComparison.Ordinal);
+        Assert.Contains("separate six-digit number from their authenticator app", outbox.Body, StringComparison.Ordinal);
         var magicLinkValue = Regex.Match(outbox.Body, "#token=([^\"<]+)", RegexOptions.CultureInvariant).Groups[1].Value;
 
         var results = await Task.WhenAll(identity.CompleteTokenAsync(magicLinkValue, default), identity.CompleteTokenAsync(magicLinkValue, default));
@@ -221,14 +223,30 @@ public sealed class IdentityFlowTests : IClassFixture<PortalFactory>
         var setupHtml = await setupResponse.Content.ReadAsStringAsync();
         var setup = (Csrf: WebUtility.HtmlDecode(Regex.Match(setupHtml, "name=\"__RequestVerificationToken\" type=\"hidden\" value=\"([^\"]+)\"", RegexOptions.CultureInvariant).Groups[1].Value), Html: setupHtml);
         Assert.NotEmpty(setup.Csrf);
+        Assert.Contains("Email sign-in complete", setup.Html, StringComparison.Ordinal);
+        Assert.Contains("The eight-character email code will not work here", setup.Html, StringComparison.Ordinal);
+        Assert.DoesNotContain("regular expression", setup.Html, StringComparison.OrdinalIgnoreCase);
         Assert.Null(await database.GetAdminTotpSecretAsync(account.Id));
         var enrollment = WebUtility.HtmlDecode(Regex.Match(setup.Html, "name=\"Enrollment\"[^>]*value=\"([^\"]+)\"", RegexOptions.CultureInvariant).Groups[1].Value);
         Assert.NotEmpty(enrollment);
         var protector = _factory.Services.GetRequiredService<IDataProtectionProvider>().CreateProtector(TotpModel.EnrollmentProtectionPurpose);
         var setupMaterial = Convert.FromBase64String(protector.Unprotect(enrollment));
+
+        var invalidResponse = await client.PostAsync("/admin/totp", Form(
+            ("__RequestVerificationToken", setup.Csrf), ("Enrollment", enrollment), ("ReturnUrl", string.Empty), ("Code", "ABCDEF")));
+        Assert.Equal(HttpStatusCode.OK, invalidResponse.StatusCode);
+        var invalidHtml = await invalidResponse.Content.ReadAsStringAsync();
+        Assert.Contains("Enter the six-digit number from your authenticator app. The email code does not work on this step.", invalidHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("regular expression", invalidHtml, StringComparison.OrdinalIgnoreCase);
+        Assert.Null(await database.GetAdminTotpSecretAsync(account.Id));
+
+        var validCsrf = WebUtility.HtmlDecode(Regex.Match(invalidHtml, "name=\"__RequestVerificationToken\" type=\"hidden\" value=\"([^\"]+)\"", RegexOptions.CultureInvariant).Groups[1].Value);
+        enrollment = WebUtility.HtmlDecode(Regex.Match(invalidHtml, "name=\"Enrollment\"[^>]*value=\"([^\"]+)\"", RegexOptions.CultureInvariant).Groups[1].Value);
+        Assert.NotEmpty(validCsrf);
+        Assert.NotEmpty(enrollment);
         var code = TotpService.GenerateCode(setupMaterial, _factory.Time.GetUtcNow());
         var response = await client.PostAsync("/admin/totp", Form(
-            ("__RequestVerificationToken", setup.Csrf), ("Enrollment", enrollment), ("ReturnUrl", string.Empty), ("Code", code)));
+            ("__RequestVerificationToken", validCsrf), ("Enrollment", enrollment), ("ReturnUrl", string.Empty), ("Code", code)));
 
         Assert.Equal("/admin", response.Headers.Location?.OriginalString);
         Assert.Equal(setupMaterial, await database.GetAdminTotpSecretAsync(account.Id));

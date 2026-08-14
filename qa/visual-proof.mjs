@@ -87,6 +87,7 @@ await anonymous.close();
 
 const admin = await browser.newContext();
 const login = await admin.newPage();
+await login.setViewportSize({ width: 390, height: 844 });
 const existingTokens = new Set();
 const existingMail = await login.request.get(mailUrl);
 if (existingMail.ok()) {
