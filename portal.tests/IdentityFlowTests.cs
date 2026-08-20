@@ -40,7 +40,38 @@ public sealed class IdentityFlowTests : IClassFixture<PortalFactory>
         Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/portal")).StatusCode);
 
         var account = await database.FindRecruiterByEmailAsync(email);
-        Assert.Equal(RecruiterStatus.Active, account?.Status);
+        Assert.NotNull(account);
+        Assert.Equal(RecruiterStatus.Active, account.Status);
+
+        var mandate = "Group Chief Architect with enterprise design authority for a regulated financial-services transformation, " +
+            "owning investment roadmaps, responsible AI governance and the connection between Product and Engineering delivery.";
+        var messageCountBefore = (await database.ListMessagesAsync()).Count(message => message.RecruiterId == account.Id);
+        var portal = await GetWithCsrfAsync(client, "/portal");
+        var analysis = await client.PostAsync("/portal?handler=Lens", Form(
+            ("__RequestVerificationToken", portal.Token),
+            ("MandateRole", "Group Chief Architect"),
+            ("MandateText", mandate)));
+        Assert.Equal(HttpStatusCode.OK, analysis.StatusCode);
+        var analysisHtml = await analysis.Content.ReadAsStringAsync();
+        Assert.Contains("This mandate earns a focused first conversation.", analysisHtml, StringComparison.Ordinal);
+        Assert.Contains("Enterprise authority", analysisHtml, StringComparison.Ordinal);
+        Assert.Contains("Candidate evidence", analysisHtml, StringComparison.Ordinal);
+        Assert.Contains("Share this brief privately", analysisHtml, StringComparison.Ordinal);
+        Assert.Equal(messageCountBefore, (await database.ListMessagesAsync()).Count(message => message.RecruiterId == account.Id));
+
+        var sharePage = await GetWithCsrfAsync(client, "/portal");
+        var shared = await client.PostAsync("/portal?handler=ShareLens", Form(
+            ("__RequestVerificationToken", sharePage.Token),
+            ("MandateRole", "Group Chief Architect"),
+            ("MandateText", mandate),
+            ("MandateNote", "The board wants the operating model made explicit before shortlist review.")));
+        Assert.Equal(HttpStatusCode.Redirect, shared.StatusCode);
+        Assert.Equal("/portal", shared.Headers.Location?.OriginalString);
+        var message = (await database.ListMessagesAsync()).Single(item =>
+            item.RecruiterId == account.Id && item.Subject.StartsWith("Mandate Lens", StringComparison.Ordinal));
+        Assert.Contains("Role: Group Chief Architect", message.Body, StringComparison.Ordinal);
+        Assert.Contains("Lens conclusion: This mandate earns a focused first conversation.", message.Body, StringComparison.Ordinal);
+        Assert.Contains(mandate, message.Body, StringComparison.Ordinal);
 
         using var replayClient = CreateClient();
         var replayPage = await GetWithCsrfAsync(replayClient, "/auth/complete");

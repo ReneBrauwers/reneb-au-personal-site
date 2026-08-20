@@ -9,4 +9,9 @@
       tokenForm.requestSubmit();
     }
   }
+
+  const lensResult = document.querySelector('[data-lens-result]');
+  if (lensResult && window.location.hash === '#lens-conclusion') {
+    window.addEventListener('load', () => lensResult.focus({ preventScroll: true }), { once: true });
+  }
 })();
