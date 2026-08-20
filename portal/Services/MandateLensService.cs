@@ -90,30 +90,33 @@ public sealed class MandateLensService
             .ThenBy(item => Array.IndexOf(SignalDefinitions, item.Definition))
             .Select(item => item.Definition)
             .ToArray();
+        var matchedKeys = matchedDefinitions.Select(definition => definition.Key).ToHashSet(StringComparer.Ordinal);
 
         var usedEvidence = new HashSet<string>(StringComparer.Ordinal);
         var signals = matchedDefinitions
+            .Select(definition => new { Definition = definition, Evidence = FindEvidence(profile, definition, usedEvidence) })
+            .Where(item => item.Evidence is not null)
             .Take(5)
-            .Select(definition => new MandateLensSignal(
-                definition.Key,
-                definition.Label,
-                definition.Observation,
-                FindEvidence(profile, definition, usedEvidence)))
+            .Select(item => new MandateLensSignal(
+                item.Definition.Key,
+                item.Definition.Label,
+                item.Definition.Observation,
+                item.Evidence!))
             .ToArray();
 
         var severeFriction = FrictionDefinitions
             .Where(definition => definition.Terms.Any(term => ContainsTerm(normalizedMandate, term)))
-            .Where(definition => definition.Label != "Delivery-only architecture" || signals.All(signal => signal.Key != "authority"))
+            .Where(definition => definition.Label != "Delivery-only architecture" || !matchedKeys.Contains("authority"))
             .Select(definition => definition.Detail)
             .ToList();
 
-        foreach (var gap in GapDefinitions.Where(gap => signals.All(signal => signal.Key != gap.SignalKey)))
+        foreach (var gap in GapDefinitions.Where(gap => !matchedKeys.Contains(gap.SignalKey)))
         {
             severeFriction.Add(gap.Observation);
         }
 
         var questions = matchedDefinitions.Select(definition => definition.Question)
-            .Concat(GapDefinitions.Where(gap => signals.All(signal => signal.Key != gap.SignalKey)).Select(gap => gap.Question))
+            .Concat(GapDefinitions.Where(gap => !matchedKeys.Contains(gap.SignalKey)).Select(gap => gap.Question))
             .Distinct(StringComparer.Ordinal)
             .Take(3)
             .ToArray();
@@ -191,7 +194,7 @@ public sealed class MandateLensService
         return builder.ToString();
     }
 
-    private static string FindEvidence(PublicCandidateProfile profile, SignalDefinition definition, HashSet<string> used)
+    private static string? FindEvidence(PublicCandidateProfile profile, SignalDefinition definition, HashSet<string> used)
     {
         var evidence = profile.DemonstratedSignals
             .Where(item => !used.Contains(item))
@@ -206,9 +209,10 @@ public sealed class MandateLensService
             .ThenBy(item => item.Text, StringComparer.Ordinal)
             .FirstOrDefault(item => item.Score > 0)?.Text;
 
-        evidence ??= profile.DemonstratedSignals.FirstOrDefault(item => !used.Contains(item));
-        evidence ??= profile.Summary;
-        used.Add(evidence);
+        if (evidence is not null)
+        {
+            used.Add(evidence);
+        }
         return evidence;
     }
 
@@ -254,7 +258,42 @@ public sealed class MandateLensService
         => terms.Count(term => ContainsTerm(normalizedText, term));
 
     private static bool ContainsTerm(string normalizedText, string term)
-        => normalizedText.Contains($" {Normalize(term).Trim()} ", StringComparison.Ordinal);
+    {
+        var needle = $" {Normalize(term).Trim()} ";
+        var searchFrom = 0;
+        while (searchFrom < normalizedText.Length)
+        {
+            var index = normalizedText.IndexOf(needle, searchFrom, StringComparison.Ordinal);
+            if (index < 0)
+            {
+                return false;
+            }
+            if (!IsNegated(normalizedText.AsSpan(0, index)))
+            {
+                return true;
+            }
+            searchFrom = index + needle.Length - 1;
+        }
+        return false;
+    }
+
+    private static bool IsNegated(ReadOnlySpan<char> prefix)
+    {
+        var preceding = prefix.ToString().Split(' ', StringSplitOptions.RemoveEmptyEntries).TakeLast(4).ToArray();
+        for (var index = preceding.Length - 1; index >= 0; index--)
+        {
+            if (preceding[index] is "but" or "however" or "except")
+            {
+                return false;
+            }
+            if (preceding[index] is not ("no" or "not" or "without" or "neither" or "nor" or "exclude" or "excluding" or "lacks" or "lacking"))
+            {
+                continue;
+            }
+            return preceding[index] != "not" || index + 1 >= preceding.Length || preceding[index + 1] != "only";
+        }
+        return false;
+    }
 
     private static string Normalize(string value)
     {
