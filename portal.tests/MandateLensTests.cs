@@ -57,6 +57,50 @@ public sealed class MandateLensTests
     }
 
     [Fact]
+    public void NegatedLanguageDoesNotBecomePositiveOverlapOrCommercialFriction()
+    {
+        var result = _service.Analyse(
+            "This mandate has no decision rights, no investment ownership, no governance accountability, " +
+            "no Product or Engineering responsibility, and is explicitly not pre-sales or quota carrying.",
+            PublicProfileDefaults.Create());
+
+        Assert.Empty(result.Signals);
+        Assert.Equal("The brief needs sharper mandate detail before fit can be judged.", result.Conclusion);
+        Assert.DoesNotContain(result.Friction, item => item.Contains("sales or quota", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void UnrelatedPublishedClaimsAreNeverUsedAsCandidateEvidence()
+    {
+        var profile = new PublicCandidateProfile
+        {
+            Summary = "A published profile with no evidence relevant to the mandate under test.",
+            DemonstratedSignals = ["Regularly speaks at professional community events and mentors early-career practitioners."]
+        };
+
+        var result = _service.Analyse(
+            "Enterprise design authority with target-state accountability and investment roadmap ownership for a consequential transformation.",
+            profile);
+
+        Assert.Empty(result.Signals);
+        Assert.DoesNotContain("community events", result.Summary, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void DisplayCapDoesNotCreateFalseGapsForMatchedCategories()
+    {
+        var result = _service.Analyse(
+            "Enterprise-wide chief architect and design authority owning target-state strategy, investment portfolios, business cases and transformation roadmaps; " +
+            "regulated governance, risk, audit and resilience; responsible AI, agentic AI and AI platform accountability; executive board leadership, cross-functional influence and practice leadership; plus Product delivery.",
+            PublicProfileDefaults.Create());
+
+        Assert.Equal(5, result.Signals.Count);
+        Assert.DoesNotContain(result.Friction, item => item.Contains("Product and Engineering is not described", StringComparison.Ordinal));
+        Assert.DoesNotContain(result.Friction, item => item.Contains("Decision rights are not explicit", StringComparison.Ordinal));
+        Assert.DoesNotContain(result.Friction, item => item.Contains("investment or business consequence is not explicit", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void SharedBriefIsCompleteBoundedAndCarriesTheHumanContext()
     {
         var mandate = new string('a', MandateLensService.MaximumMandateLength);
