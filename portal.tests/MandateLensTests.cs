@@ -70,6 +70,20 @@ public sealed class MandateLensTests
     }
 
     [Fact]
+    public void NegationFollowsClauseScopeWithoutSuppressingPositiveFraming()
+    {
+        var negative = _service.Analyse(
+            "This role does not have any responsibility for Product delivery.",
+            PublicProfileDefaults.Create());
+        var positive = _service.Analyse(
+            "No ambiguity surrounds explicit decision rights and target-state accountability.",
+            PublicProfileDefaults.Create());
+
+        Assert.DoesNotContain(negative.Signals, signal => signal.Key == "delivery");
+        Assert.Contains(positive.Signals, signal => signal.Key == "authority");
+    }
+
+    [Fact]
     public void UnrelatedPublishedClaimsAreNeverUsedAsCandidateEvidence()
     {
         var profile = new PublicCandidateProfile
@@ -84,6 +98,24 @@ public sealed class MandateLensTests
 
         Assert.Empty(result.Signals);
         Assert.DoesNotContain("community events", result.Summary, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void RelevantProfileSummaryRemainsEligibleEvidence()
+    {
+        var profile = new PublicCandidateProfile
+        {
+            Summary = "Owns enterprise design authority, target-state accountability and technology strategy.",
+            DemonstratedSignals = []
+        };
+
+        var result = _service.Analyse(
+            "Enterprise design authority with target-state accountability for technology strategy.",
+            profile);
+
+        var signal = Assert.Single(result.Signals);
+        Assert.Equal("authority", signal.Key);
+        Assert.Equal(profile.Summary, signal.Evidence);
     }
 
     [Fact]

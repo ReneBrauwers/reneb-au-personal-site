@@ -197,6 +197,8 @@ public sealed class MandateLensService
     private static string? FindEvidence(PublicCandidateProfile profile, SignalDefinition definition, HashSet<string> used)
     {
         var evidence = profile.DemonstratedSignals
+            .Append(profile.Summary)
+            .Where(item => !string.IsNullOrWhiteSpace(item))
             .Where(item => !used.Contains(item))
             .Select(item =>
             {
@@ -279,18 +281,43 @@ public sealed class MandateLensService
 
     private static bool IsNegated(ReadOnlySpan<char> prefix)
     {
-        var preceding = prefix.ToString().Split(' ', StringSplitOptions.RemoveEmptyEntries).TakeLast(4).ToArray();
-        for (var index = preceding.Length - 1; index >= 0; index--)
+        var clauseBoundary = prefix.LastIndexOf('|');
+        var clause = clauseBoundary >= 0 ? prefix[(clauseBoundary + 1)..] : prefix;
+        var preceding = clause.ToString().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var scopeStart = 0;
+        for (var index = 0; index < preceding.Length; index++)
         {
-            if (preceding[index] is "but" or "however" or "except")
+            if (preceding[index] is "but" or "however" or "except" or "although" or "though" or "yet" or "while" or "whereas" or "instead")
             {
-                return false;
+                scopeStart = index + 1;
             }
-            if (preceding[index] is not ("no" or "not" or "without" or "neither" or "nor" or "exclude" or "excluding" or "lacks" or "lacking"))
+        }
+
+        for (var index = preceding.Length - 1; index >= scopeStart; index--)
+        {
+            if (preceding[index] is not ("no" or "not" or "without" or "neither" or "nor" or "exclude" or "excludes" or "excluded" or "excluding" or "lacks" or "lacking"))
             {
                 continue;
             }
-            return preceding[index] != "not" || index + 1 >= preceding.Length || preceding[index + 1] != "only";
+            if (preceding[index] == "not" && index + 1 < preceding.Length && preceding[index + 1] == "only")
+            {
+                continue;
+            }
+
+            var subjectIndex = index + 1;
+            while (subjectIndex < preceding.Length && preceding[subjectIndex] is "a" or "an" or "any" or "the")
+            {
+                subjectIndex++;
+            }
+            if (subjectIndex < preceding.Length && preceding[subjectIndex] is
+                "ambiguity" or "ambiguities" or "barrier" or "barriers" or "concern" or "concerns" or
+                "doubt" or "doubts" or "impediment" or "impediments" or "issue" or "issues" or
+                "obstacle" or "obstacles" or "problem" or "problems" or "restriction" or "restrictions" or
+                "uncertainty" or "uncertainties")
+            {
+                continue;
+            }
+            return true;
         }
         return false;
     }
@@ -306,6 +333,18 @@ public sealed class MandateLensService
             {
                 builder.Append(character);
                 previousWasSpace = false;
+            }
+            else if (character is '.' or ';' or ':' or '!' or '?')
+            {
+                if (!previousWasSpace)
+                {
+                    builder.Append(' ');
+                }
+                if (builder.Length < 2 || builder[^2] != '|')
+                {
+                    builder.Append("| ");
+                }
+                previousWasSpace = true;
             }
             else if (!previousWasSpace)
             {
