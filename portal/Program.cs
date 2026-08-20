@@ -67,6 +67,7 @@ builder.Services.AddSingleton<PortalDatabase>();
 builder.Services.AddSingleton<IdentityService>();
 builder.Services.AddScoped<SessionCookieEvents>();
 builder.Services.AddSingleton<PdfValidator>();
+builder.Services.AddSingleton<MandateLensService>();
 builder.Services.AddScoped<SiteContentService>();
 builder.Services.AddSingleton<AiContextExtractor>();
 builder.Services.AddHttpClient("ai-authoring", client => client.Timeout = TimeSpan.FromSeconds(90));
