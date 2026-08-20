@@ -291,6 +291,12 @@ public sealed class MandateLensService
             {
                 scopeStart = index + 1;
             }
+            else if (preceding[index] is "and" or "~"
+                && BeginsPositivePredicate(preceding, index + 1)
+                && HasNominalNegator(preceding, scopeStart, index))
+            {
+                scopeStart = index + 1;
+            }
         }
 
         for (var index = preceding.Length - 1; index >= scopeStart; index--)
@@ -313,11 +319,42 @@ public sealed class MandateLensService
                 "ambiguity" or "ambiguities" or "barrier" or "barriers" or "concern" or "concerns" or
                 "doubt" or "doubts" or "impediment" or "impediments" or "issue" or "issues" or
                 "obstacle" or "obstacles" or "problem" or "problems" or "restriction" or "restrictions" or
-                "uncertainty" or "uncertainties")
+                "question" or "questions" or "uncertainty" or "uncertainties")
             {
                 continue;
             }
             return true;
+        }
+        return false;
+    }
+
+    private static bool BeginsPositivePredicate(string[] tokens, int index)
+    {
+        if (index < tokens.Length && tokens[index] is "it" or "they" or "this")
+        {
+            index++;
+        }
+        else if (index + 1 < tokens.Length && tokens[index] == "the" && tokens[index + 1] is "role" or "mandate" or "position")
+        {
+            index += 2;
+        }
+
+        return index < tokens.Length && tokens[index] is
+            "accountable" or "are" or "build" or "builds" or "carries" or "connects" or "cover" or "covers" or
+            "deliver" or "delivers" or "drive" or "drives" or "govern" or "governs" or "has" or "have" or
+            "hold" or "holds" or "include" or "includes" or "is" or "lead" or "leads" or "manage" or "manages" or
+            "must" or "own" or "owns" or "provide" or "provides" or "require" or "requires" or "responsible" or
+            "retain" or "retains" or "support" or "supports" or "will";
+    }
+
+    private static bool HasNominalNegator(string[] tokens, int start, int end)
+    {
+        for (var index = end - 1; index >= start; index--)
+        {
+            if (tokens[index] is "no" or "without" or "exclude" or "excludes" or "excluded" or "excluding" or "lacks" or "lacking")
+            {
+                return true;
+            }
         }
         return false;
     }
@@ -334,7 +371,7 @@ public sealed class MandateLensService
                 builder.Append(character);
                 previousWasSpace = false;
             }
-            else if (character is '.' or ';' or ':' or '!' or '?')
+            else if (character is '.' or ';' or '!' or '?')
             {
                 if (!previousWasSpace)
                 {
@@ -344,6 +381,15 @@ public sealed class MandateLensService
                 {
                     builder.Append("| ");
                 }
+                previousWasSpace = true;
+            }
+            else if (character == ',')
+            {
+                if (!previousWasSpace)
+                {
+                    builder.Append(' ');
+                }
+                builder.Append("~ ");
                 previousWasSpace = true;
             }
             else if (!previousWasSpace)
