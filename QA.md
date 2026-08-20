@@ -66,6 +66,8 @@ Scan source, anonymous responses, static assets, sitemap, the application assemb
 
 ## Messaging, résumé and retention
 
+- [ ] Mandate Lens runs only for approved recruiters, derives evidence from the published profile without a score or external request, withholds fit when mandate detail is weak, and surfaces sales/staff-augmentation/delivery-only friction.
+- [ ] Running Mandate Lens does not create a database message. Only the explicit private-share action stores the bounded mandate and derived context as an encrypted inbound message; administrators cannot use the recruiter-only share action.
 - [ ] Approved recruiters can create inbound messages and admins can list, read and delete them; résumé access requests are persistently deduplicated for 24 hours.
 - [ ] Notifications contain no private profile or message body; transport timeouts advance retry/backoff state instead of starving the outbox.
 - [ ] PDF upload rejects files over 5 MB, renamed/non-PDF, malformed, encrypted/uninspectable, forms/XFA, rich media and other active-content structures.
@@ -84,7 +86,7 @@ Automate and visually inspect 320×568, 375×667, 390×844, 768×1024 and 1440×
 - [ ] No serious/critical axe issues; colour contrast meets WCAG 2.2 AA.
 - [ ] 200% zoom, text reflow, forced colours, reduced motion and JavaScript-disabled reading are usable; the authenticated header and actions also pass at 320×568.
 - [ ] Forms expose validation accessibly and do not lose entered context unnecessarily.
-- [ ] `npm run visual` signs in through a real Development magic-link/TOTP flow and captures every public, auth, portal, Content Studio and AI/admin page at 390×844 and 1440×900 with zero root overflow and no serious/critical axe finding.
+- [ ] `npm run visual` signs in through a real Development magic-link/TOTP flow and captures every public, auth, portal, Mandate Lens result, Content Studio and AI/admin page at 390×844 and 1440×900 with zero root overflow and no serious/critical axe finding.
 - [ ] The local Compose harness raises only the development authentication request ceiling so the deliberate screenshot crawl does not trip abuse controls; production keeps its host-owned configured limit.
 
 ## Runtime and operations

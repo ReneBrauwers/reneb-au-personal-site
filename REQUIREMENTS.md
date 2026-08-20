@@ -22,7 +22,7 @@ Do not introduce a SPA framework, public portal port, second application runtime
 | `/candidate.json` | Public | Versioned structured representation of the published profile |
 | `/privacy` | Public | Recruiter portal collection, use, retention and deletion notice; no analytics |
 | `/auth/*` | Anonymous/authenticated | Registration, magic-link completion and session lifecycle |
-| `/portal/*` | Approved recruiter/admin | Private criteria, messaging, account deletion and approved résumé download |
+| `/portal/*` | Approved recruiter/admin | Private criteria, local-only Mandate Lens analysis, messaging, account deletion and approved résumé download |
 | `/admin/content/*` | Current `ADMIN_EMAILS` member plus TOTP | Versioned content drafts, WYSIWYG editing, preview, diff, publish and rollback |
 | `/admin/ai/*` | Current `ADMIN_EMAILS` member plus TOTP | Provider configuration, encrypted context and draft-only AI authoring |
 | `/admin/*` | Current `ADMIN_EMAILS` member plus TOTP | Résumé, recruiter and inbox administration |
@@ -69,6 +69,7 @@ When `RECRUITER_PORTAL_ENABLED=false`, discovery, sign-in, registration and recr
 
 - The private opportunity profile stores exact compensation, detailed availability, role detail and contact guidance only as encrypted server-side fields.
 - Approved recruiters can submit inbound messages. René continues the conversation externally; the portal does not send recruiter-authored outbound mail.
+- Approved recruiters can paste a 100–2,400 character role brief into Mandate Lens. Analysis is deterministic and host-local, uses only the published candidate evidence, emits no score or automated fit decision, and does not persist the pasted text. A separate explicit sharing action stores the complete bounded role brief, recruiter context and concise lens summary as an ordinary encrypted inbound message without truncation.
 - An administrator can list, mark read and delete messages.
 - Résumé upload is admin-only, PDF-only and limited to 5 MB. Validation checks declared type, signature, EOF/structure, rejects active content and uses `qpdf --check`.
 - Résumé bytes and original filenames are encrypted outside the web root. Downloads use generated filenames, authenticated attachment responses, `nosniff`, `no-store` and metadata-only auditing.

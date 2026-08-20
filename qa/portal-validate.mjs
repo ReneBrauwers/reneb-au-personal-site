@@ -192,6 +192,54 @@ if (token) {
   check(authenticatedMetrics.bodyScrollWidth <= authenticatedMetrics.clientWidth, `authenticated 320x568: body horizontal overflow ${authenticatedMetrics.bodyScrollWidth}/${authenticatedMetrics.clientWidth}`);
   for (const target of authenticatedMetrics.targets) check(target.width >= 44 && target.height >= 44, `authenticated 320x568: target '${target.label}' is ${Math.round(target.width)}x${Math.round(target.height)}`);
 
+  await authPage.setViewportSize({ width: 390, height: 844 });
+  const lensEntryMetrics = await authPage.evaluate(() => {
+    const section = document.querySelector('.mandate-lens');
+    const action = document.querySelector('.lens-action .button');
+    return {
+      sectionTop: section?.getBoundingClientRect().top || 0,
+      actionTop: action?.getBoundingClientRect().top || 0
+    };
+  });
+  const lensEntryDistance = Math.round(lensEntryMetrics.actionTop - lensEntryMetrics.sectionTop);
+  check(lensEntryDistance <= 844, `Mandate Lens 390x844: Run action begins ${lensEntryDistance}px after the section starts`);
+
+  await authPage.locator('input[name="MandateRole"]').fill("Synthetic QA mandate — not a real opportunity");
+  await authPage.locator('textarea[name="MandateText"]').first().fill("Synthetic acceptance scenario: Group Chief Architect with enterprise design authority for a regulated financial-services transformation, owning investment roadmaps, responsible AI governance and the connection between Product and Engineering delivery.");
+  await authPage.getByRole("button", { name: "Run Mandate Lens" }).click();
+  await authPage.getByRole("heading", { name: "This mandate earns a focused first conversation." }).waitFor();
+  check((await authPage.getByText("Candidate evidence").count()) >= 1, "Mandate Lens omitted candidate evidence");
+  check((await authPage.getByText("Runs on this server with no external AI or third-party upload").count()) >= 1, "Mandate Lens omitted its local-processing boundary");
+  const lensFocus = await authPage.locator('[data-lens-result]').evaluate(element => ({
+    focused: element === document.activeElement,
+    hash: window.location.hash,
+    activeElement: document.activeElement?.tagName || "none"
+  }));
+  check(lensFocus.focused, `Mandate Lens result did not receive focus after analysis (hash=${lensFocus.hash || "none"}, active=${lensFocus.activeElement})`);
+  const lensMetrics = await authPage.evaluate(() => ({
+    clientWidth: document.documentElement.clientWidth,
+    scrollWidth: document.documentElement.scrollWidth,
+    bodyScrollWidth: document.body.scrollWidth
+  }));
+  check(lensMetrics.scrollWidth <= lensMetrics.clientWidth, `Mandate Lens 320x568: root horizontal overflow ${lensMetrics.scrollWidth}/${lensMetrics.clientWidth}`);
+  check(lensMetrics.bodyScrollWidth <= lensMetrics.clientWidth, `Mandate Lens 320x568: body horizontal overflow ${lensMetrics.bodyScrollWidth}/${lensMetrics.clientWidth}`);
+  await authPage.locator('.skip-link').evaluate(element => { element.style.display = "none"; });
+  for (const proofViewport of [
+    { name: "mobile-390x844", width: 390, height: 844 },
+    { name: "desktop-1440x900", width: 1440, height: 900 }
+  ]) {
+    await authPage.setViewportSize({ width: proofViewport.width, height: proofViewport.height });
+    await authPage.locator('[data-lens-result]').focus();
+    await authPage.screenshot({
+      path: path.join(outputDir, `mandate-lens-review-${proofViewport.name}.png`),
+      fullPage: true,
+      animations: "disabled"
+    });
+  }
+  await authPage.locator('textarea[name="MandateNote"]').fill("Synthetic QA context proving explicit encrypted sharing.");
+  await authPage.getByRole("button", { name: "Share this brief privately" }).click();
+  await authPage.getByText("Your Mandate Lens brief was encrypted and shared privately with René.").waitFor();
+
   await authPage.locator('input[name="MessageSubject"]').fill("QA opportunity context");
   await authPage.locator('textarea[name="MessageBody"]').fill("This is a browser acceptance message proving the encrypted inbound workflow and redirect.");
   await authPage.getByRole("button", { name: "Send private message" }).click();

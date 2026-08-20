@@ -2,6 +2,10 @@
 
 This is the approved public portfolio copy deck. Preserve the meaning and compactness. Small edits for rhythm, line breaks or responsive layout are allowed, but do not add claims. The recruiter discovery copy below is managed through the portal's public draft/publish workflow.
 
+## Private Mandate Lens
+
+Verified recruiters may use **Mandate Lens** to turn a pasted role brief into an evidence-led private decision note. The interaction must say plainly that it runs locally, creates no fit score, and stores nothing unless the recruiter explicitly shares the brief with René. Its conclusion may recommend a focused first conversation, ask for sharper mandate detail or surface operating-model friction, but must remain candidate-supplied guidance for human review rather than an automated employment decision.
+
 ## Page title and description
 
 **Title**

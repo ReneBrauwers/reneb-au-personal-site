@@ -23,6 +23,8 @@ Also exclude date of birth, citizenship, family details, precise residence, heal
 
 Registration collects name, verified email, organisation, title, organisation or LinkedIn URL, country, sourcing purpose, privacy acknowledgement and an optional phone number. Authenticated use also creates access status, messages, résumé requests/grants and security audit metadata.
 
+Mandate Lens processes pasted role text transiently on the reneb.au host. It does not call an external AI provider and does not store the pasted text merely because analysis was requested. If the recruiter explicitly chooses **Share this brief privately**, the mandate and optional context become an encrypted inbound message governed by the same access, notification, retention and deletion controls as other portal messages. Recruiters must remove client-confidential or identifying information they are not authorised to share.
+
 Collect this information only to:
 
 - establish whether the requester is a genuine recruiter or hiring representative;
