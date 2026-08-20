@@ -88,6 +88,7 @@ th, td { padding: .7rem; border: 1px solid var(--line); text-align: left; vertic
 .stack-actions { display: flex; flex-wrap: wrap; gap: .4rem; }
 .stack-actions button { padding: .4rem .6rem; }
 code, pre { overflow-wrap: anywhere; }
+.totp-qr { display: block; width: min(280px, 100%); height: auto; margin: 1rem auto; border: .6rem solid #fff; background: #fff; }
 .portal-footer { border-top: 1px solid var(--line); color: #536273; font-size: .82rem; }
 .portal-footer a { display: inline-flex; align-items: center; min-height: 44px; }
 .visually-hidden { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0, 0, 0, 0) !important; white-space: nowrap !important; border: 0 !important; }

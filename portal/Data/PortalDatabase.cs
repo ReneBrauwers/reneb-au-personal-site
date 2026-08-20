@@ -234,7 +234,14 @@ public sealed partial class PortalDatabase
         return records;
     }
 
-    public async Task<bool> CreateLoginChallengeAsync(Guid recruiterId, string tokenHash, string codeHash, DateTimeOffset expiresAt, int requestsPerMinute, CancellationToken cancellationToken = default)
+    public async Task<bool> CreateLoginChallengeAsync(
+        Guid recruiterId,
+        string tokenHash,
+        string codeHash,
+        DateTimeOffset expiresAt,
+        int requestsPerMinute,
+        CancellationToken cancellationToken = default,
+        bool totpReenrollmentRequested = false)
     {
         await using var connection = await OpenAsync(cancellationToken);
         await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
@@ -252,17 +259,24 @@ public sealed partial class PortalDatabase
         }
         await ExecuteAsync(connection, "UPDATE LoginChallenges SET ConsumedAt = $now WHERE RecruiterId = $recruiterId AND ConsumedAt IS NULL;", cancellationToken,
             ("$now", Format(_time.GetUtcNow())), ("$recruiterId", recruiterId.ToString()));
+        var challengeId = Guid.NewGuid().ToString();
         await ExecuteAsync(connection, """
             INSERT INTO LoginChallenges (Id, RecruiterId, TokenHash, CodeHash, ExpiresAt, CreatedAt)
             VALUES ($id, $recruiterId, $tokenHash, $codeHash, $expiresAt, $now);
             """, cancellationToken,
-            ("$id", Guid.NewGuid().ToString()), ("$recruiterId", recruiterId.ToString()), ("$tokenHash", tokenHash),
+            ("$id", challengeId), ("$recruiterId", recruiterId.ToString()), ("$tokenHash", tokenHash),
             ("$codeHash", codeHash), ("$expiresAt", Format(expiresAt)), ("$now", Format(_time.GetUtcNow())));
+        if (totpReenrollmentRequested)
+        {
+            await ExecuteAsync(connection, "INSERT INTO LoginChallengeTotpReenrollments (LoginChallengeId) VALUES ($id);", cancellationToken,
+                ("$id", challengeId));
+            await InsertAuditAsync(connection, null, "authentication.totp_reenrollment_requested", recruiterId.ToString(), cancellationToken);
+        }
         await transaction.CommitAsync(cancellationToken);
         return true;
     }
 
-    public async Task<RecruiterRecord?> ConsumeLoginChallengeAsync(string? tokenHash, string? email, string? codeHash, bool adminOnly = false, CancellationToken cancellationToken = default)
+    public async Task<MailboxProofResult?> ConsumeLoginChallengeAsync(string? tokenHash, string? email, string? codeHash, bool adminOnly = false, CancellationToken cancellationToken = default)
     {
         await using var connection = await OpenAsync(cancellationToken);
         await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
@@ -276,7 +290,7 @@ public sealed partial class PortalDatabase
                     WHERE lc.TokenHash = $value AND lc.ConsumedAt IS NULL AND lc.ExpiresAt > $now
                       AND ($adminOnly = 0 OR r.IsAdmin = 1) LIMIT 1
                 ) AND ConsumedAt IS NULL
-                RETURNING RecruiterId;
+                RETURNING RecruiterId, Id;
                 """
             : """
                 UPDATE LoginChallenges SET ConsumedAt = $now
@@ -287,7 +301,7 @@ public sealed partial class PortalDatabase
                       AND lc.ConsumedAt IS NULL AND lc.ExpiresAt > $now
                       AND ($adminOnly = 0 OR r.IsAdmin = 1) LIMIT 1
                 ) AND ConsumedAt IS NULL
-                RETURNING RecruiterId;
+                RETURNING RecruiterId, Id;
                 """;
         command.Parameters.AddWithValue("$value", tokenHash ?? codeHash ?? string.Empty);
         command.Parameters.AddWithValue("$now", Format(_time.GetUtcNow()));
@@ -303,7 +317,13 @@ public sealed partial class PortalDatabase
             return null;
         }
         var recruiterId = Guid.Parse(reader.GetString(0));
+        var challengeId = reader.GetString(1);
         await reader.DisposeAsync();
+
+        await using var intent = connection.CreateCommand();
+        intent.CommandText = "SELECT EXISTS(SELECT 1 FROM LoginChallengeTotpReenrollments WHERE LoginChallengeId = $id);";
+        intent.Parameters.AddWithValue("$id", challengeId);
+        var totpReenrollmentRequested = Convert.ToInt32(await intent.ExecuteScalarAsync(cancellationToken), CultureInfo.InvariantCulture) == 1;
 
         var recruiter = await GetRecruiterByIdAsync(connection, recruiterId, cancellationToken);
         if (recruiter is null || recruiter.Status is RecruiterStatus.Suspended or RecruiterStatus.Deleted)
@@ -322,8 +342,13 @@ public sealed partial class PortalDatabase
             """, cancellationToken,
             ("$status", newStatus.ToString()), ("$now", Format(now)), ("$id", recruiterId.ToString()));
         await InsertAuditAsync(connection, recruiterId, "authentication.magic_link_completed", recruiterId.ToString(), cancellationToken);
+        if (totpReenrollmentRequested)
+        {
+            await InsertAuditAsync(connection, recruiterId, "authentication.totp_reenrollment_mailbox_verified", recruiterId.ToString(), cancellationToken);
+        }
         await transaction.CommitAsync(cancellationToken);
-        return await GetRecruiterAsync(recruiterId, cancellationToken);
+        var updatedRecruiter = await GetRecruiterAsync(recruiterId, cancellationToken);
+        return updatedRecruiter is null ? null : new MailboxProofResult(updatedRecruiter, totpReenrollmentRequested);
     }
 
     public async Task<bool> CanProceedWithMailboxProofAsync(string email, int maximumAttempts = 8, CancellationToken cancellationToken = default)
@@ -384,6 +409,41 @@ public sealed partial class PortalDatabase
             VALUES ($hash, $recruiterId, $now, $now, $expiresAt);
             """, cancellationToken,
             ("$hash", sessionHash), ("$recruiterId", recruiterId.ToString()), ("$now", Format(now)), ("$expiresAt", Format(expiresAt)));
+    }
+
+    public async Task<bool> CreateTotpVerifiedSessionAsync(
+        Guid recruiterId,
+        long expectedTotpVersion,
+        string sessionHash,
+        DateTimeOffset expiresAt,
+        string? previousSessionHash,
+        CancellationToken cancellationToken = default)
+    {
+        var now = _time.GetUtcNow();
+        await using var connection = await OpenAsync(cancellationToken);
+        await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
+        if (!string.IsNullOrWhiteSpace(previousSessionHash))
+        {
+            await ExecuteAsync(connection, "UPDATE AuthSessions SET RevokedAt = $now WHERE SessionHash = $hash AND RevokedAt IS NULL;", cancellationToken,
+                ("$now", Format(now)), ("$hash", previousSessionHash));
+        }
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            INSERT INTO AuthSessions (SessionHash, RecruiterId, CreatedAt, LastSeenAt, ExpiresAt)
+            SELECT $hash, $recruiterId, $now, $now, $expiresAt
+            WHERE EXISTS (
+                SELECT 1 FROM AdminTotpVersions
+                WHERE RecruiterId = $recruiterId AND Version = $expectedVersion
+            );
+            """;
+        command.Parameters.AddWithValue("$hash", sessionHash);
+        command.Parameters.AddWithValue("$recruiterId", recruiterId.ToString());
+        command.Parameters.AddWithValue("$now", Format(now));
+        command.Parameters.AddWithValue("$expiresAt", Format(expiresAt));
+        command.Parameters.AddWithValue("$expectedVersion", expectedTotpVersion);
+        var created = await command.ExecuteNonQueryAsync(cancellationToken) == 1;
+        await transaction.CommitAsync(cancellationToken);
+        return created;
     }
 
     public async Task<bool> ValidateAndTouchSessionAsync(Guid recruiterId, string sessionHash, DateTimeOffset newExpiry, CancellationToken cancellationToken = default)
@@ -496,18 +556,33 @@ public sealed partial class PortalDatabase
     }
 
     public async Task<byte[]?> GetAdminTotpSecretAsync(Guid accountId, CancellationToken cancellationToken = default)
+        => (await GetAdminTotpCredentialAsync(accountId, cancellationToken))?.Seed;
+
+    public async Task<AdminTotpCredential?> GetAdminTotpCredentialAsync(Guid accountId, CancellationToken cancellationToken = default)
     {
         await using var connection = await OpenAsync(cancellationToken);
         await using var command = connection.CreateCommand();
-        command.CommandText = "SELECT SecretEncrypted FROM AdminTotp WHERE RecruiterId = $id;";
+        command.CommandText = """
+            SELECT t.SecretEncrypted, v.Version
+            FROM AdminTotp t
+            JOIN AdminTotpVersions v ON v.RecruiterId = t.RecruiterId
+            WHERE t.RecruiterId = $id;
+            """;
         command.Parameters.AddWithValue("$id", accountId.ToString());
-        var value = (string?)await command.ExecuteScalarAsync(cancellationToken);
-        return value is null ? null : _encryption.DecryptBytes(Convert.FromBase64String(value));
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        if (!await reader.ReadAsync(cancellationToken))
+        {
+            return null;
+        }
+        return new AdminTotpCredential(
+            _encryption.DecryptBytes(Convert.FromBase64String(reader.GetString(0))),
+            reader.GetInt64(1));
     }
 
     public async Task SaveAdminTotpSecretAsync(Guid accountId, byte[] secret, CancellationToken cancellationToken = default)
     {
         await using var connection = await OpenAsync(cancellationToken);
+        await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
         await ExecuteAsync(connection, """
             INSERT INTO AdminTotp (RecruiterId, SecretEncrypted, EnrolledAt)
             VALUES ($id, $secret, $now)
@@ -515,6 +590,43 @@ public sealed partial class PortalDatabase
             """, cancellationToken,
             ("$id", accountId.ToString()), ("$secret", Convert.ToBase64String(_encryption.EncryptBytes(secret))),
             ("$now", Format(_time.GetUtcNow())));
+        await AdvanceAdminTotpVersionAsync(connection, accountId, cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+    }
+
+    public async Task<long> CompleteAdminTotpEnrollmentAsync(Guid accountId, byte[] totpSeed, bool reenrollment, CancellationToken cancellationToken = default)
+    {
+        var now = _time.GetUtcNow();
+        await using var connection = await OpenAsync(cancellationToken);
+        await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
+        await ExecuteAsync(connection, """
+            INSERT INTO AdminTotp (RecruiterId, SecretEncrypted, EnrolledAt)
+            VALUES ($id, $secret, $now)
+            ON CONFLICT(RecruiterId) DO UPDATE SET SecretEncrypted = excluded.SecretEncrypted, EnrolledAt = excluded.EnrolledAt;
+            """, cancellationToken,
+            ("$id", accountId.ToString()), ("$secret", Convert.ToBase64String(_encryption.EncryptBytes(totpSeed))), ("$now", Format(now)));
+        var version = await AdvanceAdminTotpVersionAsync(connection, accountId, cancellationToken);
+        await ExecuteAsync(connection, "DELETE FROM AdminTotpAttempts WHERE RecruiterId = $id;", cancellationToken,
+            ("$id", accountId.ToString()));
+        await ExecuteAsync(connection, "UPDATE AuthSessions SET RevokedAt = $now WHERE RecruiterId = $id AND RevokedAt IS NULL;", cancellationToken,
+            ("$now", Format(now)), ("$id", accountId.ToString()));
+        await InsertAuditAsync(connection, accountId,
+            reenrollment ? "authentication.totp_reenrollment_completed" : "authentication.totp_enrollment_completed",
+            accountId.ToString(), cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return version;
+    }
+
+    private static async Task<long> AdvanceAdminTotpVersionAsync(SqliteConnection connection, Guid accountId, CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            INSERT INTO AdminTotpVersions (RecruiterId, Version) VALUES ($id, 1)
+            ON CONFLICT(RecruiterId) DO UPDATE SET Version = AdminTotpVersions.Version + 1
+            RETURNING Version;
+            """;
+        command.Parameters.AddWithValue("$id", accountId.ToString());
+        return Convert.ToInt64(await command.ExecuteScalarAsync(cancellationToken), CultureInfo.InvariantCulture);
     }
 
     public async Task<bool> TryBeginAdminTotpAttemptAsync(Guid accountId, int maximumAttempts = 8, CancellationToken cancellationToken = default)
@@ -1204,6 +1316,11 @@ public sealed partial class PortalDatabase
         );
         CREATE INDEX IF NOT EXISTS IX_LoginChallenges_CodeHash ON LoginChallenges(CodeHash);
 
+        CREATE TABLE IF NOT EXISTS LoginChallengeTotpReenrollments (
+            LoginChallengeId TEXT PRIMARY KEY REFERENCES LoginChallenges(Id) ON DELETE CASCADE
+        );
+        INSERT OR IGNORE INTO SchemaVersions (Version, AppliedAt) VALUES (4, strftime('%Y-%m-%dT%H:%M:%fZ', 'now'));
+
         CREATE TABLE IF NOT EXISTS LoginCodeAttempts (
             EmailHash TEXT PRIMARY KEY,
             WindowStartedAt TEXT NOT NULL,
@@ -1227,6 +1344,14 @@ public sealed partial class PortalDatabase
             SecretEncrypted TEXT NOT NULL,
             EnrolledAt TEXT NOT NULL
         );
+
+        CREATE TABLE IF NOT EXISTS AdminTotpVersions (
+            RecruiterId TEXT PRIMARY KEY REFERENCES Recruiters(Id) ON DELETE CASCADE,
+            Version INTEGER NOT NULL CHECK (Version > 0)
+        );
+        INSERT OR IGNORE INTO AdminTotpVersions (RecruiterId, Version)
+            SELECT RecruiterId, 1 FROM AdminTotp;
+        INSERT OR IGNORE INTO SchemaVersions (Version, AppliedAt) VALUES (5, strftime('%Y-%m-%dT%H:%M:%fZ', 'now'));
 
         CREATE TABLE IF NOT EXISTS AdminTotpAttempts (
             RecruiterId TEXT PRIMARY KEY REFERENCES Recruiters(Id) ON DELETE CASCADE,

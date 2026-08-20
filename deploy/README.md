@@ -122,6 +122,12 @@ Through the admin UI:
 5. test Graph delivery to an external mailbox, business/free/disposable domain flows, approval, message, résumé grant/download/revocation and account deletion; and
 6. run the authenticated visual lane and retain its mobile/desktop screenshot report.
 
+### Administrator authenticator recovery
+
+If the enrolled authenticator is unavailable or no longer validates, open `/auth/admin`, enter the configured administrator address and select **Set up a new authenticator after email verification** before sending the link. The single-use email challenge is bound to that recovery request. After it is completed, `/admin/totp` displays a local QR code and manual setup key suitable for 1Password.
+
+The existing TOTP secret remains valid until the administrator enters a correct six-digit code from the new setup. Successful recovery atomically replaces the encrypted secret, records a metadata-only audit event and revokes earlier administrator sessions. Do not send or record the QR code, setup key or generated six-digit values in tickets, logs or release screenshots.
+
 Leave `AI_EGRESS_ENABLED=false` during this phase. You may prepare provider settings only after the separate AI credential keyring is mounted. When the content migration and editing flows pass, set `AI_EGRESS_ENABLED=true`, recreate both services, enter a provider key through `/admin/ai/providers`, refresh compatible models, configure both the provider cap and site-wide monthly ceiling, and run the minimal structured-output test. AI authoring remains disabled until that test succeeds. Confirm OpenRouter private-routing settings or the xAI ZDR response status in the UI before selecting private opportunity, résumé or uploaded context.
 
 ## 6. Normal release

@@ -11,7 +11,10 @@ public sealed class LoginModel(IdentityService identity) : PageModel
 {
     [BindProperty, Required, EmailAddress, StringLength(254)]
     public string Email { get; set; } = string.Empty;
+    [BindProperty]
+    public bool ReenrollAuthenticator { get; set; }
     public bool Submitted { get; private set; }
+    public bool SubmittedReenrollment { get; private set; }
     public bool IsAdmin { get; private set; }
 
     public void OnGet(string mode) => IsAdmin = string.Equals(mode, "admin", StringComparison.OrdinalIgnoreCase);
@@ -23,7 +26,8 @@ public sealed class LoginModel(IdentityService identity) : PageModel
         {
             return Page();
         }
-        await identity.RequestLoginAsync(Email, IsAdmin, cancellationToken);
+        SubmittedReenrollment = IsAdmin && ReenrollAuthenticator;
+        await identity.RequestLoginAsync(Email, IsAdmin, SubmittedReenrollment, cancellationToken);
         Submitted = true;
         ModelState.Clear();
         return Page();
