@@ -285,13 +285,24 @@ public sealed class MandateLensService
         var clause = clauseBoundary >= 0 ? prefix[(clauseBoundary + 1)..] : prefix;
         var preceding = clause.ToString().Split(' ', StringSplitOptions.RemoveEmptyEntries);
         var scopeStart = 0;
+        var introducedExclusion = false;
         for (var index = 0; index < preceding.Length; index++)
         {
-            if (preceding[index] is "but" or "however" or "except" or "although" or "though" or "yet" or "while" or "whereas" or "instead")
+            if (preceding[index] == "^")
+            {
+                introducedExclusion = HasExclusionIntroducer(preceding, scopeStart, index);
+                if (!introducedExclusion)
+                {
+                    scopeStart = index + 1;
+                }
+            }
+            else if (preceding[index] is "but" or "however" or "except" or "although" or "though" or "yet" or "while" or "whereas" or "instead")
             {
                 scopeStart = index + 1;
+                introducedExclusion = false;
             }
             else if (preceding[index] is "and" or "~"
+                && !introducedExclusion
                 && BeginsPositivePredicate(preceding, index + 1)
                 && HasNominalNegator(preceding, scopeStart, index))
             {
@@ -324,6 +335,29 @@ public sealed class MandateLensService
                 continue;
             }
             return true;
+        }
+        return false;
+    }
+
+    private static bool HasExclusionIntroducer(string[] tokens, int start, int end)
+    {
+        for (var index = end - 1; index >= start; index--)
+        {
+            if (tokens[index] is "exclude" or "excludes" or "excluded" or "excluding")
+            {
+                return true;
+            }
+            if (tokens[index] is not ("include" or "includes" or "included" or "including"))
+            {
+                continue;
+            }
+            for (var negator = index - 1; negator >= start; negator--)
+            {
+                if (tokens[negator] is "no" or "not" or "without")
+                {
+                    return true;
+                }
+            }
         }
         return false;
     }
@@ -390,6 +424,15 @@ public sealed class MandateLensService
                     builder.Append(' ');
                 }
                 builder.Append("~ ");
+                previousWasSpace = true;
+            }
+            else if (character == ':')
+            {
+                if (!previousWasSpace)
+                {
+                    builder.Append(' ');
+                }
+                builder.Append("^ ");
                 previousWasSpace = true;
             }
             else if (!previousWasSpace)
