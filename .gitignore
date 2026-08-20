@@ -2,6 +2,7 @@
 .env.*
 !.env.example
 artifacts/
+.impeccable/review/
 node_modules/
 *.log
 *.bak

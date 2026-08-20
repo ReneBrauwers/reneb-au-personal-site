@@ -80,6 +80,35 @@ async function inspectRoutes(context, routes, sessionLabel) {
   if (sessionLabel === "authenticated") check(analyticsRequests.length === 0, `authenticated pages made Umami requests: ${analyticsRequests.join(", ")}`);
 }
 
+async function inspectMandateLens(context) {
+  for (const viewport of [{ name: "mobile-390x844", width: 390, height: 844 }, { name: "desktop-1440x900", width: 1440, height: 900 }]) {
+    const page = await context.newPage();
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await page.goto(`${baseUrl}/portal`, { waitUntil: "networkidle" });
+    await page.locator('input[name="MandateRole"]').fill("Synthetic QA mandate — not a real opportunity");
+    await page.locator('textarea[name="MandateText"]').first().fill("Synthetic acceptance scenario: Group Chief Architect with enterprise design authority for a regulated financial-services transformation, owning investment roadmaps, responsible AI governance and the connection between Product and Engineering delivery.");
+    await page.getByRole("button", { name: "Run Mandate Lens" }).click();
+    await page.getByRole("heading", { name: "This mandate earns a focused first conversation." }).waitFor();
+    const metrics = await page.evaluate(() => ({
+      clientWidth: document.documentElement.clientWidth,
+      scrollWidth: document.documentElement.scrollWidth,
+      bodyScrollWidth: document.body.scrollWidth,
+      bodyFontSize: Number.parseFloat(getComputedStyle(document.body).fontSize)
+    }));
+    check(metrics.scrollWidth <= metrics.clientWidth, `authenticated/mandate-lens/${viewport.name}: root overflow ${metrics.scrollWidth}/${metrics.clientWidth}`);
+    check(metrics.bodyScrollWidth <= metrics.clientWidth, `authenticated/mandate-lens/${viewport.name}: body overflow ${metrics.bodyScrollWidth}/${metrics.clientWidth}`);
+    const axe = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"]).analyze();
+    const serious = axe.violations.filter(item => ["serious", "critical"].includes(item.impact));
+    check(serious.length === 0, `authenticated/mandate-lens/${viewport.name}: accessibility ${serious.map(item => item.id).join(", ")}`);
+    await page.locator('[data-lens-result]').focus();
+    check(await page.locator('[data-lens-result]').evaluate(element => element === document.activeElement), `authenticated/mandate-lens/${viewport.name}: result focus was not restored after accessibility analysis`);
+    const file = `authenticated-mandate-lens-${viewport.name}.png`;
+    await page.screenshot({ path: path.join(outputDir, file), fullPage: true, animations: "disabled" });
+    evidence.push({ session: "authenticated", page: "mandate-lens", route: "/portal?handler=Lens", viewport: viewport.name, file, ...metrics, seriousAccessibilityViolations: serious.length });
+    await page.close();
+  }
+}
+
 const anonymous = await browser.newContext();
 await anonymous.route("https://stats.reneb.au/**", route => route.fulfill({ status: 200, contentType: "application/javascript", body: "" }));
 await inspectRoutes(anonymous, anonymousRoutes, "anonymous");
@@ -132,6 +161,7 @@ if (token) {
     await login.getByRole("button", { name: "Verify administrator access" }).click();
     await login.waitForURL(`${baseUrl}/admin`);
     await inspectRoutes(admin, authenticatedRoutes, "authenticated");
+    await inspectMandateLens(admin);
   }
 }
 await login.close();
