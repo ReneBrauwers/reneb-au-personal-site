@@ -117,6 +117,20 @@ public sealed class MandateLensTests
     }
 
     [Fact]
+    public void InclusionListsIgnoreUnrelatedNegatorsAndResetAtTheNextColon()
+    {
+        var positiveInclusion = _service.Analyse(
+            "A role without a sales quota includes: Product delivery.",
+            PublicProfileDefaults.Create());
+        var resetList = _service.Analyse(
+            "Responsibilities exclude: sales, mission: Product delivery.",
+            PublicProfileDefaults.Create());
+
+        Assert.Contains(positiveInclusion.Signals, signal => signal.Key == "delivery");
+        Assert.Contains(resetList.Signals, signal => signal.Key == "delivery");
+    }
+
+    [Fact]
     public void UnrelatedPublishedClaimsAreNeverUsedAsCandidateEvidence()
     {
         var profile = new PublicCandidateProfile
