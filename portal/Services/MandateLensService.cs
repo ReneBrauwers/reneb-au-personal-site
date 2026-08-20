@@ -285,16 +285,18 @@ public sealed class MandateLensService
         var clause = clauseBoundary >= 0 ? prefix[(clauseBoundary + 1)..] : prefix;
         var preceding = clause.ToString().Split(' ', StringSplitOptions.RemoveEmptyEntries);
         var scopeStart = 0;
+        var colonSegmentStart = 0;
         var introducedExclusion = false;
         for (var index = 0; index < preceding.Length; index++)
         {
             if (preceding[index] == "^")
             {
-                introducedExclusion = HasExclusionIntroducer(preceding, scopeStart, index);
+                introducedExclusion = HasExclusionIntroducer(preceding, colonSegmentStart, index);
                 if (!introducedExclusion)
                 {
                     scopeStart = index + 1;
                 }
+                colonSegmentStart = index + 1;
             }
             else if (preceding[index] is "but" or "however" or "except" or "although" or "though" or "yet" or "while" or "whereas" or "instead")
             {
@@ -351,12 +353,14 @@ public sealed class MandateLensService
             {
                 continue;
             }
-            for (var negator = index - 1; negator >= start; negator--)
+            var negator = index - 1;
+            while (negator >= start && tokens[negator] is "clearly" or "currently" or "explicitly" or "expressly" or "intentionally" or "necessarily")
             {
-                if (tokens[negator] is "no" or "not" or "without")
-                {
-                    return true;
-                }
+                negator--;
+            }
+            if (negator >= start && tokens[negator] is "not" or "without")
+            {
+                return true;
             }
         }
         return false;
