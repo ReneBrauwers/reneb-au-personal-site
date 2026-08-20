@@ -3,6 +3,14 @@
 @{
     ViewData["Title"] = "Private opportunity profile";
 }
+<!--
+THESIS: A role brief becomes an evidence-led decision paper; refuse fit scores and generic matching dashboards.
+OWN-WORLD: Deep navy decision room, paper output, warm path and editorial type inherited from reneb.au.
+STORY: Paste mandate, inspect evidence and friction, then choose whether to share the brief privately.
+FIRST VIEWPORT: Plain-language promise and local-processing boundary sit beside one large mandate field and one action.
+FORM: Established-surface extension; a connected evidence ledger is the first and chosen structure; no concept seed by contract.
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
+-->
 <div class="private-banner"><div class="portal-shell">Private, verified-access information · Do not forward or republish</div></div>
 <section class="content-section">
   <div class="portal-shell section-grid">
@@ -22,6 +30,123 @@
         <div><dt>Additional matching guidance</dt><dd>@Html.Raw(Model.HtmlOrFallback(Model.Profile.AdditionalGuidanceRichText))</dd></div>
       </dl>
     </div>
+  </div>
+</section>
+
+<section class="content-section mandate-lens" aria-labelledby="mandate-lens-heading">
+  <div class="portal-shell">
+    <div class="lens-introduction">
+      <div>
+        <h2 id="mandate-lens-heading">Paste the mandate. Get the uncomfortable questions first.</h2>
+        <p>Mandate Lens tests role language against candidate-supplied evidence, exposing overlap, ambiguity and operating-model friction before the first meeting.</p>
+      </div>
+      <aside class="lens-boundary" aria-label="Mandate privacy boundary">
+        <strong>Local by design</strong>
+        <p>Runs on this server with no external AI or third-party upload, and no fit score. Nothing is stored unless you explicitly share it with René.</p>
+      </aside>
+    </div>
+
+    <form method="post" asp-page-handler="Lens" asp-fragment="lens-conclusion" class="lens-workbench">
+      <div class="field lens-brief-field">
+        <label asp-for="MandateText">Role brief or mandate</label>
+        <textarea asp-for="MandateText" rows="10" maxlength="2400" aria-describedby="mandate-lens-help" placeholder="Paste the purpose, decision rights, outcomes and delivery context. Remove client-confidential or identifying details first."></textarea>
+        <span asp-validation-for="MandateText"></span>
+        <span id="mandate-lens-help" class="field-hint">100–2,400 characters. Deterministic, private and never a percentage score.</span>
+      </div>
+      <div class="lens-action">
+        <button class="button button-light" type="submit">Run Mandate Lens</button>
+        <span>Evidence first. Human judgement always.</span>
+      </div>
+      <div class="field lens-role-field">
+        <label asp-for="MandateRole">Role or mandate label <span class="field-optional">Optional</span></label>
+        <input asp-for="MandateRole" autocomplete="off" placeholder="For example: Group Chief Architect">
+        <span asp-validation-for="MandateRole"></span>
+      </div>
+    </form>
+
+    @if (Model.LensResult is { } lens)
+    {
+      <article class="lens-result" aria-labelledby="lens-conclusion" aria-live="polite" tabindex="-1" data-lens-result>
+        <header class="lens-conclusion">
+          <p class="lens-metadata">Generated locally · Candidate-supplied evidence · Human review</p>
+          <h2 id="lens-conclusion">@lens.Conclusion</h2>
+          <p class="lens-summary">@lens.Summary</p>
+          <div class="lens-hypothesis">
+            <strong>Working hypothesis to test</strong>
+            <p>@lens.WorkingHypothesis</p>
+          </div>
+        </header>
+
+        <div class="lens-pressure-test">
+          <section>
+            <h3>Questions for the first conversation</h3>
+            <ol>
+              @foreach (var question in lens.Questions) { <li>@question</li> }
+            </ol>
+          </section>
+          <section>
+            <h3>What the brief leaves unresolved</h3>
+            @if (lens.Friction.Count == 0)
+            {
+              <p>The pasted text makes the core mandate unusually clear. The questions opposite are the remaining pressure test.</p>
+            }
+            else
+            {
+              <ul>
+                @foreach (var item in lens.Friction) { <li>@item</li> }
+              </ul>
+            }
+          </section>
+        </div>
+
+        @if (lens.Signals.Count > 0)
+        {
+          <div class="lens-evidence-path" aria-label="Mandate signals and candidate evidence">
+            @for (var index = 0; index < lens.Signals.Count; index++)
+            {
+              var signal = lens.Signals[index];
+              <section class="lens-signal">
+                <span class="lens-node" aria-hidden="true">@(index + 1)</span>
+                <div class="lens-signal-reading">
+                  <h3>@signal.Label</h3>
+                  <p>@signal.Observation</p>
+                </div>
+                <blockquote>
+                  <strong>Candidate evidence</strong>
+                  <p>@signal.Evidence</p>
+                </blockquote>
+              </section>
+            }
+          </div>
+        }
+
+        @if (!Model.IsAdmin)
+        {
+          <form method="post" asp-page-handler="ShareLens" class="lens-share">
+            <input type="hidden" asp-for="MandateRole">
+            <textarea hidden asp-for="MandateText"></textarea>
+            <div>
+              <h3>Turn the analysis into a better opening conversation.</h3>
+              <p>Sharing stores the full pasted mandate, your context and a concise lens summary as an encrypted private message. Nothing is included in the notification email.</p>
+            </div>
+            <div class="field">
+              <label asp-for="MandateNote">Context for René <span class="field-optional">Optional</span></label>
+              <textarea asp-for="MandateNote" rows="3" maxlength="400" aria-describedby="mandate-note-help" placeholder="What should René understand before replying?"></textarea>
+              <span asp-validation-for="MandateNote"></span>
+              <span id="mandate-note-help" class="field-hint">Up to 400 characters. The full private message remains within the encrypted-message limit.</span>
+            </div>
+            <div class="lens-share-action">
+              <button class="button" type="submit">Share this brief privately</button>
+              <span>This action stores the mandate. Analysis alone does not.</span>
+            </div>
+          </form>
+        }
+        else
+        {
+          <p class="lens-admin-note">Administrator preview: the recruiter-only private sharing action is intentionally unavailable.</p>
+        }
+      </article>
+    }
   </div>
 </section>
 

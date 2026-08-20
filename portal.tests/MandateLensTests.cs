@@ -57,17 +57,37 @@ public sealed class MandateLensTests
     }
 
     [Fact]
-    public void SharedBriefIsBoundedAndCarriesTheHumanContext()
+    public void SharedBriefIsCompleteBoundedAndCarriesTheHumanContext()
     {
-        var mandate = new string('a', 3900);
+        var mandate = new string('a', MandateLensService.MaximumMandateLength);
+        var note = new string('b', MandateLensService.MaximumNoteLength);
         var result = _service.Analyse("Enterprise architecture design authority and investment roadmap ownership.", PublicProfileDefaults.Create());
 
-        var message = _service.ComposePrivateMessage("Chief Architect", mandate, "Please focus on the operating-model question.", result);
+        var message = _service.ComposePrivateMessage("Chief Architect", mandate, note, result);
 
-        Assert.True(message.Length <= 4000);
+        Assert.True(message.Length <= MandateLensService.MaximumPrivateMessageLength);
         Assert.Contains("Role: Chief Architect", message, StringComparison.Ordinal);
+        Assert.Contains("Working hypothesis:", message, StringComparison.Ordinal);
         Assert.Contains("Recruiter context:", message, StringComparison.Ordinal);
         Assert.Contains("Pasted mandate:", message, StringComparison.Ordinal);
-        Assert.EndsWith("…", message, StringComparison.Ordinal);
+        Assert.EndsWith(mandate, message, StringComparison.Ordinal);
+        Assert.DoesNotContain('…', message);
+    }
+
+    [Fact]
+    public void SharedBriefRejectsInputThatCannotFitTheCompleteMessageContract()
+    {
+        var result = _service.Analyse("Enterprise architecture design authority and investment roadmap ownership.", PublicProfileDefaults.Create());
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => _service.ComposePrivateMessage(
+            "Chief Architect",
+            new string('a', MandateLensService.MaximumMandateLength + 1),
+            null,
+            result));
+        Assert.Throws<ArgumentOutOfRangeException>(() => _service.ComposePrivateMessage(
+            "Chief Architect",
+            "Enterprise architecture design authority and investment roadmap ownership.",
+            new string('b', MandateLensService.MaximumNoteLength + 1),
+            result));
     }
 }

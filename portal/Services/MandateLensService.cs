@@ -6,6 +6,11 @@ namespace ReneB.Portal.Services;
 
 public sealed class MandateLensService
 {
+    public const int MaximumMandateLength = 2400;
+    public const int MaximumNoteLength = 400;
+    public const int MaximumRoleLength = 140;
+    public const int MaximumPrivateMessageLength = 4000;
+
     private static readonly SignalDefinition[] SignalDefinitions =
     [
         new(
@@ -138,31 +143,52 @@ public sealed class MandateLensService
 
     public string ComposePrivateMessage(string? roleLabel, string mandate, string? note, MandateLensResult result)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(mandate);
+        ArgumentNullException.ThrowIfNull(result);
+
+        var trimmedRole = roleLabel?.Trim();
+        var trimmedMandate = mandate.Trim();
+        var trimmedNote = note?.Trim();
+        if (trimmedRole?.Length > MaximumRoleLength)
+        {
+            throw new ArgumentOutOfRangeException(nameof(roleLabel), $"Role labels cannot exceed {MaximumRoleLength} characters.");
+        }
+        if (trimmedMandate.Length > MaximumMandateLength)
+        {
+            throw new ArgumentOutOfRangeException(nameof(mandate), $"Mandates cannot exceed {MaximumMandateLength} characters.");
+        }
+        if (trimmedNote?.Length > MaximumNoteLength)
+        {
+            throw new ArgumentOutOfRangeException(nameof(note), $"Recruiter context cannot exceed {MaximumNoteLength} characters.");
+        }
+
         var builder = new StringBuilder();
         builder.AppendLine("Mandate Lens brief shared by a verified recruiter.");
-        if (!string.IsNullOrWhiteSpace(roleLabel))
+        if (!string.IsNullOrWhiteSpace(trimmedRole))
         {
-            builder.AppendLine(CultureInfo.InvariantCulture, $"Role: {roleLabel.Trim()}");
+            builder.AppendLine(CultureInfo.InvariantCulture, $"Role: {trimmedRole}");
         }
         builder.AppendLine(CultureInfo.InvariantCulture, $"Lens conclusion: {result.Conclusion}");
+        builder.AppendLine(CultureInfo.InvariantCulture, $"Working hypothesis: {result.WorkingHypothesis}");
         if (result.Signals.Count > 0)
         {
             builder.AppendLine(CultureInfo.InvariantCulture, $"Mandate signals: {string.Join(", ", result.Signals.Select(signal => signal.Label))}");
         }
-        if (!string.IsNullOrWhiteSpace(note))
+        if (!string.IsNullOrWhiteSpace(trimmedNote))
         {
             builder.AppendLine();
             builder.AppendLine("Recruiter context:");
-            builder.AppendLine(note.Trim());
+            builder.AppendLine(trimmedNote);
         }
         builder.AppendLine();
         builder.AppendLine("Pasted mandate:");
-        builder.Append(mandate.Trim());
+        builder.Append(trimmedMandate);
 
-        const int maximumMessageLength = 4000;
-        return builder.Length <= maximumMessageLength
-            ? builder.ToString()
-            : builder.ToString(0, maximumMessageLength - 1) + "…";
+        if (builder.Length > MaximumPrivateMessageLength)
+        {
+            throw new InvalidOperationException("The complete Mandate Lens message exceeds the encrypted message limit.");
+        }
+        return builder.ToString();
     }
 
     private static string FindEvidence(PublicCandidateProfile profile, SignalDefinition definition, HashSet<string> used)
