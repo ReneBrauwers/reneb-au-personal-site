@@ -9,26 +9,34 @@
     <h1>Verify with your authenticator.</h1>
     <div class="notice notice-success" role="status">
       <p><strong>Email sign-in complete.</strong> Administrator access requires one separate security check.</p>
-      <p>Open the authenticator app you use for reneb.au and enter its current six-digit number below. Do not enter the eight-character code from the email; that code has already completed the email step.</p>
+      @if (!Model.IsEnrollment)
+      {
+        <p>Open the authenticator app you use for reneb.au and enter its current six-digit number below. Do not enter the eight-character code from the email; that code has already completed the email step.</p>
+      }
     </div>
-    @if (Model.IsNew)
+    @if (Model.IsEnrollment)
     {
       <div class="notice notice-warning">
-        <p><strong>First-time setup:</strong> add this account to your authenticator app before continuing, then enter the six-digit number it generates.</p>
+        <p><strong>@(Model.IsReenrollment ? "Authenticator recovery:" : "First-time setup:")</strong> add a one-time password to your reneb.au login in 1Password, then scan this QR code.</p>
+        <img class="totp-qr" src="@Model.QrCodeDataUri" alt="QR code for adding the reneb.au one-time password to 1Password" width="280" height="280">
         <p><strong>Account:</strong> reneb.au (@Model.AdminEmail)</p>
-        <p><strong>Setup key:</strong> <code>@Model.SecretBase32</code></p>
-        <p class="field-hint">The setup key is encrypted at rest. Store a recovery copy in your password manager.</p>
+        <p><strong>Manual setup key:</strong> <code>@Model.SecretBase32</code></p>
+        <p class="field-hint">If scanning is unavailable, enter the setup key in 1Password. The new key is not saved until you prove it with the current six-digit number below.</p>
+        @if (Model.IsReenrollment)
+        {
+          <p class="field-hint">Your existing authenticator remains active until the new setup is verified. Completing recovery replaces it and signs out prior administrator sessions.</p>
+        }
       </div>
     }
     <div asp-validation-summary="ModelOnly"></div>
     <input type="hidden" asp-for="ReturnUrl">
     <input type="hidden" asp-for="Enrollment">
     <div class="field">
-      <label asp-for="Code">Current six-digit code from your authenticator app</label>
+      <label asp-for="Code">@(Model.IsEnrollment ? "Current six-digit code from the new 1Password entry" : "Current six-digit code from your authenticator app")</label>
       <input asp-for="Code" autocomplete="one-time-code" inputmode="numeric" maxlength="6" aria-describedby="totp-code-hint" spellcheck="false">
       <span asp-validation-for="Code"></span>
       <span id="totp-code-hint" class="field-hint">Numbers only. The eight-character email code will not work here.</span>
     </div>
-    <div class="action-row"><button class="button" type="submit">Verify administrator access</button></div>
+    <div class="action-row"><button class="button" type="submit">@(Model.IsReenrollment ? "Complete authenticator recovery" : "Verify administrator access")</button></div>
   </form>
 </div>

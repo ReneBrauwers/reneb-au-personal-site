@@ -105,6 +105,14 @@ public sealed record RecruiterRecord(
     DateTimeOffset? EmailVerifiedAt,
     DateTimeOffset LastActiveAt);
 
+public sealed record MailboxProofResult(
+    RecruiterRecord Recruiter,
+    bool TotpReenrollmentRequested);
+
+public sealed record AdminTotpCredential(
+    byte[] Seed,
+    long Version);
+
 public sealed record MessageRecord(
     Guid Id,
     Guid RecruiterId,

@@ -62,6 +62,7 @@ Scan source, anonymous responses, static assets, sitemap, the application assemb
 - [ ] Sessions expire, sign-out/revocation works and removed `ADMIN_EMAILS` lose authority immediately.
 - [ ] Approved recruiters cannot access admin pages and pending/suspended/deleted accounts cannot access private data.
 - [ ] Admin TOTP setup is not persisted until a valid code proves enrolment; verification and five-minute step-up protect every sensitive action.
+- [ ] Admin TOTP recovery must be explicitly requested before the single-use mailbox challenge is issued; the old secret remains active until the new QR/setup key is proven, then prior sessions are revoked.
 
 ## Messaging, résumé and retention
 

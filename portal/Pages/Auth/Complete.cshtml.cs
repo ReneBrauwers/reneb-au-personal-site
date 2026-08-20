@@ -38,14 +38,15 @@ public sealed class CompleteModel(IdentityService identity, PortalDatabase datab
         return await CompleteAsync(await identity.CompleteCodeAsync(Email, Code, cancellationToken, adminOnly: !options.Value.Enabled), cancellationToken);
     }
 
-    private async Task<IActionResult> CompleteAsync(RecruiterRecord? recruiter, CancellationToken cancellationToken)
+    private async Task<IActionResult> CompleteAsync(MailboxProofResult? result, CancellationToken cancellationToken)
     {
+        var recruiter = result?.Recruiter;
         if (recruiter is null || (!options.Value.Enabled && !identity.IsAdminEmail(recruiter.Email)))
         {
             ErrorMessage = "That verification has expired or has already been used. Request a new sign-in link.";
             return Page();
         }
-        await identity.SignInAsync(HttpContext, recruiter);
+        await identity.SignInAsync(HttpContext, recruiter, totpReenrollment: result!.TotpReenrollmentRequested);
         await database.TouchRecruiterAsync(recruiter.Id, cancellationToken);
         if (identity.IsAdminEmail(recruiter.Email))
         {

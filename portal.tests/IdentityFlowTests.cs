@@ -109,7 +109,7 @@ public sealed class IdentityFlowTests : IClassFixture<PortalFactory>
         var outbox = await database.FindPendingMailForRecipientAsync(email, "magic-link");
         Assert.NotNull(outbox);
         Assert.Contains("eight-character email verification code", outbox.Body, StringComparison.Ordinal);
-        Assert.Contains("separate six-digit number from their authenticator app", outbox.Body, StringComparison.Ordinal);
+        Assert.Contains("separate six-digit number from their existing authenticator app", outbox.Body, StringComparison.Ordinal);
         var magicLinkValue = Regex.Match(outbox.Body, "#token=([^\"<]+)", RegexOptions.CultureInvariant).Groups[1].Value;
 
         var results = await Task.WhenAll(identity.CompleteTokenAsync(magicLinkValue, default), identity.CompleteTokenAsync(magicLinkValue, default));
@@ -225,8 +225,13 @@ public sealed class IdentityFlowTests : IClassFixture<PortalFactory>
         Assert.NotEmpty(setup.Csrf);
         Assert.Contains("Email sign-in complete", setup.Html, StringComparison.Ordinal);
         Assert.Contains("The eight-character email code will not work here", setup.Html, StringComparison.Ordinal);
+        Assert.Contains("1Password", setup.Html, StringComparison.Ordinal);
         Assert.DoesNotContain("regular expression", setup.Html, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("img-src 'self' data:", setupResponse.Headers.GetValues("Content-Security-Policy").Single(), StringComparison.Ordinal);
         Assert.Null(await database.GetAdminTotpSecretAsync(account.Id));
+        var qrBase64 = Regex.Match(setup.Html, "class=\"totp-qr\" src=\"data:image/png;base64,([^\"]+)\"", RegexOptions.CultureInvariant).Groups[1].Value;
+        Assert.NotEmpty(qrBase64);
+        Assert.Equal(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 }, Convert.FromBase64String(WebUtility.HtmlDecode(qrBase64))[..8]);
         var enrollment = WebUtility.HtmlDecode(Regex.Match(setup.Html, "name=\"Enrollment\"[^>]*value=\"([^\"]+)\"", RegexOptions.CultureInvariant).Groups[1].Value);
         Assert.NotEmpty(enrollment);
         var protector = _factory.Services.GetRequiredService<IDataProtectionProvider>().CreateProtector(TotpModel.EnrollmentProtectionPurpose);
@@ -269,6 +274,110 @@ public sealed class IdentityFlowTests : IClassFixture<PortalFactory>
         var rejectedGrant = await client.PostAsync("/admin/recruiters?handler=Grant", Form(
             ("__RequestVerificationToken", recruitersPage.Token), ("id", pending.Id.ToString())));
         Assert.Equal(HttpStatusCode.Redirect, rejectedGrant.StatusCode);
+    }
+
+    [Fact]
+    public async Task AdminTotpRecoveryRequiresChallengeIntentAndReplacesTheSecretOnlyAfterProof()
+    {
+        const string email = "recovery-admin@example.invalid";
+        await using var baseFactory = new PortalFactory();
+        await using var recoveryFactory = baseFactory.WithWebHostBuilder(builder =>
+            builder.ConfigureAppConfiguration((_, configuration) =>
+                configuration.AddInMemoryCollection(new Dictionary<string, string?> { ["Portal:AdminEmails:0"] = email })));
+        HttpClient CreateRecoveryClient() => recoveryFactory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false,
+            HandleCookies = true
+        });
+        var database = recoveryFactory.Services.GetRequiredService<PortalDatabase>();
+        var time = recoveryFactory.Services.GetRequiredService<TimeProvider>();
+        var account = await database.EnsureAdminAccountAsync(email);
+        Assert.NotNull(account);
+        var originalTotpSeed = TotpService.CreateSecret();
+        await database.SaveAdminTotpSecretAsync(account.Id, originalTotpSeed);
+        var originalCredential = await database.GetAdminTotpCredentialAsync(account.Id);
+        Assert.NotNull(originalCredential);
+
+        using var existingSession = CreateRecoveryClient();
+        var login = await GetWithCsrfAsync(existingSession, "/auth/admin");
+        await existingSession.PostAsync("/auth/admin", Form(("__RequestVerificationToken", login.Token), ("Email", email)));
+        var ordinaryMail = await database.FindPendingMailForRecipientAsync(email, "magic-link");
+        Assert.NotNull(ordinaryMail);
+        Assert.DoesNotContain("Authenticator recovery was requested", ordinaryMail.Body, StringComparison.Ordinal);
+        await database.MarkMailSentAsync(ordinaryMail.Id);
+        var ordinaryChallengeValue = Regex.Match(ordinaryMail.Body, "#token=([^\"<]+)", RegexOptions.CultureInvariant).Groups[1].Value;
+        var completion = await GetWithCsrfAsync(existingSession, "/auth/complete");
+        await existingSession.PostAsync("/auth/complete?handler=Token", Form(("__RequestVerificationToken", completion.Token), ("Token", ordinaryChallengeValue)));
+        var ordinaryTotp = await GetWithCsrfAsync(existingSession, "/admin/totp");
+        Assert.DoesNotContain("class=\"totp-qr\"", ordinaryTotp.Html, StringComparison.Ordinal);
+        var originalCode = TotpService.GenerateCode(originalTotpSeed, time.GetUtcNow());
+        var ordinaryVerification = await existingSession.PostAsync("/admin/totp", Form(
+            ("__RequestVerificationToken", ordinaryTotp.Token), ("Enrollment", string.Empty), ("ReturnUrl", string.Empty), ("Code", originalCode)));
+        Assert.True(ordinaryVerification.Headers.Location?.OriginalString == "/admin",
+            $"Ordinary TOTP verification returned {(int)ordinaryVerification.StatusCode}: {await ordinaryVerification.Content.ReadAsStringAsync()}");
+
+        using var recoverySession = CreateRecoveryClient();
+        login = await GetWithCsrfAsync(recoverySession, "/auth/admin");
+        var request = await recoverySession.PostAsync("/auth/admin", Form(
+            ("__RequestVerificationToken", login.Token), ("Email", email), ("ReenrollAuthenticator", "true")));
+        var requestHtml = await request.Content.ReadAsStringAsync();
+        Assert.Contains("new authenticator setup", requestHtml, StringComparison.Ordinal);
+        Assert.Equal(originalTotpSeed, await database.GetAdminTotpSecretAsync(account.Id));
+
+        var recoveryMail = await database.FindPendingMailForRecipientAsync(email, "magic-link");
+        Assert.NotNull(recoveryMail);
+        Assert.Contains("Authenticator recovery was requested", recoveryMail.Body, StringComparison.Ordinal);
+        var recoveryChallengeValue = Regex.Match(recoveryMail.Body, "#token=([^\"<]+)", RegexOptions.CultureInvariant).Groups[1].Value;
+        completion = await GetWithCsrfAsync(recoverySession, "/auth/complete");
+        var recoveryCompletion = await recoverySession.PostAsync("/auth/complete?handler=Token", Form(
+            ("__RequestVerificationToken", completion.Token), ("Token", recoveryChallengeValue)));
+        Assert.Equal("/admin/totp", recoveryCompletion.Headers.Location?.OriginalString);
+
+        using var replaySession = CreateRecoveryClient();
+        var replayPage = await GetWithCsrfAsync(replaySession, "/auth/complete");
+        var replay = await replaySession.PostAsync("/auth/complete?handler=Token", Form(
+            ("__RequestVerificationToken", replayPage.Token), ("Token", recoveryChallengeValue)));
+        Assert.Contains("expired or has already been used", await replay.Content.ReadAsStringAsync(), StringComparison.Ordinal);
+
+        var recoveryTotp = await GetWithCsrfAsync(recoverySession, "/admin/totp");
+        Assert.Contains("Authenticator recovery", recoveryTotp.Html, StringComparison.Ordinal);
+        Assert.Contains("class=\"totp-qr\"", recoveryTotp.Html, StringComparison.Ordinal);
+        Assert.Contains("Complete authenticator recovery", recoveryTotp.Html, StringComparison.Ordinal);
+        var enrollment = WebUtility.HtmlDecode(Regex.Match(recoveryTotp.Html, "name=\"Enrollment\"[^>]*value=\"([^\"]+)\"", RegexOptions.CultureInvariant).Groups[1].Value);
+        var protector = recoveryFactory.Services.GetRequiredService<IDataProtectionProvider>().CreateProtector(TotpModel.EnrollmentProtectionPurpose);
+        var replacementTotpSeed = Convert.FromBase64String(protector.Unprotect(enrollment));
+        Assert.NotEqual(originalTotpSeed, replacementTotpSeed);
+
+        var invalidCode = TotpService.GenerateCode(replacementTotpSeed, time.GetUtcNow()) == "000000" ? "000001" : "000000";
+        var invalid = await recoverySession.PostAsync("/admin/totp", Form(
+            ("__RequestVerificationToken", recoveryTotp.Token), ("Enrollment", enrollment), ("ReturnUrl", string.Empty), ("Code", invalidCode)));
+        Assert.Equal(HttpStatusCode.OK, invalid.StatusCode);
+        Assert.Equal(originalTotpSeed, await database.GetAdminTotpSecretAsync(account.Id));
+
+        var invalidHtml = await invalid.Content.ReadAsStringAsync();
+        var retryCsrf = WebUtility.HtmlDecode(Regex.Match(invalidHtml, "name=\"__RequestVerificationToken\" type=\"hidden\" value=\"([^\"]+)\"", RegexOptions.CultureInvariant).Groups[1].Value);
+        enrollment = WebUtility.HtmlDecode(Regex.Match(invalidHtml, "name=\"Enrollment\"[^>]*value=\"([^\"]+)\"", RegexOptions.CultureInvariant).Groups[1].Value);
+        var replacementCode = TotpService.GenerateCode(replacementTotpSeed, time.GetUtcNow());
+        var completed = await recoverySession.PostAsync("/admin/totp", Form(
+            ("__RequestVerificationToken", retryCsrf), ("Enrollment", enrollment), ("ReturnUrl", string.Empty), ("Code", replacementCode)));
+        Assert.Equal("/admin", completed.Headers.Location?.OriginalString);
+        var rotatedCredential = await database.GetAdminTotpCredentialAsync(account.Id);
+        Assert.NotNull(rotatedCredential);
+        Assert.Equal(replacementTotpSeed, rotatedCredential.Seed);
+        Assert.True(rotatedCredential.Version > originalCredential.Version);
+
+        var staleSessionCreated = await database.CreateTotpVerifiedSessionAsync(
+            account.Id,
+            originalCredential.Version,
+            IdentityService.HashSession(Guid.NewGuid().ToString()),
+            time.GetUtcNow().AddMinutes(30),
+            previousSessionHash: null);
+        Assert.False(staleSessionCreated);
+
+        var revoked = await existingSession.GetAsync("/admin");
+        Assert.Equal(HttpStatusCode.Redirect, revoked.StatusCode);
+        Assert.Contains("/auth/login", revoked.Headers.Location?.OriginalString, StringComparison.Ordinal);
+        Assert.Equal(HttpStatusCode.OK, (await recoverySession.GetAsync("/admin")).StatusCode);
     }
 
     [Fact]

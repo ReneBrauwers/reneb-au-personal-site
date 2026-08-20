@@ -118,6 +118,7 @@ if (token) {
   check(Boolean(secret), "administrator visual acceptance: TOTP enrolment key was not shown");
   if (secret) {
     await login.locator(".notice-warning code").evaluate(element => { element.textContent = "[redacted in visual evidence]"; });
+    await login.locator(".totp-qr").evaluate(element => { element.style.visibility = "hidden"; });
     await login.screenshot({ path: path.join(outputDir, "authenticated-totp-enrolment-mobile-390x844.png"), fullPage: true, animations: "disabled" });
     const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
     let bits = "";

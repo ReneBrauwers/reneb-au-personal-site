@@ -9,13 +9,29 @@
     <h1>Sign in without a password.</h1>
     @if (Model.Submitted)
     {
-      <div class="notice notice-success"><p>If this address is eligible, a single-use link has been sent. It expires after 15 minutes.</p></div>
+      <div class="notice notice-success">
+        <p>If this address is eligible, a single-use link has been sent. It expires after 15 minutes.</p>
+        @if (Model.SubmittedReenrollment)
+        {
+          <p>The link will open a new authenticator setup after mailbox verification. The existing authenticator remains active until the new six-digit code is verified.</p>
+        }
+      </div>
     }
     else
     {
       <p>Enter the email address you previously verified. The response does not reveal whether an account exists.</p>
 <div asp-validation-summary="ModelOnly"></div>
       <div class="field"><label asp-for="Email"></label><input asp-for="Email" autocomplete="email" inputmode="email"><span asp-validation-for="Email"></span></div>
+      @if (Model.IsAdmin)
+      {
+        <div class="field">
+          <label asp-for="ReenrollAuthenticator">
+            <input asp-for="ReenrollAuthenticator">
+            <span>Set up a new authenticator after email verification</span>
+          </label>
+          <span class="field-hint">Use this recovery option if the existing reneb.au entry in your authenticator no longer works. The email will clearly identify the recovery request.</span>
+        </div>
+      }
       <div class="action-row"><button class="button" type="submit">Send a secure link</button></div>
     }
   </form>

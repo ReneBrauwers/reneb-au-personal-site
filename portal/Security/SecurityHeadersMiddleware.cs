@@ -26,9 +26,11 @@ public sealed class SecurityHeadersMiddleware(RequestDelegate next)
                 || context.Request.Path == "/readyz";
 
             var analyticsPolicy = analyticsEnabled ? $" {analyticsOrigin}" : string.Empty;
+            var qrEnrollmentRoute = string.Equals(context.Request.Path.Value?.TrimEnd('/'), "/admin/totp", StringComparison.OrdinalIgnoreCase);
+            var imagePolicy = qrEnrollmentRoute ? "'self' data:" : "'self'";
             context.Response.Headers["Content-Security-Policy"] = publicAnalytics
                 ? $"default-src 'self'; base-uri 'self'; connect-src 'self'{analyticsPolicy}; font-src 'none'; form-action 'self'; frame-ancestors 'none'; img-src 'self'; object-src 'none'; script-src 'self' 'nonce-{scriptNonce}'{analyticsPolicy}; style-src 'self'"
-                : "default-src 'self'; base-uri 'self'; connect-src 'self'; font-src 'none'; form-action 'self'; frame-ancestors 'none'; img-src 'self'; object-src 'none'; script-src 'self'; style-src 'self'";
+                : $"default-src 'self'; base-uri 'self'; connect-src 'self'; font-src 'none'; form-action 'self'; frame-ancestors 'none'; img-src {imagePolicy}; object-src 'none'; script-src 'self'; style-src 'self'";
             context.Response.Headers["Referrer-Policy"] = privateRoute ? "no-referrer" : "strict-origin-when-cross-origin";
             context.Response.Headers["X-Content-Type-Options"] = "nosniff";
             context.Response.Headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()";

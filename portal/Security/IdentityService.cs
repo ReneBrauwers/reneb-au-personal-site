@@ -12,6 +12,8 @@ namespace ReneB.Portal.Security;
 
 public sealed class IdentityService
 {
+    public const string TotpReenrollmentClaim = "totp_reenrollment";
+
     private readonly PortalDatabase _database;
     private readonly FieldEncryptionService _encryption;
     private readonly PortalOptions _options;
@@ -45,11 +47,14 @@ public sealed class IdentityService
         {
             return true;
         }
-        await CreateChallengeAndMailAsync(recruiter, cancellationToken);
+        await CreateChallengeAndMailAsync(recruiter, false, cancellationToken);
         return true;
     }
 
-    public async Task RequestLoginAsync(string email, bool adminOnly, CancellationToken cancellationToken)
+    public Task RequestLoginAsync(string email, bool adminOnly, CancellationToken cancellationToken)
+        => RequestLoginAsync(email, adminOnly, false, cancellationToken);
+
+    public async Task RequestLoginAsync(string email, bool adminOnly, bool totpReenrollmentRequested, CancellationToken cancellationToken)
     {
         var normalized = PortalDatabase.NormalizeEmail(email);
         RecruiterRecord? recruiter;
@@ -71,13 +76,13 @@ public sealed class IdentityService
             return;
         }
 
-        await CreateChallengeAndMailAsync(recruiter, cancellationToken);
+        await CreateChallengeAndMailAsync(recruiter, adminOnly && totpReenrollmentRequested, cancellationToken);
     }
 
-    public async Task<RecruiterRecord?> CompleteTokenAsync(string token, CancellationToken cancellationToken, bool adminOnly = false)
+    public async Task<MailboxProofResult?> CompleteTokenAsync(string token, CancellationToken cancellationToken, bool adminOnly = false)
         => await _database.ConsumeLoginChallengeAsync(HashToken(token), null, null, adminOnly, cancellationToken);
 
-    public async Task<RecruiterRecord?> CompleteCodeAsync(string email, string code, CancellationToken cancellationToken, bool adminOnly = false)
+    public async Task<MailboxProofResult?> CompleteCodeAsync(string email, string code, CancellationToken cancellationToken, bool adminOnly = false)
     {
         var normalized = PortalDatabase.NormalizeEmail(email);
         if (adminOnly && !IsAdminEmail(normalized))
@@ -97,7 +102,7 @@ public sealed class IdentityService
         return recruiter;
     }
 
-    public async Task SignInAsync(HttpContext context, RecruiterRecord recruiter, bool totpVerified = false)
+    public async Task SignInAsync(HttpContext context, RecruiterRecord recruiter, bool totpVerified = false, bool totpReenrollment = false)
     {
         var now = _time.GetUtcNow();
         if (context.User.FindFirstValue("session_id") is { Length: > 0 } previousSession)
@@ -106,6 +111,39 @@ public sealed class IdentityService
         }
         var sessionToken = Base64Url(RandomNumberGenerator.GetBytes(32));
         await _database.CreateSessionAsync(recruiter.Id, HashSession(sessionToken), now.AddMinutes(30));
+        await IssueSignInCookieAsync(context, recruiter, sessionToken, now, totpVerified, totpReenrollment);
+    }
+
+    public async Task<bool> SignInWithTotpAsync(HttpContext context, RecruiterRecord recruiter, long expectedTotpVersion)
+    {
+        var now = _time.GetUtcNow();
+        var previousSessionHash = context.User.FindFirstValue("session_id") is { Length: > 0 } previousSession
+            ? HashSession(previousSession)
+            : null;
+        var sessionToken = Base64Url(RandomNumberGenerator.GetBytes(32));
+        var created = await _database.CreateTotpVerifiedSessionAsync(
+            recruiter.Id,
+            expectedTotpVersion,
+            HashSession(sessionToken),
+            now.AddMinutes(30),
+            previousSessionHash);
+        if (!created)
+        {
+            await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return false;
+        }
+        await IssueSignInCookieAsync(context, recruiter, sessionToken, now, totpVerified: true, totpReenrollment: false);
+        return true;
+    }
+
+    private static async Task IssueSignInCookieAsync(
+        HttpContext context,
+        RecruiterRecord recruiter,
+        string sessionToken,
+        DateTimeOffset now,
+        bool totpVerified,
+        bool totpReenrollment)
+    {
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, recruiter.Id.ToString()),
@@ -117,6 +155,10 @@ public sealed class IdentityService
         if (totpVerified)
         {
             claims.Add(new Claim("totp_at", now.ToUnixTimeSeconds().ToString(System.Globalization.CultureInfo.InvariantCulture)));
+        }
+        if (totpReenrollment)
+        {
+            claims.Add(new Claim(TotpReenrollmentClaim, bool.TrueString));
         }
 
         var principal = new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme));
@@ -146,7 +188,7 @@ public sealed class IdentityService
         return _time.GetUtcNow() - DateTimeOffset.FromUnixTimeSeconds(timestamp) <= maximumAge;
     }
 
-    private async Task CreateChallengeAndMailAsync(RecruiterRecord recruiter, CancellationToken cancellationToken)
+    private async Task CreateChallengeAndMailAsync(RecruiterRecord recruiter, bool totpReenrollmentRequested, CancellationToken cancellationToken)
     {
         var token = Base64Url(RandomNumberGenerator.GetBytes(32));
         var code = CreateCode();
@@ -157,18 +199,26 @@ public sealed class IdentityService
             _encryption.LookupHash($"{normalized}:{code}"),
             _time.GetUtcNow().AddMinutes(15),
             _options.AuthRequestsPerMinute,
-            cancellationToken);
+            cancellationToken,
+            totpReenrollmentRequested);
         if (!created)
         {
             return;
         }
 
         var link = $"{_options.CanonicalBaseUrl.TrimEnd('/')}/auth/complete#token={Uri.EscapeDataString(token)}";
+        var recoveryNotice = totpReenrollmentRequested
+            ? """
+                <p><strong>Authenticator recovery was requested.</strong> After mailbox verification, this link will show a new QR code and setup key for reneb.au.</p>
+                <p>The existing authenticator remains active until a current six-digit code from the new setup is verified. If you did not request recovery, do not use this link.</p>
+                """
+            : "<p>Administrators will then be asked for a separate six-digit number from their existing authenticator app.</p>";
         var body = $"""
             <p>Use this private link to continue to René Brauwers' recruiter portal. It expires in 15 minutes and can be used once.</p>
             <p><a href="{System.Net.WebUtility.HtmlEncode(link)}">Continue to the recruiter portal</a></p>
             <p>If the link cannot be opened, enter this eight-character email verification code on the completion page: <strong>{code}</strong></p>
-            <p>This code verifies mailbox access only. Administrators will then be asked for a separate six-digit number from their authenticator app.</p>
+            <p>This code verifies mailbox access only.</p>
+            {recoveryNotice}
             <p>If you did not request this message, no action is required.</p>
             """;
         await _database.EnqueueMailAsync("magic-link", recruiter.Email, "Your secure reneb.au sign-in link", body, cancellationToken);
