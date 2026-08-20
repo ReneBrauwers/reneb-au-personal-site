@@ -103,6 +103,20 @@ public sealed class MandateLensTests
     }
 
     [Fact]
+    public void ColonCarriesOnlyExplicitExclusionLists()
+    {
+        var excludedList = _service.Analyse(
+            "Responsibilities exclude: sales and support Product delivery.",
+            PublicProfileDefaults.Create());
+        var newClause = _service.Analyse(
+            "The role has no sales quota: it owns Product delivery.",
+            PublicProfileDefaults.Create());
+
+        Assert.DoesNotContain(excludedList.Signals, signal => signal.Key == "delivery");
+        Assert.Contains(newClause.Signals, signal => signal.Key == "delivery");
+    }
+
+    [Fact]
     public void UnrelatedPublishedClaimsAreNeverUsedAsCandidateEvidence()
     {
         var profile = new PublicCandidateProfile
