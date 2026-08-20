@@ -76,6 +76,10 @@ public sealed class IndexModel(
         RemoveMessageValidation();
         if (!ValidateMandate())
         {
+            if (HasAnalysableMandate())
+            {
+                LensResult = mandateLens.Analyse(MandateText!, await database.GetPublicProfileAsync(false, cancellationToken));
+            }
             await LoadAsync(cancellationToken);
             return Page();
         }
@@ -153,6 +157,12 @@ public sealed class IndexModel(
             ModelState.AddModelError(nameof(MandateText), "Paste at least 100 characters so the lens has enough mandate context to test.");
         }
         return ModelState.IsValid;
+    }
+
+    private bool HasAnalysableMandate()
+    {
+        var length = MandateText?.Trim().Length ?? 0;
+        return length >= 100 && length <= MandateLensService.MaximumMandateLength;
     }
 
     private void RemoveMessageValidation()

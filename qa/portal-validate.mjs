@@ -236,6 +236,13 @@ if (token) {
       animations: "disabled"
     });
   }
+  await authPage.locator('form.lens-share textarea[name="MandateNote"]').evaluate(element => {
+    element.value = "x".repeat(401);
+    element.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  await authPage.getByRole("button", { name: "Share this brief privately" }).click();
+  await authPage.getByRole("heading", { name: "This mandate earns a focused first conversation." }).waitFor();
+  await authPage.getByText("The field MandateNote must be a string with a maximum length of 400.").waitFor();
   await authPage.locator('textarea[name="MandateNote"]').fill("Synthetic QA context proving explicit encrypted sharing.");
   await authPage.getByRole("button", { name: "Share this brief privately" }).click();
   await authPage.getByText("Your Mandate Lens brief was encrypted and shared privately with René.").waitFor();
