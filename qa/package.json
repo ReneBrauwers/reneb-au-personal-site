@@ -16,5 +16,9 @@
     "lighthouse": "13.4.1",
     "playwright": "1.62.1",
     "postcss": "8.5.26"
+  },
+  "overrides": {
+    "fast-uri": "3.1.7",
+    "source-map-js": "1.2.2"
   }
 }
