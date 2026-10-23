@@ -37,39 +37,51 @@ public static class HomeSectionDefaults
     [
         new()
         {
-            Heading = "Maze Realm",
+            Heading = "A browser maze game",
             Status = "Live",
-            Detail = "An immersive browser maze game for phone and desktop, built on a .NET maze generator that produces JSON blueprints. Free play needs no account, wallet, download or payment; optional XRPL Testnet features sit behind independent release flags."
+            Detail = "An immersive maze game for phone and desktop, built on a .NET engine that procedurally generates mazes as JSON blueprints. Free play needs no account, download or payment; optional blockchain features sit behind independent release flags."
         },
         new()
         {
-            Heading = "Equine Vet OS",
+            Heading = "A practice-management prototype for a veterinary clinic",
             Status = "Unreleased prototype",
-            Detail = "Born from a conversation with a mate who is a horse vet: a practice operating system for a single equine clinic, with the horse as the clinical spine. An offline-capable staff field app, voice-drafted notes that a person reviews, and a separate owner and trainer portal. Staff make and sign every clinical decision."
+            Detail = "Born from a conversation with a mate who is a vet: a practice operating system for a single clinic, with the animal as the clinical spine. An offline-capable field app for staff, voice-drafted notes that a person reviews, and a separate portal for owners. Staff make and sign every clinical decision."
         },
         new()
         {
-            Heading = "XRPL Accumulator",
+            Heading = "An automated asset-accumulation system",
             Status = "Personal use",
-            Detail = "A deterministic, auditable, fail-closed system for accumulating an asset on the XRP Ledger. Strategy, risk, signing, submission and reconciliation never depend on an LLM, and it runs from accepted, immutable container images."
+            Detail = "A deterministic, auditable, fail-closed system that accumulates a digital asset on a public ledger. Strategy, risk, signing, submission and reconciliation never depend on an LLM, and it runs only from accepted, immutable container images."
         },
         new()
         {
-            Heading = "reneb.au",
-            Status = "Live",
-            Detail = "This site: ASP.NET Core Razor Pages behind an nginx gateway, a governed content studio, a privacy-first recruiter portal, and CI that validates every change before publishing container images."
-        },
-        new()
-        {
-            Heading = "CryptoTaxMan",
+            Heading = "A character-creation and catalogue platform",
             Status = "Work in progress",
-            Detail = "A Blazor WebAssembly app to manage and enrich crypto transactions and estimate capital gains with basic rules, plus a console tool that downloads AUD exchange rates from CoinGecko, Yahoo Finance and Sologenic."
+            Detail = "A container-first .NET and React platform for generating and curating characters with AI, with a prompt studio that audits every rendered prompt, encrypted provider secrets, multi-factor sign-in and privacy controls such as customer export and erasure."
         },
         new()
         {
-            Heading = "Integration toolkit",
+            Heading = "A sensor-driven room pet",
+            Status = "Personal use",
+            Detail = "A small ESP32 device with air-quality, CO2 and climate sensors that gives a room a personality and nudges you to ventilate, heat or cool. A self-hosted .NET control centre manages telemetry, character profiles and signed over-the-air updates."
+        },
+        new()
+        {
+            Heading = "Crypto tax and portfolio tooling",
+            Status = "Work in progress",
+            Detail = "Tools that reconcile crypto transactions and estimate Australian capital gains: FIFO lot accounting across the July to June financial year, the 12-month discount, strict validation with per-transaction traces, and historical AUD price downloads."
+        },
+        new()
+        {
+            Heading = "This website",
+            Status = "Live",
+            Detail = "ASP.NET Core Razor Pages behind an nginx gateway, a governed content studio, a privacy-first recruiter portal, and CI that tests and scans every change before publishing container images."
+        },
+        new()
+        {
+            Heading = "Enterprise integration tooling",
             Status = "2010 to 2017",
-            Detail = "Years of .NET integration side projects: custom BizTalk functoids, a REST behaviour and message inspectors for BizTalk WCF endpoints, a dynamic WCF service host and invoker, and an Azure orders API demo built for Global Integration Bootcamp 2017 in Sydney."
+            Detail = "Years of .NET integration side projects: custom mapping functions and REST message inspectors for an enterprise integration platform, a dynamic WCF service host and invoker, and a cloud orders API demo built for a community integration event."
         }
     ];
 
