@@ -35,8 +35,28 @@ public static class ContentTypeRegistry
     {
         var visited = new HashSet<object>(ReferenceEqualityComparer.Instance);
         ValidateNode(value, visited, value.GetType().Name);
+        if (value is HomePageContent home)
+        {
+            foreach (var project in home.Projects)
+            {
+                if (string.IsNullOrEmpty(project.LinkUrl)) continue;
+                if (!Uri.TryCreate(project.LinkUrl, UriKind.Absolute, out var link) || link.Scheme != Uri.UriSchemeHttps
+                    || !string.IsNullOrEmpty(link.UserInfo) || string.IsNullOrWhiteSpace(project.LinkLabel))
+                {
+                    throw new ValidationException("Project links must be plain HTTPS URLs with a link label.");
+                }
+            }
+        }
         if (value is SiteSettingsContent settings)
         {
+            if (!Uri.TryCreate(settings.GitHubUrl, UriKind.Absolute, out var github) || github.Scheme != Uri.UriSchemeHttps)
+            {
+                throw new ValidationException("The GitHub URL must be an HTTPS URL.");
+            }
+            if (!string.IsNullOrEmpty(settings.ContactEmail) && !new EmailAddressAttribute().IsValid(settings.ContactEmail))
+            {
+                throw new ValidationException("The contact email must be a valid email address or empty.");
+            }
             if (!Uri.TryCreate(settings.UmamiScriptUrl, UriKind.Absolute, out var uri)
                 || uri.Scheme != Uri.UriSchemeHttps || !string.IsNullOrEmpty(uri.UserInfo)
                 || !string.IsNullOrEmpty(uri.Query) || !string.IsNullOrEmpty(uri.Fragment)

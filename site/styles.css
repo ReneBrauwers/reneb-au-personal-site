@@ -653,6 +653,72 @@ blockquote footer {
   text-transform: uppercase;
 }
 
+.systems,
+.projects {
+  border-top: 1px solid var(--line);
+}
+
+.systems-intro,
+.projects-intro {
+  max-width: 62ch;
+  margin-top: 1.25rem;
+  color: var(--slate-dark);
+}
+
+.systems-list {
+  display: grid;
+  margin-top: clamp(3rem, 5vw, 4.5rem);
+  gap: 2.25rem 2.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  list-style: none;
+}
+
+.systems-list li {
+  min-width: 0;
+}
+
+.systems-list p,
+.project-card p {
+  margin-top: 0.7rem;
+  color: var(--slate-dark);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.project-grid {
+  display: grid;
+  margin-top: clamp(3rem, 5vw, 4.5rem);
+  border-top: 1px solid var(--line);
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  list-style: none;
+}
+
+.project-card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  border-bottom: 1px solid var(--line);
+  padding: 2rem clamp(1rem, 2.4vw, 2rem) 1.5rem 0;
+}
+
+.project-card .text-link {
+  margin-top: auto;
+}
+
+.project-card p.project-status {
+  margin: 0 0 0.75rem;
+  color: var(--warm-ink);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.projects-more {
+  margin-top: 1.5rem;
+}
+
 .ai-section {
   background: var(--warm-soft);
 }
