@@ -38,6 +38,15 @@ public sealed class ProofItem
     [Required, StringLength(160)] public string Detail { get; set; } = string.Empty;
 }
 
+public sealed class ProjectCard
+{
+    [Required, StringLength(120)] public string Heading { get; set; } = string.Empty;
+    [Required, StringLength(60)] public string Status { get; set; } = string.Empty;
+    [Required, StringLength(600)] public string Detail { get; set; } = string.Empty;
+    [StringLength(300)] public string LinkUrl { get; set; } = string.Empty;
+    [StringLength(120)] public string LinkLabel { get; set; } = string.Empty;
+}
+
 public sealed class HomePageContent
 {
     [Required, StringLength(120)] public string HeaderDescriptor { get; set; } = string.Empty;
@@ -68,6 +77,20 @@ public sealed class HomePageContent
     [Required, StringLength(240)] public string PullQuote { get; set; } = string.Empty;
     [Required, StringLength(120)] public string PullQuoteAttribution { get; set; } = string.Empty;
 
+    // Added after the first published revision: initializers supply the defaults when an
+    // older stored home document does not contain these properties yet.
+    [Required, StringLength(120)] public string SystemsEyebrow { get; set; } = HomeSectionDefaults.SystemsEyebrow;
+    [Required, StringLength(180)] public string SystemsHeading { get; set; } = HomeSectionDefaults.SystemsHeading;
+    [Required] public RichTextContent SystemsIntroduction { get; set; } = HomeSectionDefaults.SystemsIntroduction();
+    [Required, MinLength(1), MaxLength(6)] public List<ContentCard> SystemsPractices { get; set; } = HomeSectionDefaults.SystemsPractices();
+
+    [Required, StringLength(120)] public string ProjectsNavigationLabel { get; set; } = HomeSectionDefaults.ProjectsNavigationLabel;
+    [Required, StringLength(120)] public string ProjectsEyebrow { get; set; } = HomeSectionDefaults.ProjectsEyebrow;
+    [Required, StringLength(180)] public string ProjectsHeading { get; set; } = HomeSectionDefaults.ProjectsHeading;
+    [Required] public RichTextContent ProjectsIntroduction { get; set; } = HomeSectionDefaults.ProjectsIntroduction();
+    [Required, MinLength(1), MaxLength(8)] public List<ProjectCard> Projects { get; set; } = HomeSectionDefaults.Projects();
+    [Required, StringLength(120)] public string ProjectsGitHubAction { get; set; } = HomeSectionDefaults.ProjectsGitHubAction;
+
     [Required, StringLength(120)] public string AiEyebrow { get; set; } = string.Empty;
     [Required, StringLength(180)] public string AiHeading { get; set; } = string.Empty;
     [Required] public RichTextContent AiBody { get; set; } = new();
@@ -91,6 +114,10 @@ public sealed class SiteSettingsContent
     [Required, Url, StringLength(300)] public string LinkedInUrl { get; set; } = string.Empty;
     [Required, Url, StringLength(300)] public string XUrl { get; set; } = string.Empty;
     [Required, StringLength(80)] public string XHandle { get; set; } = string.Empty;
+    [Required, Url, StringLength(300)] public string GitHubUrl { get; set; } = "https://github.com/ReneBrauwers";
+    // Optional public contact address. Leave empty until a public mailbox is chosen; the
+    // homepage only renders a mailto link when this has a value.
+    [StringLength(254)] public string ContactEmail { get; set; } = string.Empty;
     [Required, StringLength(160)] public string FooterNotice { get; set; } = string.Empty;
     [StringLength(300)] public string AnalyticsNotice { get; set; } = string.Empty;
     public bool AnalyticsEnabled { get; set; } = true;
