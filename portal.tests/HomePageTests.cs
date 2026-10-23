@@ -30,16 +30,30 @@ public sealed class HomePageTests : IClassFixture<PortalFactory>
         Assert.Contains("Prevention over recovery", html, StringComparison.Ordinal);
         Assert.Contains("id=\"projects\"", html, StringComparison.Ordinal);
         Assert.Contains("href=\"#projects\"", html, StringComparison.Ordinal);
-        Assert.Contains("https://mazerealm.com/", html, StringComparison.Ordinal);
         Assert.Contains("Unreleased prototype", html, StringComparison.Ordinal);
+        Assert.Contains("XRPL Accumulator", html, StringComparison.Ordinal);
+        Assert.Contains("Integration toolkit", html, StringComparison.Ordinal);
         Assert.Contains("href=\"https://github.com/ReneBrauwers\"", html, StringComparison.Ordinal);
 
-        // Private repositories must never be linked from the public site.
-        Assert.DoesNotContain("github.com/ReneBrauwers/equine-vet-os", html, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("github.com/ReneBrauwers/void-labyrinth", html, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("github.com/ReneBrauwers/maze-realm", html, StringComparison.OrdinalIgnoreCase);
-        // No public mailbox is configured by default, so no mailto link is rendered.
+        // Projects are described, never linked.
+        var start = html.IndexOf("id=\"projects\"", StringComparison.Ordinal);
+        var end = html.IndexOf("</section>", start, StringComparison.Ordinal);
+        var projects = html[start..end];
+        Assert.DoesNotContain("<a ", projects, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("href=", projects, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("mazerealm.com", html, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("github.com/ReneBrauwers/", html, StringComparison.OrdinalIgnoreCase);
+
+        // No email address is published; recruiters sign in to the portal instead.
         Assert.DoesNotContain("mailto:", html, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("id=\"recruiter-contact\"", html, StringComparison.Ordinal);
+        Assert.Contains("Sign in to the recruiter portal", html, StringComparison.Ordinal);
+        Assert.Contains("href=\"/auth/login\" data-umami-event=\"recruiter-signin-contact\">Recruiter sign in</a>", html, StringComparison.Ordinal);
+        Assert.Contains("href=\"/auth/login\" data-umami-event=\"recruiter-signin-header\">Recruiter sign in</a>", html, StringComparison.Ordinal);
+        Assert.Contains("href=\"/auth/register\" data-umami-event=\"recruiter-access-start\">Request recruiter access</a>", html, StringComparison.Ordinal);
+
+        var login = await _client.GetAsync("/auth/login");
+        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
         // The advisory-business placeholder is a server-side comment and must not ship in HTML.
         Assert.DoesNotContain("advisory-business", html, StringComparison.OrdinalIgnoreCase);
     }
@@ -48,31 +62,30 @@ public sealed class HomePageTests : IClassFixture<PortalFactory>
     public void PreviouslyPublishedHomeDocumentGainsNewSectionDefaults()
     {
         var json = JsonNode.Parse(JsonSerializer.Serialize(ContentDefaults.Home(), ContentTypeRegistry.JsonOptions))!.AsObject();
-        foreach (var key in json.Select(p => p.Key).Where(k => k.StartsWith("systems", StringComparison.Ordinal) || k.StartsWith("projects", StringComparison.Ordinal)).ToList())
+        foreach (var key in json.Select(p => p.Key).Where(k => k.StartsWith("systems", StringComparison.Ordinal) || k.StartsWith("projects", StringComparison.Ordinal) || k.StartsWith("recruiterContact", StringComparison.Ordinal) || k.StartsWith("recruiterSignIn", StringComparison.Ordinal) || k.StartsWith("recruiterRequest", StringComparison.Ordinal)).ToList())
         {
             json.Remove(key);
         }
 
         var home = Assert.IsType<HomePageContent>(ContentTypeRegistry.DeserializeAndValidate(ContentDocumentKeys.Home, json.ToJsonString()));
-        Assert.Equal(4, home.Projects.Count);
+        Assert.Equal(6, home.Projects.Count);
+        Assert.Equal("Recruiter sign in", home.RecruiterSignInAction);
         Assert.Equal(5, home.SystemsPractices.Count);
         Assert.Equal("Make the trade-offs visible.", home.HeroHeadingLineTwo);
 
         var settings = Assert.IsType<SiteSettingsContent>(ContentTypeRegistry.DeserializeAndValidate(
             ContentDocumentKeys.SiteSettings, "{\"seoTitle\":\"t\",\"metaDescription\":\"d\",\"socialTitle\":\"s\",\"socialDescription\":\"d\",\"socialImageUrl\":\"https://reneb.au/social-card.png\",\"linkedInUrl\":\"https://www.linkedin.com/in/renebrauwers/\",\"xUrl\":\"https://x.com/Rene_B\",\"xHandle\":\"@Rene_B\",\"footerNotice\":\"f\"}"));
         Assert.Equal("https://github.com/ReneBrauwers", settings.GitHubUrl);
-        Assert.Equal(string.Empty, settings.ContactEmail);
     }
 
     [Fact]
-    public void ProjectLinksMustBeHttps()
+    public void ProjectCardsHaveNoLinkFieldsAndGitHubUrlMustBeHttps()
     {
-        var home = ContentDefaults.Home();
-        home.Projects[0].LinkUrl = "http://mazerealm.com/";
-        Assert.Throws<ValidationException>(() => ContentTypeRegistry.ValidateGraph(home));
+        Assert.Null(typeof(ProjectCard).GetProperty("LinkUrl"));
+        Assert.Null(typeof(SiteSettingsContent).GetProperty("ContactEmail"));
 
         var settings = ContentDefaults.SiteSettings();
-        settings.ContactEmail = "not-an-email";
+        settings.GitHubUrl = "http://github.com/ReneBrauwers";
         Assert.Throws<ValidationException>(() => ContentTypeRegistry.ValidateGraph(settings));
     }
 }

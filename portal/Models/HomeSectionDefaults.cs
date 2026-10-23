@@ -27,9 +27,11 @@ public static class HomeSectionDefaults
     public const string ProjectsHeading = "The builder never left.";
 
     public static RichTextContent ProjectsIntroduction() => RichTextContent.FromParagraphs(
-        "Personal projects built in my own time. They keep my advice honest about what it takes to design, test and ship a working system.");
+        "Personal projects built in my own time, described here rather than linked. They keep my advice honest about what it takes to design, test, ship and run a working system.");
 
-    public const string ProjectsGitHubAction = "More on GitHub";
+    public const string RecruiterContactNote = "Recruiters and talent partners: I don't publish an email address. Sign in to the recruiter portal (or request verified access) to get in touch and view my full profile and resume.";
+    public const string RecruiterSignInAction = "Recruiter sign in";
+    public const string RecruiterRequestAccessAction = "Request recruiter access";
 
     public static List<ProjectCard> Projects() =>
     [
@@ -37,9 +39,7 @@ public static class HomeSectionDefaults
         {
             Heading = "Maze Realm",
             Status = "Live",
-            Detail = "An immersive browser maze game for phone and desktop. Free play needs no account, wallet, download or payment; optional XRPL Testnet features sit behind independent release flags.",
-            LinkUrl = "https://mazerealm.com/",
-            LinkLabel = "Play at mazerealm.com"
+            Detail = "An immersive browser maze game for phone and desktop, built on a .NET maze generator that produces JSON blueprints. Free play needs no account, wallet, download or payment; optional XRPL Testnet features sit behind independent release flags."
         },
         new()
         {
@@ -49,19 +49,27 @@ public static class HomeSectionDefaults
         },
         new()
         {
+            Heading = "XRPL Accumulator",
+            Status = "Personal use",
+            Detail = "A deterministic, auditable, fail-closed system for accumulating an asset on the XRP Ledger. Strategy, risk, signing, submission and reconciliation never depend on an LLM, and it runs from accepted, immutable container images."
+        },
+        new()
+        {
             Heading = "reneb.au",
             Status = "Live",
-            Detail = "This site: ASP.NET Core Razor Pages behind an nginx gateway, a governed content studio, a privacy-first recruiter portal, and CI that validates every change before publishing container images.",
-            LinkUrl = "https://github.com/ReneBrauwers/reneb-au-personal-site",
-            LinkLabel = "Source on GitHub"
+            Detail = "This site: ASP.NET Core Razor Pages behind an nginx gateway, a governed content studio, a privacy-first recruiter portal, and CI that validates every change before publishing container images."
         },
         new()
         {
             Heading = "CryptoTaxMan",
             Status = "Work in progress",
-            Detail = "A Blazor WebAssembly app to manage and enrich crypto transactions and estimate capital gains with basic rules, plus a console tool that downloads AUD exchange rates from CoinGecko, Yahoo Finance and Sologenic.",
-            LinkUrl = "https://github.com/ReneBrauwers/CryptoTaxMan",
-            LinkLabel = "Source on GitHub"
+            Detail = "A Blazor WebAssembly app to manage and enrich crypto transactions and estimate capital gains with basic rules, plus a console tool that downloads AUD exchange rates from CoinGecko, Yahoo Finance and Sologenic."
+        },
+        new()
+        {
+            Heading = "Integration toolkit",
+            Status = "2010 to 2017",
+            Detail = "Years of .NET integration side projects: custom BizTalk functoids, a REST behaviour and message inspectors for BizTalk WCF endpoints, a dynamic WCF service host and invoker, and an Azure orders API demo built for Global Integration Bootcamp 2017 in Sydney."
         }
     ];
 
