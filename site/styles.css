@@ -715,10 +715,6 @@ blockquote footer {
   text-transform: uppercase;
 }
 
-.projects-more {
-  margin-top: 1.5rem;
-}
-
 .ai-section {
   background: var(--warm-soft);
 }
@@ -1159,3 +1155,6 @@ blockquote footer {
     display: none;
   }
 }
+
+.recruiter-contact { margin-bottom: 1.5rem; padding-bottom: 1.25rem; border-bottom: 1px solid rgba(255, 255, 255, 0.2); }
+.recruiter-contact p { margin: 0 0 1rem; }

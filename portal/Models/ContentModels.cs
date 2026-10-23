@@ -43,8 +43,6 @@ public sealed class ProjectCard
     [Required, StringLength(120)] public string Heading { get; set; } = string.Empty;
     [Required, StringLength(60)] public string Status { get; set; } = string.Empty;
     [Required, StringLength(600)] public string Detail { get; set; } = string.Empty;
-    [StringLength(300)] public string LinkUrl { get; set; } = string.Empty;
-    [StringLength(120)] public string LinkLabel { get; set; } = string.Empty;
 }
 
 public sealed class HomePageContent
@@ -89,7 +87,10 @@ public sealed class HomePageContent
     [Required, StringLength(180)] public string ProjectsHeading { get; set; } = HomeSectionDefaults.ProjectsHeading;
     [Required] public RichTextContent ProjectsIntroduction { get; set; } = HomeSectionDefaults.ProjectsIntroduction();
     [Required, MinLength(1), MaxLength(8)] public List<ProjectCard> Projects { get; set; } = HomeSectionDefaults.Projects();
-    [Required, StringLength(120)] public string ProjectsGitHubAction { get; set; } = HomeSectionDefaults.ProjectsGitHubAction;
+
+    [Required, StringLength(300)] public string RecruiterContactNote { get; set; } = HomeSectionDefaults.RecruiterContactNote;
+    [Required, StringLength(80)] public string RecruiterSignInAction { get; set; } = HomeSectionDefaults.RecruiterSignInAction;
+    [Required, StringLength(80)] public string RecruiterRequestAccessAction { get; set; } = HomeSectionDefaults.RecruiterRequestAccessAction;
 
     [Required, StringLength(120)] public string AiEyebrow { get; set; } = string.Empty;
     [Required, StringLength(180)] public string AiHeading { get; set; } = string.Empty;
@@ -115,9 +116,6 @@ public sealed class SiteSettingsContent
     [Required, Url, StringLength(300)] public string XUrl { get; set; } = string.Empty;
     [Required, StringLength(80)] public string XHandle { get; set; } = string.Empty;
     [Required, Url, StringLength(300)] public string GitHubUrl { get; set; } = "https://github.com/ReneBrauwers";
-    // Optional public contact address. Leave empty until a public mailbox is chosen; the
-    // homepage only renders a mailto link when this has a value.
-    [StringLength(254)] public string ContactEmail { get; set; } = string.Empty;
     [Required, StringLength(160)] public string FooterNotice { get; set; } = string.Empty;
     [StringLength(300)] public string AnalyticsNotice { get; set; } = string.Empty;
     public bool AnalyticsEnabled { get; set; } = true;
