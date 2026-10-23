@@ -37,6 +37,10 @@ public static class ContentTypeRegistry
         ValidateNode(value, visited, value.GetType().Name);
         if (value is SiteSettingsContent settings)
         {
+            if (!Uri.TryCreate(settings.GitHubUrl, UriKind.Absolute, out var github) || github.Scheme != Uri.UriSchemeHttps)
+            {
+                throw new ValidationException("The GitHub URL must be an HTTPS URL.");
+            }
             if (!Uri.TryCreate(settings.UmamiScriptUrl, UriKind.Absolute, out var uri)
                 || uri.Scheme != Uri.UriSchemeHttps || !string.IsNullOrEmpty(uri.UserInfo)
                 || !string.IsNullOrEmpty(uri.Query) || !string.IsNullOrEmpty(uri.Fragment)
