@@ -31,8 +31,8 @@ public sealed class HomePageTests : IClassFixture<PortalFactory>
         Assert.Contains("id=\"projects\"", html, StringComparison.Ordinal);
         Assert.Contains("href=\"#projects\"", html, StringComparison.Ordinal);
         Assert.Contains("Unreleased prototype", html, StringComparison.Ordinal);
-        Assert.Contains("XRPL Accumulator", html, StringComparison.Ordinal);
-        Assert.Contains("Integration toolkit", html, StringComparison.Ordinal);
+        Assert.Contains("An automated asset-accumulation system", html, StringComparison.Ordinal);
+        Assert.Contains("Enterprise integration tooling", html, StringComparison.Ordinal);
         Assert.Contains("href=\"https://github.com/ReneBrauwers\"", html, StringComparison.Ordinal);
 
         // Projects are described, never linked.
@@ -58,6 +58,35 @@ public sealed class HomePageTests : IClassFixture<PortalFactory>
         Assert.DoesNotContain("advisory-business", html, StringComparison.OrdinalIgnoreCase);
     }
 
+    public static readonly string[] KnownProjectNames =
+    [
+        "Maze Realm", "MazeRealm", "maze-realm", "Void Labyrinth", "RPG-LLM-Empire", "Equine Vet OS", "equine-vet-os",
+        "XRPL Accumulator", "xrpl-accumulator", "XRPL", "XRP", "CryptoTaxMan", "AssetTransactionTracker", "crypto-transaction-report",
+        "Soulforge", "Roomagotchi", "MoodCanvas", "BizTalk", "Global Integration Bootcamp", "reneb.au", "Coogee", "CoinGecko", "Sologenic",
+        "ArchGovHub", "Kuntsult", "hgdmogoh"
+    ];
+
+    [Fact]
+    public async Task ProjectsSectionNamesNoProjects()
+    {
+        var html = WebUtility.HtmlDecode(await _client.GetStringAsync("/"));
+        var start = html.IndexOf("id=\"projects\"", StringComparison.Ordinal);
+        Assert.True(start >= 0);
+        var projects = html[start..html.IndexOf("</section>", start, StringComparison.Ordinal)];
+        foreach (var name in KnownProjectNames)
+        {
+            Assert.DoesNotContain(name, projects, StringComparison.OrdinalIgnoreCase);
+        }
+
+        foreach (var card in HomeSectionDefaults.Projects())
+        {
+            foreach (var name in KnownProjectNames)
+            {
+                Assert.DoesNotContain(name, card.Heading + " " + card.Status + " " + card.Detail, StringComparison.OrdinalIgnoreCase);
+            }
+        }
+    }
+
     [Fact]
     public void PreviouslyPublishedHomeDocumentGainsNewSectionDefaults()
     {
@@ -68,7 +97,7 @@ public sealed class HomePageTests : IClassFixture<PortalFactory>
         }
 
         var home = Assert.IsType<HomePageContent>(ContentTypeRegistry.DeserializeAndValidate(ContentDocumentKeys.Home, json.ToJsonString()));
-        Assert.Equal(6, home.Projects.Count);
+        Assert.Equal(8, home.Projects.Count);
         Assert.Equal("Recruiter sign in", home.RecruiterSignInAction);
         Assert.Equal(5, home.SystemsPractices.Count);
         Assert.Equal("Make the trade-offs visible.", home.HeroHeadingLineTwo);
