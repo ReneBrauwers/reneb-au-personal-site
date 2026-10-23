@@ -5,7 +5,7 @@ RUN dotnet restore portal/ReneB.Portal.csproj
 COPY portal/ portal/
 RUN dotnet publish portal/ReneB.Portal.csproj --configuration Release --no-restore --output /out /p:UseAppHost=false
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0.11-noble@sha256:207cc51496778557731c81ff670333d8ade4a4fec22768fd1be8e78474a84ecf
+FROM mcr.microsoft.com/dotnet/aspnet:10.0.13-noble@sha256:8af87eba5e7cdafb1514d7388be287365da97c132509e84dfe252ffd552398ca
 USER root
 RUN apt-get update \
     && apt-get install --yes --no-install-recommends ca-certificates curl poppler-utils qpdf \
