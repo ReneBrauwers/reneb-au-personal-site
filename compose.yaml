@@ -11,6 +11,7 @@ services:
       RECRUITER_PORTAL_ENABLED: "true"
       ADMIN_EMAILS: admin@example.invalid
       UNTRUSTED_EMAIL_DOMAINS: gmail.com,outlook.com,hotmail.com
+      PUBLIC_REDACT_TERMS: ${PUBLIC_REDACT_TERMS:-}
       DISPOSABLE_EMAIL_DOMAINS: mailinator.com,10minutemail.com,yopmail.com
       Portal__DataDirectory: /app/data
       Portal__BackupDirectory: /app/backups
@@ -73,6 +74,7 @@ services:
       QA_BASE_URL: http://web:8080
       QA_MAIL_URL: http://portal:8080/dev/mail
       QA_OUTPUT_DIR: /work/artifacts/local
+      PUBLIC_REDACT_TERMS: ${PUBLIC_REDACT_TERMS:-}
     volumes:
       - ./artifacts:/work/artifacts
       - ./site:/work/site:ro

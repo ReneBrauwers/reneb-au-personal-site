@@ -11,9 +11,6 @@ namespace ReneB.Portal.Tests;
 
 public sealed class PublicMetadataAndEventsTests : IClassFixture<PortalFactory>
 {
-    // The employer is not published. The names live only in this test so a regression is caught.
-    private static readonly string[] EmployerNames = ["EMPLOYER", "EMPLOYER Limited", "EMPLOYER Group", "EMPLOYER"];
-
     private static readonly string[] PublicRoutes =
     [
         "/", "/recruiters", "/llms.txt", "/recruiters/profile.md", "/candidate.json", "/robots.txt", "/sitemap.xml", "/privacy"
@@ -79,16 +76,27 @@ public sealed class PublicMetadataAndEventsTests : IClassFixture<PortalFactory>
         Assert.Contains("https://github.com/ReneBrauwers", sameAs);
     }
 
-    [Fact]
-    public async Task PublicRoutesNeverContainTheEmployerName()
+    [RedactionFact]
+    public async Task PublicRoutesNeverContainTheConfiguredEmployerTerms()
     {
         foreach (var route in PublicRoutes)
         {
             var body = WebUtility.HtmlDecode(await _client.GetStringAsync(route));
-            foreach (var name in EmployerNames)
+            foreach (var term in RedactionTerms.All)
             {
-                Assert.False(body.Contains(name, StringComparison.OrdinalIgnoreCase), $"{route} mentions the employer");
+                Assert.False(body.Contains(term, StringComparison.OrdinalIgnoreCase), $"{route} mentions a redacted term");
             }
+            Assert.DoesNotContain("worksFor", body, StringComparison.Ordinal);
+            Assert.DoesNotContain("currentEmployer", body, StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
+    [Fact]
+    public async Task PublicRoutesCarryNoEmployerFieldsOrStructuredEmployerData()
+    {
+        foreach (var route in PublicRoutes)
+        {
+            var body = await _client.GetStringAsync(route);
             Assert.DoesNotContain("worksFor", body, StringComparison.Ordinal);
             Assert.DoesNotContain("currentEmployer", body, StringComparison.OrdinalIgnoreCase);
         }
@@ -100,49 +108,76 @@ public sealed class PublicMetadataAndEventsTests : IClassFixture<PortalFactory>
         Assert.Null(typeof(PublicCandidateProfile).GetProperty("CurrentEmployer"));
         var candidate = await _client.GetStringAsync("/candidate.json");
         Assert.DoesNotContain("employer", candidate, StringComparison.OrdinalIgnoreCase);
+    }
 
+    [RedactionFact]
+    public void DefaultsAndSourceContentDoNotContainTheConfiguredTerms()
+    {
+        var redaction = new EmployerRedaction(RedactionTerms.All);
         var defaults = JsonSerializer.Serialize(ContentDefaults.Home(), ContentTypeRegistry.JsonOptions)
             + JsonSerializer.Serialize(PublicProfileDefaults.Create(), ContentTypeRegistry.JsonOptions)
             + JsonSerializer.Serialize(ContentDefaults.SiteSettings(), ContentTypeRegistry.JsonOptions);
-        Assert.False(EmployerRedaction.Mentions(defaults));
+        Assert.False(redaction.Mentions(defaults));
     }
 
     [Fact]
     public void EmployerRedactionRewritesStoredContentWithoutLeavingBrokenSentences()
     {
+        // A synthetic term keeps this test independent of the real, secret one.
+        var redaction = new EmployerRedaction(["Acme Widgets Pty Ltd", "Acme Widgets"]);
         var home = ContentDefaults.Home();
-        home.ProofItems[0].Detail = "EMPLOYER";
-        home.FoundationBody = RichTextContent.FromParagraphs("Today I lead Enterprise Architecture at EMPLOYER, working across Business and Risk.");
-        home.ClosingEyebrow = "EMPLOYER and others";
-        EmployerRedaction.Apply(home);
+        home.ProofItems[0].Detail = "Acme Widgets Pty Ltd";
+        home.FoundationBody = RichTextContent.FromParagraphs("Today I lead Enterprise Architecture at Acme Widgets Pty Ltd, working across Business and Risk.");
+        home.ClosingEyebrow = "ACME widgets's partners and others";
+        redaction.Apply(home);
 
         Assert.Equal("Enterprise architecture leadership", home.ProofItems[0].Detail);
         Assert.Contains("Enterprise Architecture in regulated financial services, working across Business and Risk.", home.FoundationBody.DeltaJson, StringComparison.Ordinal);
-        Assert.Equal("a regulated financial-services organisation and others", home.ClosingEyebrow);
-        Assert.False(EmployerRedaction.Mentions(JsonSerializer.Serialize(home, ContentTypeRegistry.JsonOptions)));
-        Assert.Equal("EMPLOYER motion is not an employer.", EmployerRedaction.Redact("EMPLOYER motion is not an employer."));
+        Assert.Equal("a regulated financial-services organisation's partners and others", home.ClosingEyebrow);
+        Assert.False(redaction.Mentions(JsonSerializer.Serialize(home, ContentTypeRegistry.JsonOptions)));
+        Assert.Equal("Acme Widgetsville is a different word.", redaction.Redact("Acme Widgetsville is a different word."));
     }
 
     [Fact]
+    public void RedactionIsANoOpWhenNoTermsAreConfigured()
+    {
+        foreach (var raw in new string?[] { null, "", "  ", " , ; " })
+        {
+            var redaction = new EmployerRedaction(EmployerRedaction.ParseTerms(raw));
+            Assert.False(redaction.IsEnabled);
+            var home = ContentDefaults.Home();
+            var before = JsonSerializer.Serialize(home, ContentTypeRegistry.JsonOptions);
+            redaction.Apply(home);
+            Assert.Equal(before, JsonSerializer.Serialize(home, ContentTypeRegistry.JsonOptions));
+            Assert.Equal("anything at all", redaction.Redact("anything at all"));
+        }
+        Assert.Equal(["One Term", "Two"], EmployerRedaction.ParseTerms(" One Term, Two ;"));
+    }
+
+    [RedactionFact]
     public async Task PreviouslyPublishedContentThatNamesTheEmployerIsRedactedAtRenderTime()
     {
+        var term = RedactionTerms.All.OrderByDescending(item => item.Length).First();
         var database = _factory.Services.GetRequiredService<PortalDatabase>();
 
         var home = await database.GetContentAsync<HomePageContent>(ContentDocumentKeys.Home, true);
         var legacyHome = ContentDefaults.Home();
-        legacyHome.ProofItems[0].Detail = "EMPLOYER";
-        legacyHome.FoundationBody = RichTextContent.FromParagraphs("I lead Enterprise Architecture at EMPLOYER in Sydney.");
+        legacyHome.ProofItems[0].Detail = term;
+        legacyHome.FoundationBody = RichTextContent.FromParagraphs($"I lead Enterprise Architecture at {term} in Sydney.");
         await database.PublishContentAsync(ContentDocumentKeys.Home, legacyHome, home.Revision, Guid.NewGuid());
 
         var profile = await database.GetContentAsync<PublicCandidateProfile>(ContentDocumentKeys.RecruiterProfile, true);
         var legacyProfile = profile.Content;
-        legacyProfile.DemonstratedSignals = [.. legacyProfile.DemonstratedSignals, "Head of Enterprise Architecture at EMPLOYER"];
+        legacyProfile.DemonstratedSignals = [.. legacyProfile.DemonstratedSignals, $"Head of Enterprise Architecture at {term}"];
         await database.PublishContentAsync(ContentDocumentKeys.RecruiterProfile, legacyProfile, profile.Revision, Guid.NewGuid());
 
         foreach (var route in PublicRoutes)
         {
             var body = WebUtility.HtmlDecode(await _client.GetStringAsync(route));
-            Assert.False(body.Contains("EMPLOYER", StringComparison.OrdinalIgnoreCase), $"{route} mentions the employer after legacy content was published");
+            foreach (var each in RedactionTerms.All)
+            {
+                Assert.False(body.Contains(each, StringComparison.OrdinalIgnoreCase), $"{route} mentions a redacted term after legacy content was published");
+            }
         }
         Assert.Contains("in regulated financial services in Sydney", WebUtility.HtmlDecode(await _client.GetStringAsync("/")), StringComparison.Ordinal);
     }

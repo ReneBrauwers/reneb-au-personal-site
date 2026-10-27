@@ -15,6 +15,7 @@ docker compose --profile qa run --rm qa npm run lighthouse
 ```
 
 Use the digest-pinned SDK reference from the workflow when reproducing CI exactly. Browser evidence is written beneath ignored `artifacts/`.
+Set `PUBLIC_REDACT_TERMS` (comma-separated, never committed; locally you can keep it in the gitignored `.redact-terms.local`) before running the .NET tests and the QA lanes so the redaction tests and the published-text check run; without it they skip. `compose.yaml` passes the variable through to `portal` and `qa`.
 `QA_MAIL_URL` must identify the Development-mode mailbox endpoint for the same stack as `QA_BASE_URL`; it is never available in production.
 
 ## Public content and discovery

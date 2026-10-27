@@ -173,7 +173,7 @@ public sealed partial class PortalDatabase
         var content = JsonSerializer.Deserialize<T>(_encryption.Decrypt(reader.GetString(0)), ContentTypeRegistry.JsonOptions)
             ?? throw new InvalidOperationException($"Content document '{key}' is invalid.");
         NormalizeContent(content!);
-        if (key != ContentDocumentKeys.OpportunityProfile) EmployerRedaction.Apply(content);
+        if (key != ContentDocumentKeys.OpportunityProfile) EmployerRedaction.Current.Apply(content);
         return new ContentSnapshot<T>(content, reader.GetInt64(1), Parse(reader.GetString(2)));
     }
 

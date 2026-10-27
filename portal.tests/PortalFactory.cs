@@ -34,6 +34,11 @@ public sealed class PortalFactory : WebApplicationFactory<Program>
             ["Mail:Mode"] = "Development",
             ["AllowedHosts"] = "localhost;127.0.0.1"
         }));
+        if (RedactionTerms.Raw is { } redactTerms)
+        {
+            builder.ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(
+                new Dictionary<string, string?> { [ReneB.Portal.Services.EmployerRedaction.SettingName] = redactTerms }));
+        }
         builder.ConfigureServices(services =>
         {
             services.RemoveAll<IHostedService>();

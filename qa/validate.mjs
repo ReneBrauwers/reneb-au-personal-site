@@ -17,6 +17,13 @@ const viewports = [
   { name: "1920x1080", width: 1920, height: 1080 }
 ];
 
+// Terms that must never be published come from the host-owned environment, never from source.
+const redactTerms = (process.env.PUBLIC_REDACT_TERMS || "")
+  .split(/[,;\n]/)
+  .map(term => term.trim().toLowerCase())
+  .filter(Boolean);
+if (redactTerms.length === 0) console.log("PUBLIC_REDACT_TERMS is not set; the redacted-term check is skipped.");
+
 const failures = [];
 const results = [];
 const touchResults = [];
@@ -113,7 +120,10 @@ for (const viewport of viewports) {
   check(metrics.canonical === "https://reneb.au/", `${viewport.name}: canonical is ${metrics.canonical}`);
   check(metrics.wordmark === "René Brauwers", `${viewport.name}: wordmark is '${metrics.wordmark}'`);
   check(metrics.bodyText.includes("Head of Enterprise Architecture"), `${viewport.name}: current role is missing`);
-  check(!/EMPLOYER/i.test(metrics.bodyText), `${viewport.name}: employer must not be published`);
+  if (redactTerms.length > 0) {
+    const lowered = metrics.bodyText.toLowerCase();
+    check(!redactTerms.some(term => lowered.includes(term)), `${viewport.name}: a redacted term is published`);
+  }
   check(metrics.bodyText.includes("Yes, this website was coded by AI."), `${viewport.name}: AI transparency statement is missing`);
   check(metrics.bodyText.includes("Cookieless, self-hosted analytics measure aggregate visits and approximate city/region."), `${viewport.name}: analytics privacy notice is missing`);
   check(metrics.analyticsScripts.length === 1, `${viewport.name}: expected one approved analytics script, found ${metrics.analyticsScripts.length}`);
