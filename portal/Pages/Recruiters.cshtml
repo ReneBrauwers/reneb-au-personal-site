@@ -1,17 +1,15 @@
 @page "/recruiters"
 @model ReneB.Portal.Pages.RecruitersModel
 @{
-    ViewData["Title"] = "For recruiters and talent agents";
+    ViewData["Title"] = ReneB.Portal.Pages.RecruitersModel.PageTitle;
     ViewData["PublicAnalytics"] = true;
 }
-@Html.Raw($"<script type=\"application/ld+json\" nonce=\"{Model.ScriptNonce}\">{Model.JsonLd}</script>")
-
 <section class="hero-panel" data-umami-event="recruiter-preview-open">
   <div class="portal-shell">
     <p class="eyebrow">@Model.Profile.CandidateName · @Model.Profile.CurrentRole</p>
     <h1>@Model.Profile.Headline</h1>
     <p class="lead">@Model.Profile.Summary</p>
-    <p class="hero-context">@Model.Profile.CurrentEmployer · @Model.Profile.ProfessionalContext</p>
+    <p class="hero-context">@Model.Profile.ProfessionalContext</p>
     <div class="action-row">
       <a class="button button-light" href="/auth/register" data-umami-event="recruiter-access-start">Request verified access</a>
       <a class="button button-secondary" href="/recruiters/profile.md">Read the machine-friendly profile</a>
@@ -73,3 +71,21 @@
     </div>
   </div>
 </section>
+
+@section Head {
+  <meta name="description" content="@Model.MetaDescription">
+  <meta name="theme-color" content="#0A1624">
+  <meta property="og:type" content="profile">
+  <meta property="og:site_name" content="@Model.Settings.DisplayName">
+  <meta property="og:locale" content="en_AU">
+  <meta property="og:title" content="@Model.SocialTitle">
+  <meta property="og:description" content="@Model.MetaDescription">
+  <meta property="og:url" content="https://reneb.au/recruiters">
+  <meta property="og:image" content="@Model.Settings.SocialImageUrl">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:creator" content="@Model.Settings.XHandle">
+  <meta name="twitter:title" content="@Model.SocialTitle">
+  <meta name="twitter:description" content="@Model.MetaDescription">
+  <meta name="twitter:image" content="@Model.Settings.SocialImageUrl">
+  @Html.Raw($"<script type=\"application/ld+json\" nonce=\"{Model.ScriptNonce}\">{Model.JsonLd}</script>")
+}

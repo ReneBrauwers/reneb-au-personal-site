@@ -14,9 +14,6 @@ public sealed class PublicCandidateProfile
     public string CurrentRole { get; set; } = "Head of Enterprise Architecture";
 
     [Required, StringLength(160)]
-    public string CurrentEmployer { get; set; } = "EMPLOYER";
-
-    [Required, StringLength(160)]
     public string ProfessionalContext { get; set; } = "Regulated financial services in Sydney, Australia";
 
     [Required, StringLength(900)]

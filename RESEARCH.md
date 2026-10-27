@@ -29,13 +29,13 @@ Profile:
 - `https://www.linkedin.com/in/renebrauwers/`
 - Public profile spelling: `Rene Brauwers`
 - Public headline observed in search: `Head of Enterprise Architecture | Helping Business and Engineering Make Better Technology Decisions | Regulated Financial Services`
-- Public summary fragment observed: `I lead Enterprise Architecture at EMPLOYER, working across Business, Engineering, Product, Data, Security and Risk`
+- Public summary fragment observed: leads Enterprise Architecture in regulated financial services, working across Business, Engineering, Product, Data, Security and Risk
 - Public location: Greater Sydney Area
-- Public employer: EMPLOYER
+- Current employer: intentionally not recorded or published (see `DECISIONS.md`)
 
 Reliability:
 
-- **Current public** for role, employer, professional headline and broad working relationships
+- **Current public** for role, professional headline and broad working relationships
 - The public page truncates parts of the biography for signed-out visitors
 - Use the official accented spelling `René` for the personal site based on the user's stated identity preference
 
@@ -57,15 +57,7 @@ Reliability:
 
 ### Employer context
 
-EMPLOYER:
-
-- `https://example.invalid/employer`
-- LinkedIn company profile appeared in search with René listed among employees
-
-Reliability:
-
-- **Current public** for employer identity and regulated financial-services context
-- Employer content does not authorise logo use or disclosure of internal initiatives
+The current employer is intentionally not named in this repository or on the site (see `DECISIONS.md`). Describe the sector instead: regulated financial services. Do not use employer logos or disclose internal initiatives.
 
 ## Wayback Machine research
 
@@ -186,7 +178,6 @@ Reliability:
 - René Brauwers
 - Sydney, Australia
 - Head of Enterprise Architecture
-- EMPLOYER
 - regulated financial services
 - works across Business, Engineering, Product, Data, Security and Risk
 - LinkedIn URL

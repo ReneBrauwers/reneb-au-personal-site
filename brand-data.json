@@ -13,7 +13,6 @@
     "asciiName": "Rene Brauwers",
     "location": "Sydney, Australia",
     "role": "Head of Enterprise Architecture",
-    "employer": "EMPLOYER",
     "sector": "Regulated financial services"
   },
   "positioning": {
@@ -40,7 +39,7 @@
     "xHandle": "@Rene_B"
   },
   "approvedCurrentClaims": [
-    "René leads Enterprise Architecture at EMPLOYER.",
+    "René leads Enterprise Architecture in regulated financial services.",
     "He leads an enterprise architecture function and provides matrix architecture leadership across multiple delivery squads.",
     "He advises senior business and technology leaders, engages executive and governance forums, and contributes to annual investment planning and business cases.",
     "He has established technology governance spanning architecture review, standards, decisions, exceptions, risk and audit traceability.",

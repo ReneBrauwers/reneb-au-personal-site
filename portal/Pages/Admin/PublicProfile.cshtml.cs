@@ -53,7 +53,6 @@ public sealed class PublicProfileModel(PortalDatabase database, IdentityService 
         [Required, StringLength(100)] public string CandidateName { get; set; } = string.Empty;
         [Required, StringLength(120)] public string Headline { get; set; } = string.Empty;
         [Required, StringLength(120)] public string CurrentRole { get; set; } = string.Empty;
-        [Required, StringLength(160)] public string CurrentEmployer { get; set; } = string.Empty;
         [Required, StringLength(160)] public string ProfessionalContext { get; set; } = string.Empty;
         [Required, StringLength(900)] public string Summary { get; set; } = string.Empty;
         [Required, StringLength(4000)] public string DemonstratedSignals { get; set; } = string.Empty;
@@ -69,7 +68,6 @@ public sealed class PublicProfileModel(PortalDatabase database, IdentityService 
             CandidateName = CandidateName.Trim(),
             Headline = Headline.Trim(),
             CurrentRole = CurrentRole.Trim(),
-            CurrentEmployer = CurrentEmployer.Trim(),
             ProfessionalContext = ProfessionalContext.Trim(),
             Summary = Summary.Trim(),
             LastReviewed = LastReviewed,
@@ -86,7 +84,6 @@ public sealed class PublicProfileModel(PortalDatabase database, IdentityService 
             CandidateName = profile.CandidateName,
             Headline = profile.Headline,
             CurrentRole = profile.CurrentRole,
-            CurrentEmployer = profile.CurrentEmployer,
             ProfessionalContext = profile.ProfessionalContext,
             Summary = profile.Summary,
             LastReviewed = profile.LastReviewed,

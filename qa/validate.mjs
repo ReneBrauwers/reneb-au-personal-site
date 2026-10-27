@@ -113,7 +113,7 @@ for (const viewport of viewports) {
   check(metrics.canonical === "https://reneb.au/", `${viewport.name}: canonical is ${metrics.canonical}`);
   check(metrics.wordmark === "René Brauwers", `${viewport.name}: wordmark is '${metrics.wordmark}'`);
   check(metrics.bodyText.includes("Head of Enterprise Architecture"), `${viewport.name}: current role is missing`);
-  check(metrics.bodyText.includes("EMPLOYER"), `${viewport.name}: employer is missing`);
+  check(!/EMPLOYER/i.test(metrics.bodyText), `${viewport.name}: employer must not be published`);
   check(metrics.bodyText.includes("Yes, this website was coded by AI."), `${viewport.name}: AI transparency statement is missing`);
   check(metrics.bodyText.includes("Cookieless, self-hosted analytics measure aggregate visits and approximate city/region."), `${viewport.name}: analytics privacy notice is missing`);
   check(metrics.analyticsScripts.length === 1, `${viewport.name}: expected one approved analytics script, found ${metrics.analyticsScripts.length}`);
