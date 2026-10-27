@@ -31,7 +31,7 @@ public static class ContentDefaults
         HeroSecondaryAction = "How I think",
         ProofItems =
         [
-            new() { Heading = "Head of Enterprise Architecture", Detail = "EMPLOYER" },
+            new() { Heading = "Head of Enterprise Architecture", Detail = "Enterprise architecture leadership" },
             new() { Heading = "Former Microsoft Azure MVP", Detail = "Builder credibility, carried forward" },
             new() { Heading = "Sydney, Australia", Detail = "Regulated financial services" }
         ],
@@ -49,7 +49,7 @@ public static class ContentDefaults
         FoundationHeading = "Engineering reality belongs in the boardroom.",
         FoundationBody = RichTextContent.FromParagraphs(
             "My foundation is hands-on: software, enterprise integration, automation and cloud. It lets me move from executive consequence to engineering reality without losing either. That grounding matters when a clean strategy meets legacy constraints, delivery pressure and the consequences of operating change.",
-            "Today I lead Enterprise Architecture at EMPLOYER, working across Business, Engineering, Product, Data, Security and Risk to improve technology decisions in a regulated environment.",
+            "Today I lead Enterprise Architecture in regulated financial services, working across Business, Engineering, Product, Data, Security and Risk to improve technology decisions in a regulated environment.",
             "Earlier in my career I was recognised as a Microsoft Azure MVP and contributed through technical writing, book reviews and community sessions. The products changed; curiosity and practical judgement stayed."),
         PerspectiveEyebrow = "Operating position",
         PerspectiveHeading = "Architecture earns its place by improving the decision.",

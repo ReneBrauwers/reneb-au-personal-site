@@ -45,6 +45,8 @@ If either command fails, leave production pinned and retry until both tags resol
 
 `UNTRUSTED_EMAIL_DOMAINS` is the comma-separated set of consumer/free-mail domains that remain pending for administrator approval after mailbox verification. `DISPOSABLE_EMAIL_DOMAINS` is the separate comma-separated set rejected with a generic response. Domain and subdomain matches are case-insensitive. Both lists are configurable and non-exhaustive; every other non-disposable domain activates after mailbox verification and can still be suspended by an administrator.
 
+`PUBLIC_REDACT_TERMS` is an optional, host-owned, comma-separated list of terms (for example a current employer) that must never appear on public pages, JSON-LD, `candidate.json`, `llms.txt` or the Markdown profile. The portal strips them from stored public content when it is read. Keep the real value only in the host `.env`; when it is unset nothing is redacted, so set it before or together with any deployment that must keep stored content clean.
+
 `PORTAL_TRUSTED_PROXY_NETWORKS` is a comma-separated CIDR allowlist for the actual Docker gateway and external edge-proxy hops. Resolve these networks read-only on the production host; do not copy the documentation examples. The portal processes at most two forwarded hops and stops when the current sender is not trusted, preventing a client-supplied `X-Forwarded-For` value from bypassing IP throttling.
 
 ## 3. Field-encryption keyring

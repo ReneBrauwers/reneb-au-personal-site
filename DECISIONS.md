@@ -10,7 +10,7 @@ These decisions are intentional defaults. Do not ask René to re-decide them dur
 | Domain | `https://reneb.au` |
 | Location | Sydney, Australia |
 | Primary identity | Business-first technology advisor and enterprise architecture leader |
-| Current role | Head of Enterprise Architecture at EMPLOYER |
+| Current role | Head of Enterprise Architecture (the employer is intentionally not named) |
 | Sector context | Regulated financial services |
 | Core proposition | Helping Business and Engineering make better technology decisions that deliver sustainable business outcomes |
 | Distinctive bridge | Business ↔ Architecture ↔ Engineering |
@@ -62,11 +62,11 @@ Do not publish a public email address yet. Historical `brauwers.nl` email addres
 
 ## Employer treatment
 
-The current role and employer may be stated in text because they are current public profile information.
+The current role may be stated, but the current employer must not be named anywhere public: not in page copy, metadata, JSON-LD (`worksFor`), `candidate.json`, `llms.txt`, the Markdown profile or stored content. Describe the sector instead (regulated financial services). `EmployerRedaction` strips any stored mention on read, and a test fails if an employer name reaches a public route.
 
 Do not:
 
-- use the EMPLOYER or EMPLOYER logo;
+- use any employer logo;
 - imply that the site is an employer publication;
 - describe confidential initiatives, clients, systems or internal responsibilities;
 - publish internal stakeholder names; or

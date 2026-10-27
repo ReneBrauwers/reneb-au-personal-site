@@ -21,7 +21,6 @@ public static class PublicProfileRenderer
             contact = "https://reneb.au/auth/register",
             headline = profile.Headline,
             currentRole = profile.CurrentRole,
-            currentEmployer = profile.CurrentEmployer,
             professionalContext = profile.ProfessionalContext,
             summary = profile.Summary,
             demonstratedSignals = profile.DemonstratedSignals,
@@ -52,7 +51,7 @@ public static class PublicProfileRenderer
         output.AppendLine();
         output.AppendLine(profile.Headline);
         output.AppendLine();
-        output.AppendLine($"Current role: {profile.CurrentRole} at {profile.CurrentEmployer} ({profile.ProfessionalContext}).");
+        output.AppendLine($"Current role: {profile.CurrentRole} ({profile.ProfessionalContext}).");
         output.AppendLine();
         output.AppendLine(profile.Summary);
         AppendList(output, "Demonstrated signals", profile.DemonstratedSignals);
@@ -80,7 +79,7 @@ public static class PublicProfileRenderer
         output.AppendLine();
         output.AppendLine($"{profile.Headline}. {profile.Summary}");
         output.AppendLine();
-        output.AppendLine($"Current role: {profile.CurrentRole} at {profile.CurrentEmployer} ({profile.ProfessionalContext}).");
+        output.AppendLine($"Current role: {profile.CurrentRole} ({profile.ProfessionalContext}).");
         AppendList(output, "Demonstrated signals", profile.DemonstratedSignals);
         AppendList(output, "Roles of interest", profile.RolesOfInterest);
         AppendList(output, "Areas of interest", profile.AreasOfInterest);
@@ -100,7 +99,7 @@ public static class PublicProfileRenderer
         return output.ToString();
     }
 
-    public static string ToJsonLd(PublicCandidateProfile profile)
+    public static string ToJsonLd(PublicCandidateProfile profile, string? description = null, IEnumerable<string>? sameAs = null)
     {
         var services = profile.RolesOfInterest
             .Select(role => (object)new Dictionary<string, object?>
@@ -123,20 +122,23 @@ public static class PublicProfileRenderer
             ["name"] = profile.CandidateName,
             ["url"] = "https://reneb.au/",
             ["jobTitle"] = profile.CurrentRole,
-            ["worksFor"] = new Dictionary<string, object?>
-            {
-                ["@type"] = "Organization",
-                ["name"] = profile.CurrentEmployer
-            },
             ["knowsAbout"] = profile.AreasOfInterest,
             ["seeks"] = demand
         };
+        var links = sameAs?.Where(link => !string.IsNullOrWhiteSpace(link)).Distinct(StringComparer.Ordinal).ToArray();
+        if (links is { Length: > 0 })
+        {
+            person["sameAs"] = links;
+        }
         var document = new Dictionary<string, object?>
         {
             ["@context"] = "https://schema.org",
             ["@type"] = "ProfilePage",
             ["@id"] = "https://reneb.au/recruiters#profile",
             ["url"] = "https://reneb.au/recruiters",
+            ["name"] = $"{profile.CandidateName} - recruiter profile",
+            ["description"] = description,
+            ["inLanguage"] = "en-AU",
             ["dateModified"] = profile.LastReviewed.ToString("yyyy-MM-dd"),
             ["mainEntity"] = person
         };

@@ -135,6 +135,10 @@ builder.Services.AddHostedService<RetentionWorker>();
 
 var app = builder.Build();
 
+// Host-owned list of terms (for example a current employer) that must never appear in public output.
+// Read after Build so every configuration source, including test hosts, is applied.
+EmployerRedaction.Configure(app.Configuration[EmployerRedaction.SettingName]);
+
 if (app.Environment.IsDevelopment())
 {
     await app.Services.GetRequiredService<PortalDatabase>().MigrateAsync();

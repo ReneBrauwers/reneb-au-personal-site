@@ -13,3 +13,6 @@ portal.tests/bin/
 portal.tests/obj/
 Thumbs.db
 .DS_Store
+
+# Local-only list of terms to redact from public output (see PUBLIC_REDACT_TERMS); never commit.
+.redact-terms.local

@@ -13,7 +13,6 @@
     <div class="field"><label asp-for="Input.CandidateName"></label><input asp-for="Input.CandidateName"></div>
     <div class="field"><label asp-for="Input.Headline"></label><input asp-for="Input.Headline"></div>
     <div class="field"><label asp-for="Input.CurrentRole"></label><input asp-for="Input.CurrentRole"></div>
-    <div class="field"><label asp-for="Input.CurrentEmployer"></label><input asp-for="Input.CurrentEmployer"></div>
     <div class="field"><label asp-for="Input.ProfessionalContext"></label><input asp-for="Input.ProfessionalContext"></div>
     <div class="field"><label asp-for="Input.Summary"></label><textarea asp-for="Input.Summary"></textarea></div>
     <div class="field"><label asp-for="Input.DemonstratedSignals"></label><textarea asp-for="Input.DemonstratedSignals"></textarea></div>
@@ -37,7 +36,7 @@
     <div class="portal-shell">
       <p class="section-eyebrow">Private draft preview</p>
       <h2 id="draft-preview-title">@preview.Headline</h2>
-      <p><strong>@preview.CandidateName</strong> · @preview.CurrentRole at @preview.CurrentEmployer · @preview.ProfessionalContext</p>
+      <p><strong>@preview.CandidateName</strong> · @preview.CurrentRole · @preview.ProfessionalContext</p>
       <p class="lead">@preview.Summary</p>
       <div class="fit-grid">
         <article class="fit-card"><h3>Demonstrated signals</h3><ul>@foreach (var item in preview.DemonstratedSignals) { <li>@item</li> }</ul></article>

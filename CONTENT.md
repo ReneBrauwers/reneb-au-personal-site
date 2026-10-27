@@ -141,7 +141,7 @@ If the quote is used, present it as René's operating principle—not as a third
 
 > My career began hands-on: building software, integrations and cloud platforms, then leading teams and complex delivery. That progression still shapes how I work. I can move from executive consequence to engineering reality without losing either.
 >
-> Today I lead Enterprise Architecture at EMPLOYER in Sydney, working across Business, Engineering, Product, Data, Security and Risk. My focus is simple: help the organisation make better technology decisions and turn them into sustainable outcomes.
+> Today I lead Enterprise Architecture in regulated financial services in Sydney, working across Business, Engineering, Product, Data, Security and Risk. My focus is simple: help the organisation make better technology decisions and turn them into sustainable outcomes.
 >
 > Earlier in my career I was recognised as a Microsoft Azure MVP and contributed through technical writing, book reviews and community sessions. I still believe credibility comes from staying curious, testing assumptions and remaining close to the work.
 

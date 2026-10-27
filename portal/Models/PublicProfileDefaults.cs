@@ -7,7 +7,6 @@ public static class PublicProfileDefaults
         CandidateName = "René Brauwers",
         Headline = "Enterprise architecture leadership for consequential change",
         CurrentRole = "Head of Enterprise Architecture",
-        CurrentEmployer = "EMPLOYER",
         ProfessionalContext = "Regulated financial services in Sydney, Australia",
         Summary = "A business-first enterprise architecture leader who connects executive intent, investment, governance and engineering reality. René leads an enterprise architecture function, advises senior leaders and stays close enough to delivery to test strategy in practice. Consider him for senior mandates where enterprise authority, decision quality and accountable modernisation matter.",
         SummaryRichText = RichTextContent.FromParagraphs("A business-first enterprise architecture leader who connects executive intent, investment, governance and engineering reality. René leads an enterprise architecture function, advises senior leaders and stays close enough to delivery to test strategy in practice. Consider him for senior mandates where enterprise authority, decision quality and accountable modernisation matter."),
