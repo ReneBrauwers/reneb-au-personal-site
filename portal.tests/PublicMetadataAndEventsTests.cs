@@ -205,11 +205,26 @@ public sealed class PublicMetadataAndEventsTests : IClassFixture<PortalFactory>
 
         // Closing-section scroll event: marked section plus a nonce'd inline script allowed by the existing public CSP.
         Assert.Contains("<section class=\"closing section\" data-umami-section=\"closing\"", html, StringComparison.Ordinal);
-        var nonce = Regex.Match(html, "<script nonce=\"([^\"]+)\">\\s*\\(function").Groups[1].Value;
+        // The nonce is base64, so Razor HTML-encodes "+" in the attribute; browsers decode it before CSP matching.
+        var nonce = WebUtility.HtmlDecode(Regex.Match(html, "<script nonce=\"([^\"]+)\">\\s*\\(function").Groups[1].Value);
         Assert.NotEmpty(nonce);
         Assert.Contains("window.umami.track('closing-section-view')", html, StringComparison.Ordinal);
         var csp = response.Headers.GetValues("Content-Security-Policy").Single();
         Assert.Contains($"script-src 'self' 'nonce-{nonce}' https://stats.reneb.au", csp, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task InlineScriptNonceMatchesTheCspNonceOnEveryRequest()
+    {
+        // Base64 nonces contain "+" about a third of the time, which Razor HTML-encodes in attributes.
+        for (var attempt = 0; attempt < 80; attempt++)
+        {
+            var response = await _client.GetAsync("/");
+            var html = await response.Content.ReadAsStringAsync();
+            var nonce = WebUtility.HtmlDecode(Regex.Match(html, "<script nonce=\"([^\"]+)\">\\s*\\(function").Groups[1].Value);
+            Assert.NotEmpty(nonce);
+            Assert.Contains($"'nonce-{nonce}'", response.Headers.GetValues("Content-Security-Policy").Single(), StringComparison.Ordinal);
+        }
     }
 
     [Theory]
