@@ -190,6 +190,10 @@ public sealed class PublicMetadataAndEventsTests : IClassFixture<PortalFactory>
 
         Assert.Equal(4, Regex.Matches(html, "data-umami-event=\"linkedin-click\"").Count);
         Assert.Equal(2, Regex.Matches(html, "data-umami-event=\"github-click\"").Count);
+        foreach (var location in new[] { "header", "footer" })
+        {
+            Assert.Contains($"href=\"https://blog.reneb.au/\" data-umami-event=\"blog-click\" data-umami-event-location=\"{location}\"", html, StringComparison.Ordinal);
+        }
         foreach (var location in new[] { "header", "hero", "closing", "footer" })
         {
             Assert.Contains($"data-umami-event=\"linkedin-click\" data-umami-event-location=\"{location}\"", html, StringComparison.Ordinal);
