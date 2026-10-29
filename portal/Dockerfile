@@ -1,11 +1,11 @@
-FROM mcr.microsoft.com/dotnet/sdk:10.0.400-noble@sha256:e1fc6e423f543119c406d24e2e687d67c569f18f04a37a8b0005d80ad0dcee80 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0.403-noble@sha256:de4fe90a98845d75910b9769662465c84de1a934665c431279d1382b2bddc02b AS build
 WORKDIR /src
 COPY portal/ReneB.Portal.csproj portal/
 RUN dotnet restore portal/ReneB.Portal.csproj
 COPY portal/ portal/
 RUN dotnet publish portal/ReneB.Portal.csproj --configuration Release --no-restore --output /out /p:UseAppHost=false
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0.13-noble@sha256:8af87eba5e7cdafb1514d7388be287365da97c132509e84dfe252ffd552398ca
+FROM mcr.microsoft.com/dotnet/aspnet:10.0.14-noble@sha256:de0ee358cdd672f7017a003bed21e9ac9ed48a27c922a59b18175b6e82fa7fee
 USER root
 RUN apt-get update \
     && apt-get install --yes --no-install-recommends ca-certificates curl poppler-utils qpdf \
